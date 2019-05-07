@@ -3,12 +3,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>996</title>
 <style type="text/css">
-<!--
 .STYLE1 {
 	color: #FF0000;
 	font-weight: bold;
 }
--->
 </style>
 </head>
 
