@@ -1,0 +1,11 @@
+table.gridtable tr td {
+    border-left: 1px solid #7FD2FF;  /*����*/
+ }
+ 
+ tr {
+/* 	font: bold 12px/20px Arial; */
+/* 	text-align: left; */
+/* 	padding: 4px; */
+/* 	height:10px;  不起作用*/
+line-height: 10px;
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	id="WebApp_ID" version="3.0">
+
+	<display-name>bee-ext</display-name>
+
+	<session-config>
+		<session-timeout>30</session-timeout>   <!-- 单位分钟 -->
+	</session-config>
+
+<!-- 	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:/applicationContext.xml</param-value>
+	</context-param>
+
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener> -->
+
+	<servlet>
+		<servlet-name>webBeesql</servlet-name>
+		<servlet-class>org.teasoft.beeext.servlet.WebBeeSqlServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>webBeesql</servlet-name>
+		<url-pattern>/webBeesql/*</url-pattern>
+	</servlet-mapping>
+
+</web-app>

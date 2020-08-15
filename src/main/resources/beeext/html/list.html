@@ -1,0 +1,236 @@
+<html>
+<head>
+<title>通用列表</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+.STYLE1 {
+	color: #FF0000
+}
+
+.divbox {
+	width: 1493px;
+/* 	height: 435px; */
+/* 	color: #f00; */
+/* 	padding: 2px; */
+/* 	border-width:1px;  */
+	 border-style:solid;
+	border-color:#40B1EE;
+}
+
+.template {
+	display: none;
+	/* 	visibility: hidden; */
+}
+/* .pagination2{ */
+/* 	width:1080px; */
+/* } */
+.pagination table {
+	/*     float: left; */
+	height: 25px;
+	width: 1495px;
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="css/common.css"/>
+
+<link rel="stylesheet" type="text/css" href="css/je/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="css/je/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="css/je/themes/color.css">
+<link rel="stylesheet" type="text/css" href="css/je/themes/demo.css">
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jqeEx.js"></script>
+<script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="js/template-web.js"></script>
+
+
+<script type="text/javascript">
+
+function keyevent(){
+    if(event.keyCode==119 ){
+    query();
+    }
+}
+document.onkeydown = keyevent;
+
+	$(function() {
+// 		$("#resultBox").height(835);
+		
+		$("#getTab").click(function() {
+			query();
+		});
+	});
+	
+	
+	function query(){
+		var sqlStr;
+		if ($('#sqlStr').val().trim() != "") {
+			
+		   if($('#sqlStr').val().trim() == "-- 请输入sql.可选择运行部分语句;可以按F8查询."){
+				alert("sql string would not be empty !");
+				return;
+		   }
+			
+			var selectedTxt=$("#sqlStr").selection();
+			if(selectedTxt!=""){
+			  sqlStr=selectedTxt;
+			}else{
+			  sqlStr = $('#sqlStr').val().trim();
+			}
+// 		    alert(sqlStr);
+			
+			$('#pager').pagination({
+				pageNumber : 1     //TODO pageNumber也设为用户刚刚选的
+			});
+			
+			showlist(sqlStr);
+		} else {
+			alert("sql string would not be empty !");
+			return;
+		}
+	}
+	
+/* 	function showlist(sqlStr) {
+		alert("ha...");
+		$.getJSON("${path}/select",{sqlStr : sqlStr}, function(data) {
+			alert(data);
+			
+			$('#pager').pagination({
+				total : data.total
+			});
+			var content = template('template', data);
+			$('#result').html(content);
+		});
+	} */
+	
+	
+function showlist(sqlStr) {
+	   $.ajax({ 
+	    type:'post',  
+	    url:"${path}/select", 
+	    data:{sqlStr : sqlStr},  
+	    dataType:'json', 
+	    
+	    error:function(e){  
+         console.log(e);  
+//          alert(e.status+"  :  "+e.statusText);
+         alert(e.responseText);
+       }, 
+	    success: function(result){
+		if (result.errorMsg){
+			$.messager.show({
+				title: 'Error',
+				msg: result.error
+			});
+		} else {
+// 			$.messager.show({
+// 				title: 'Successfully',
+// 				msg: 'Successfully!'
+// 			});
+			
+			$('#pager').pagination({
+				total : result.total
+			});
+			var content = template('template', result);
+			$('#result').html(content);
+		}
+	}
+   });
+}
+
+	function turnPage(pageNumber, pageSize) {
+// 		alert(pageSize);
+//         int m=pageSize/10;
+//        alert(pageSize instanceof Object);
+       var m;
+       if(pageSize==10) m=1;
+       else if(pageSize==20) m=2;
+       else if(pageSize==30) m=3;
+       else if(pageSize==50) m=5;
+	   $("#resultBox").height(435*m);
+	   
+	   var sqlStr;
+		if ($('#sqlStr').val().trim() != "") {
+			  if($('#sqlStr').val().trim() == "-- 请输入sql.可选择运行部分语句;可以按F8查询."){
+				alert("sql string would not be empty !");
+				return;
+			   }
+			sqlStr = $('#sqlStr').val().trim();
+		} else {
+			alert("sql string would not be empty !");
+			return;
+		}
+		
+		$.getJSON("${path}/select?page=" + pageNumber + "&rows="
+				+ pageSize, {sqlStr : sqlStr}, function(data) {
+			
+// 			pageSize  width: 1506px;
+// 			$(".divbox").css("width","1806");
+// 			$(".divbox").height(835);
+// 			$("#resultBox").addClass("divbox");
+
+
+			var content = template('template', data);
+			$('#result').html(content);
+		});
+	}
+</script>
+</head>
+<body>
+
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<input id="getTab" type="button" value="查询" />
+	<br><br><br>
+<!-- 
+	<select name="tab0" id="tab0">
+	    <option value="user" selected="selected">user</option>
+	    <option value="objArrayTest" >objArrayTest</option>
+		<option value="orderhistory" >orderhistory</option>
+		<option value="templatedemoabcdef">templatedemoabcdef</option>
+		<option value="testnum">testnum</option>
+	</select> -->
+	
+	<label>
+<textarea name="sqlStr" id="sqlStr" cols="205" rows="10" placeholder="   -- 请输入sql.可选择运行部分语句;可以按F8查询."></textarea>
+</label>
+<br><br>
+<!-- 	<span class="Red">*</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
+	<p>
+	<div id="result"></div>
+	<textarea id="template" class="template">
+<div id="resultBox" class="divbox">
+<table id="commlist" width="1490"  >
+ <tr>
+      {{each rows[0]  j_value j}} 
+         <th>{{j}}</th>
+	   {{/each}}
+ </tr>   
+	   
+     {{each rows value i}}
+           <tr>
+       {{each rows[i]  j_value j}} 
+         <td>{{@j_value}} </td>
+	   {{/each}}
+		 </tr>  
+    {{/each}}
+    
+</table>
+</div>
+</textarea>
+
+	<div>
+		<div id="pager"
+			data-options="
+					layout:['list','sep','first','prev','links','next','last','sep','manual'],
+					beforePageText:'跳到第',
+					afterPageText:'页, 共 {pages}页'
+					,
+					 onSelectPage: function(pageNumber, pageSize){
+                                 turnPage(pageNumber, pageSize);
+                     }
+				   "></div>
+	 </div>
+
+</body>
+</html>
