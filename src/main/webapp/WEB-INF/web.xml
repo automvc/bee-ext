@@ -21,7 +21,7 @@
 
 	<servlet>
 		<servlet-name>webBeesql</servlet-name>
-		<servlet-class>org.teasoft.beeext.servlet.WebBeeSqlServlet</servlet-class>
+		<servlet-class>org.teasoft.beeext.websql.servlet.WebBeeSqlServlet</servlet-class>
 	</servlet>
 
 	<servlet-mapping>

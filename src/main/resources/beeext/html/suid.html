@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>通用列表</title>
+<title>Bee SQL for Web</title>
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <style type="text/css">
@@ -49,21 +49,24 @@
 
 function keyevent(){
     if(event.keyCode==119 ){
-    query();
+    select();
     }
 }
 document.onkeydown = keyevent;
 
 	$(function() {
-// 		$("#resultBox").height(835);
-		
-		$("#getTab").click(function() {
-			query();
+		$("#selectBt").click(function() {
+			select();
 		});
+		
+		$("#modifyBt").click(function() {
+			alert("developing...");
+		});
+		
 	});
 	
 	
-	function query(){
+	function select(){
 		var sqlStr;
 		if ($('#sqlStr').val().trim() != "") {
 			
@@ -78,10 +81,9 @@ document.onkeydown = keyevent;
 			}else{
 			  sqlStr = $('#sqlStr').val().trim();
 			}
-// 		    alert(sqlStr);
 			
 			$('#pager').pagination({
-				pageNumber : 1     //TODO pageNumber也设为用户刚刚选的
+				pageNumber : 1 
 			});
 			
 			showlist(sqlStr);
@@ -180,7 +182,9 @@ function showlist(sqlStr) {
 <body>
 
 	<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<input id="getTab" type="button" value="查询" />
+	<input id="selectBt" type="button" value="查询" />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<input id="modifyBt" type="button" value="更改" />
 	<br><br><br>
 <!-- 
 	<select name="tab0" id="tab0">
@@ -195,7 +199,6 @@ function showlist(sqlStr) {
 <textarea name="sqlStr" id="sqlStr" cols="205" rows="10" placeholder="   -- 请输入sql.可选择运行部分语句;可以按F8查询."></textarea>
 </label>
 <br><br>
-<!-- 	<span class="Red">*</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
 	<p>
 	<div id="result"></div>
 	<textarea id="template" class="template">
