@@ -6,13 +6,13 @@ Bee-Ext
 
 **我们希望通过扩展Bee,提供更多更好用的工具!&nbsp;**
 
-* 1. Web SQL with Bee	
+* 1.Web SQL with Bee	
 
 * 2.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 
 * 3.更快的开发Spring Cloud微服务的新组合：[Bee + Spring Boot](../../../bee-springboot)  
 
-* 4. Bee cache with Redis(doing)	
+* 4.Bee cache with Redis(doing)	
 
 
 **Bee** 网址:  
