@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.teasoft.beeext.websql.sqlexecuter;
+package org.teasoft.beex.websql.sqlexecuter;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

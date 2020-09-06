@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.teasoft.beeext.websql.servlet;
+package org.teasoft.beex.websql.servlet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.teasoft.beeext.websql.sqlexecuter.WebSqlService;
+import org.teasoft.beex.websql.sqlexecuter.WebSqlService;
 
 /**
  * @author Kingstar

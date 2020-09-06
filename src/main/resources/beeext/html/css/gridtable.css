@@ -9,3 +9,11 @@ table.gridtable tr td {
 /* 	height:10px;  不起作用*/
 line-height: 10px;
 }
+
+ th,td {
+ border-width: 0 1px 1px 0;
+  border-style: dotted;
+  margin: 0;
+  padding: 0;
+    border-color: #ccc;
+}
