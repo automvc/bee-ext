@@ -1,22 +1,24 @@
 
 Bee-Ext
 =========
-**Bee** 是一个 Java ORM框架利器, 它的开发速度快, 编码少, 还很简单！       
-**Bee** 是一个具有人工智能(AI)特性，省时/优雅、简易、自动( **AiTea:** Timesaving/Tasteful, Easy, Automatic) 的ORM软件框架(AiTeaSoft)(IT-->AiTea 的思维转变!)。  
+**Bee** is an ORM framework.  **Easy for Stronger.**   
+**Bee** is an easy and high efficiency ORM framework.    
+**Coding Complexity is O(1),it means that Bee will do the Dao for you**.  
 
-**我们希望通过扩展Bee,提供更多更好用的工具!&nbsp;**
+**We hope to provide more and better tools for you via extending Bee!&nbsp;**
 
 * 1.Web SQL with Bee	
 
-* 2.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
+* 2.Compatible with various popular Log frameworks	
 
-* 3.更快的开发Spring Cloud微服务的新组合：[Bee + Spring Boot](../../../bee-springboot)  
+* 3.Bee cache with Redis(doing)	
 
-* 4.Bee cache with Redis(doing)	
+**Others:**	
+* 1.Faster development of new combinations of Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 
+* 2.Faster development of new combinations of Spring Cloud microservices：[Bee + Spring Boot](../../../bee-springboot)  
 
-**Bee** 网址:  
+**Bee** see:  
 https://github.com/automvc/bee  
-
-**Bee在gitee** 的网址:  
-https://gitee.com/automvc/bee
+**Honey** see:  
+https://github.com/automvc/honey  
