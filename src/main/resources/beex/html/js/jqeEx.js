@@ -1,3 +1,5 @@
+//  * Copyright 2016-2020 the original author.All rights reserved. 
+//  * Kingstar(honeysoft@126.com) 
 
 Date.prototype.format = function(format) {
 	var o = {
