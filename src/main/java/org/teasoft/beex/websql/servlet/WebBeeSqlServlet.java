@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2018 the original author.All rights reserved.
+ * Copyright 2016-2020 the original author.All rights reserved.
  * Kingstar(honeysoft@126.com)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,7 +83,7 @@ public class WebBeeSqlServlet extends HttpServlet {
 
 	protected void returnResourceFile(String fileOrPathName, String uri, HttpServletResponse response) throws ServletException, IOException {
 
-		String filePath = "beeext/html" + fileOrPathName;
+		String filePath = "beex/html" + fileOrPathName;
 
 		if (filePath.endsWith(".html")) {
 			response.setContentType("text/html; charset=utf-8");
@@ -101,11 +101,12 @@ public class WebBeeSqlServlet extends HttpServlet {
 
 		if (filePath.endsWith("/index.html")) {
 			text = text.replace("url:\"${path}", "url:\"" + uri);
-		} else if (filePath.endsWith("/list.html")) {
+		} else if (filePath.endsWith("/suid.html")) {
 			text = text.replace("${path}", uri);
-		} else if (filePath.endsWith("/list1.html")) {
-			text = text.replace("${path}", uri);
-		}
+		} 
+//		  else if (filePath.endsWith("/list1.html")) {
+//			text = text.replace("${path}", uri);
+//		}
 
 		response.getWriter().write(text);
 	}
