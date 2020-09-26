@@ -36,9 +36,9 @@ public class Log4jImpl implements Log {
 		log = Logger.getLogger(callerFQCN);
 	}
 
-	public Log4jImpl(String loggerName) {
+	public Log4jImpl(String name) {
 		callerFQCN = Log4jImpl.class.getName();
-		log = Logger.getLogger(loggerName);
+		log = Logger.getLogger(name);
 	}
 
 	public Logger getLog() {

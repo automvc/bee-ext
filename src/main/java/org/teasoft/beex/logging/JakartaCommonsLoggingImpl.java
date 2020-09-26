@@ -28,8 +28,8 @@ public class JakartaCommonsLoggingImpl implements org.teasoft.bee.logging.Log {
 
 	private Log log;
 
-	public JakartaCommonsLoggingImpl(String loggerName) {
-		log = LogFactory.getLog(loggerName);
+	public JakartaCommonsLoggingImpl(String name) {
+		log = LogFactory.getLog(name);
 	}
 
 	@Override

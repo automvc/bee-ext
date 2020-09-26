@@ -29,8 +29,8 @@ public class Log4j2Impl implements Log {
 
 	private Logger log;
 
-	public Log4j2Impl(String loggerName) {
-		log = LogManager.getLogger(loggerName);
+	public Log4j2Impl(String name) {
+		log = LogManager.getLogger(name);
 	}
 
 	@Override
