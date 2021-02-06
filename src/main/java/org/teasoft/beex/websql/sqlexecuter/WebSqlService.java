@@ -74,7 +74,8 @@ public class WebSqlService {
 			msg = "{\"total\":" + count + ",\"rows\":" + r + "}";
 
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+//			System.err.println(e.getMessage());
+			Logger.error(e.getMessage());
 			msg = "{\"error\":" + e.getMessage() + "}";
 		}
 		return msg;

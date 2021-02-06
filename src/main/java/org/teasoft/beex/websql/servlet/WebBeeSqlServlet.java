@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.teasoft.beex.websql.sqlexecuter.WebSqlService;
+import org.teasoft.honey.osql.core.Logger;
 
 /**
  * @author Kingstar
@@ -58,7 +59,7 @@ public class WebBeeSqlServlet extends HttpServlet {
 			
 			sqlStr=WebSqlService.filterSql(sqlStr);
 
-			System.err.println(sqlStr);
+//			System.err.println(sqlStr);
 			String pageStr = request.getParameter("page");
 			String rowsStr = request.getParameter("rows");
 			int page, rows;
@@ -129,7 +130,7 @@ public class WebBeeSqlServlet extends HttpServlet {
 			try {
 				if (in != null) in.close();
 			} catch (Exception e) {
-				e.printStackTrace();
+				Logger.error(e.getMessage());
 			}
 		}
 	}
