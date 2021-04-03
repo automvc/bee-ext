@@ -249,7 +249,7 @@ public class ExcelReader {
 	private static List<String[]> getListBySheet(Sheet sheet, int startRow, int endRow) throws Exception{
 		List<String[]> list = new ArrayList<>();
 		int rows = sheet.getLastRowNum(); //最后的行号,不是总行数.     如何判断是无数据的空行???  TODO
-//		int rows = sheet.getPhysicalNumberOfRows();// 获取表格的总行数
+//		int rows = sheet.getPhysicalNumberOfRows();
 		int columns = 0;
 		String[] colStr = null;
 
