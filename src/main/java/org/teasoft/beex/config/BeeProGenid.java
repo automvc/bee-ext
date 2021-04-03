@@ -27,7 +27,7 @@ public class BeeProGenid {
 	private Integer workerid;
 	private Integer generatorType;
 	private Boolean forAllTableLongId;
-	private Boolean replaceOldValue; 
+	private Boolean replaceOldId; 
 	private String includesEntityList;
 	private String excludesEntityList;
 
@@ -55,12 +55,12 @@ public class BeeProGenid {
 		this.forAllTableLongId = forAllTableLongId;
 	}
 	
-	public Boolean getReplaceOldValue() {
-		return replaceOldValue;
+	public Boolean getReplaceOldId() {
+		return replaceOldId;
 	}
 
-	public void setReplaceOldValue(Boolean replaceOldValue) {
-		this.replaceOldValue = replaceOldValue;
+	public void setReplaceOldId(Boolean replaceOldId) {
+		this.replaceOldId = replaceOldId;
 	}
 
 	public String getIncludesEntityList() {
