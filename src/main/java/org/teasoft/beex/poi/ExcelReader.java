@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.Cell;
@@ -273,54 +272,26 @@ public class ExcelReader {
 		return list;
 	}
 	
-	/*private static List<String[]> getListBySheet(Sheet sheet){
-	List<String[]> list = new ArrayList<>();
-//		int rows = sheet.getPhysicalNumberOfRows();// 获取表格的总行数
-	int rows = sheet.getLastRowNum();  //这个较正确,最后一行,合并的,不会计算
-	int columns = 0;
-	// 在第一行标题行计算出列数量,因为数据行中可能会有空值
-//		columns = sheet.getRow(0).getLastCellNum();  //要是有两行标题,就会有问题.
-
-	String[] colStr = null;
-
-	for (int r = 0; r < rows; r++) { // 循环遍历表格的行
-		Row row = sheet.getRow(r); // 获取单元格中指定的行对象
-		if (row != null) {
-			columns=row.getLastCellNum();
-			colStr = new String[columns];
-			for (int c = 0; c < columns; c++) { // 循环遍历行中的单元格
-				Cell cell = row.getCell(c);
-				colStr[c] = trim(getValue(cell));
-			}
-			list.add(colStr);
-		}
-	}
-	return list;
-}*/
-
 	private static String getValue(Cell cell) {
 		if (cell == null) {
 			return null;
 		}
 		 String result = new String();  
-	        switch (cell.getCellType()) {  
-	        case HSSFCell.CELL_TYPE_NUMERIC:// 数字类型  
+//	        switch (cell.getCellType()) {  
+	        switch (cell.getCellTypeEnum()) {  
+	        case NUMERIC :// 数字类型  
 	        	short formatType=cell.getCellStyle().getDataFormat();
-	            if (HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式  
-	                SimpleDateFormat sdf = null;  
-	                if (cell.getCellStyle().getDataFormat() == HSSFDataFormat.getBuiltinFormat("h:mm")) {  
-	                    sdf = new SimpleDateFormat("HH:mm");  
-	                } else {// 日期  
-	                    sdf = new SimpleDateFormat("yyyy/MM/dd");  
-	                }  
-	                Date date = cell.getDateCellValue();  
-	                result = sdf.format(date);  
-				} else if (formatType == 14 || formatType == 31 || formatType == 57 || formatType == 58 || formatType == 20
+//	        	System.out.println(formatType);
+//	        	System.out.println(cell.getCellStyle().getDataFormatString());
+//	        	System.out.println(cell.getStringCellValue());
+					
+				if (formatType == 14 || formatType == 31 || formatType == 57 || formatType == 58 || formatType == 20
 						|| formatType == 32) {
 					// 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)  
 					SimpleDateFormat sdf = null;
 					if (formatType == 14)
-						sdf = new SimpleDateFormat("yyyy-MM-dd");
+//						sdf = new SimpleDateFormat("yyyy-MM-dd");
+					    sdf = new SimpleDateFormat("yyyy/M/dd");
 					else if (formatType == 31)
 						sdf = new SimpleDateFormat("yyyy年MM月dd日");
 					else if (formatType == 57)
@@ -333,27 +304,48 @@ public class ExcelReader {
 						sdf = new SimpleDateFormat("h时mm分");
 					else
 						sdf = new SimpleDateFormat("yyyy-MM-dd");
-//	                yyyy-MM-dd----- 14
 //	                yyyy年m月d日--- 31
 //	                yyyy年m月------- 57
 //	                m月d日  ---------- 58
 //	                HH:mm----------- 20
 //	                h时mm分  ------- 32
+					
 	                double value = cell.getNumericCellValue();
 	                Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);  
 	                result = sdf.format(date);  
-	            } else { 
-	            	
-					/*double value = cell.getNumericCellValue();  
-					CellStyle style = cell.getCellStyle();  
-					DecimalFormat format = new DecimalFormat();  
-					String temp = style.getDataFormatString();  
-					// 单元格设置成常规  
-					if (temp.equals("General")) {  
-					    format.applyPattern("#");  
-					}  
-					result = format.format(value);  */
-	            	
+	                
+				} else if (formatType == 177 ) {
+					SimpleDateFormat sdf = null;
+					sdf = new SimpleDateFormat("yyyy/M/d");
+					Date date = cell.getDateCellValue();
+					result = sdf.format(date);   
+	                
+				} else if (formatType == 178 ) {
+					SimpleDateFormat sdf = null;
+					sdf = new SimpleDateFormat("d-MMM-yy");
+					Date date = cell.getDateCellValue();
+					result = sdf.format(date);
+					
+				} else if ( formatType == 179) {
+					SimpleDateFormat sdf = null;
+					sdf = new SimpleDateFormat("MM/dd/yy");
+					Date date = cell.getDateCellValue();
+					result = sdf.format(date);
+				} else if ( formatType == 180) {
+					SimpleDateFormat sdf = null;
+					sdf = new SimpleDateFormat("yyyy-MM-dd");
+					Date date = cell.getDateCellValue();
+					result = sdf.format(date);
+				} else if (HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式  
+	                SimpleDateFormat sdf = null;  
+	                if (cell.getCellStyle().getDataFormat() == HSSFDataFormat.getBuiltinFormat("h:mm")) {  
+	                    sdf = new SimpleDateFormat("HH:mm");  
+	                } else {// 日期  
+	                    sdf = new SimpleDateFormat("yyyy/MM/dd");  
+	                }  
+	                Date date = cell.getDateCellValue();  
+	                result = sdf.format(date);  
+				} else {
 	    			double cur = cell.getNumericCellValue();
 	    			long longVal = Math.round(cur);
 	    			Object inputValue = null;
@@ -364,12 +356,12 @@ public class ExcelReader {
 	    			result = String.valueOf(inputValue);
 	            }  
 	            break;  
-	        case HSSFCell.CELL_TYPE_STRING:// String类型  
+	        case STRING:// String类型  
 	            result = cell.getRichStringCellValue().toString();  
 	            break;  
-	        case HSSFCell.CELL_TYPE_BLANK:  
+	        case BLANK:  
 	            result = "";  
-	        case HSSFCell.CELL_TYPE_BOOLEAN:
+	        case BOOLEAN:
 				result = String.valueOf(cell.getBooleanCellValue());
 	        default:  
 //	            result = "";  
