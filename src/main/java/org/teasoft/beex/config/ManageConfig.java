@@ -57,7 +57,6 @@ public class ManageConfig {
 	private BeeProShowSQL beeProShowSQL;
 
 	public void updateConfig() {
-		//		Map<String, Object> newConfigMap = new HashMap<>();
 		Map<String, Object> newConfigMap = new LinkedHashMap<>();
 
 		newConfigMap.putAll(process(beePro, false));
@@ -202,8 +201,6 @@ public class ManageConfig {
 
 	public void setBeeProShowSQL(BeeProShowSQL beeProShowSQL) {
 		this.beeProShowSQL = beeProShowSQL;
-		
-//		updateConfig(); //TODO
 	}
 
 }
