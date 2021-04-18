@@ -21,9 +21,9 @@ package org.teasoft.beex.config;
  * @author Kingstar
  * @since  1.9
  */
-public class BeeProShowSQL {
+public class BeeProShowSql {
 
-	// prefix= "showSQL_"
+	// prefix= "showSql_"
 	private Boolean showType;
 
 	private Boolean showExecutableSql;
