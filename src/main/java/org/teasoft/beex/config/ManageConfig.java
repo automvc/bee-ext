@@ -54,7 +54,7 @@ public class ManageConfig {
 
 	private BeeProSelectJson beeProSelectJson;
 
-	private BeeProShowSQL beeProShowSQL;
+	private BeeProShowSql beeProShowSql;
 
 	public void updateConfig() {
 		Map<String, Object> newConfigMap = new LinkedHashMap<>();
@@ -70,7 +70,7 @@ public class ManageConfig {
 		newConfigMap.putAll(process(beeProPearFlowerId));
 		newConfigMap.putAll(process(beeProReturnStringList));
 		newConfigMap.putAll(process(beeProSelectJson));
-		newConfigMap.putAll(process(beeProShowSQL));
+		newConfigMap.putAll(process(beeProShowSql));
 
 //		Logger.info("[Bee] new config: "+newConfigMap);
 		HoneyContext.updateConfig(newConfigMap);  
@@ -195,12 +195,12 @@ public class ManageConfig {
 		this.beeProSelectJson = beeProSelectJson;
 	}
 
-	public BeeProShowSQL getBeeProShowSQL() {
-		return beeProShowSQL;
+	public BeeProShowSql getBeeProShowSql() {
+		return beeProShowSql;
 	}
 
-	public void setBeeProShowSQL(BeeProShowSQL beeProShowSQL) {
-		this.beeProShowSQL = beeProShowSQL;
+	public void setBeeProShowSql(BeeProShowSql beeProShowSql) {
+		this.beeProShowSql = beeProShowSql;
 	}
 
 }
