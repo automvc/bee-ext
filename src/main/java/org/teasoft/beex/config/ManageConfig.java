@@ -28,7 +28,7 @@ import org.teasoft.honey.osql.name.NameUtil;
 
 /**
  * 收集Spring Boot配置文件设置的属性.
- * 属性对应Javabean要用包装类型.若为null,表示没有更改,则不收集.
+ * Javabean的属性要用包装类型.若为null,表示没有更改,则不收集.
  * @author Kingstar
  * @since  1.9
  */
