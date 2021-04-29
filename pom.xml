@@ -31,12 +31,14 @@
 			<scope>provided</scope>
 		</dependency>
 
+        <!-- log4j -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 			<scope>provided</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -78,16 +80,19 @@
 			<version>1.1.7</version>
 			<scope>provided</scope>
 		</dependency>
+		
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>3.17</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>3.17</version>
+			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>
@@ -99,8 +104,8 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.0.0</version>
 			</plugin>
-			
-						<!--配置生成源码包 -->
+
+			<!--config source -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
