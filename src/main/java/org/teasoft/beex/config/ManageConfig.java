@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.name.NameUtil;
@@ -108,8 +109,8 @@ public class ManageConfig {
 					newConfigMap.put(modeFix + fields[i].getName(), fields[i].get(propObject));
 				}
 
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				throw ExceptionHelper.convert(e);
 			}
 		}
 		return newConfigMap;

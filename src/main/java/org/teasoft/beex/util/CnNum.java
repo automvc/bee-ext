@@ -63,7 +63,6 @@ public class CnNum {
 	
 	private static String tranToUpper(double num,boolean isUpperNum) {
 		String d1=num+"";
-		System.err.println(d1);
 		int index=d1.indexOf(".");
 		String s1;
 		String s2;
