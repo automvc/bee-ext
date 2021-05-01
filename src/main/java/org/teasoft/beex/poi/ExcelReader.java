@@ -378,8 +378,10 @@ public class ExcelReader {
 				break;
 			case BLANK:
 				result = "";
+				break;
 			case BOOLEAN:
 				result = String.valueOf(cell.getBooleanCellValue());
+				break;
 			default:
 				//	            result = "";  
 				result = cell.getStringCellValue();
