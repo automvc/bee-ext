@@ -1,7 +1,18 @@
 /*
  * Copyright 2016-2021 the original author.All rights reserved.
  * Kingstar(honeysoft@126.com)
- * The license,see the LICENSE file.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teasoft.beex.util;
@@ -45,6 +56,8 @@ public class CnNum {
 		numUpperMap.put("9", "玖");
 	}
 	
+	private CnNum() {}
+	
 	public static String tran(long num) {
 		return tran(num+"",false);
 	}
@@ -63,7 +76,7 @@ public class CnNum {
 	
 	private static String tranToUpper(double num,boolean isUpperNum) {
 		String d1=num+"";
-		int index=d1.indexOf(".");
+		int index=d1.indexOf('.');
 		String s1;
 		String s2;
 		if(index>-1) {
@@ -155,42 +168,44 @@ public class CnNum {
 		return sbu.toString();
 	}
 	
-//	public static void main(String[] args) {
-//		System.out.println(tran(1100));
-//		System.out.println(tran(1001));
-//		System.out.println(tran(20030));
-//		System.out.println(tran(500005));
-//		System.out.println(tran(500305));
-//		
-//		
-//		System.out.println(tranToUpper(1100));
-//		System.out.println(tranToUpper(1001));
-//		System.out.println(tranToUpper(20030));
-//		System.out.println(tranToUpper(500005));
-//		System.out.println(tranToUpper(500305));
-//		
-//		System.out.println("======================");
-//		
-//		System.out.println(tranToUpper(500305D));
-//		System.out.println(tranToUpper(500305.23D));
-//		System.out.println(tranToUpper(500305.123D));
-//		
-//		System.out.println(tran(500305.23D));
-//		System.out.println(tran(5003050.234D));
-//		
-//		System.out.println("======================");
-//		System.out.println(tran(1004));
-//		System.out.println(tran(2046));
-//		System.out.println(tran(2932));
-//		System.out.println(tran(9040));
-//		System.out.println(tran(1001));
-//		System.out.println(tran(327));
-//		System.out.println(tran(8052));
-//		System.out.println(tran(1503));
-//		System.out.println(tran(1100));
-//		System.out.println(tran(2500));
-//		System.out.println(tran(970));
-//		System.out.println(tran(1900));
-//	}
+/*	
+	public static void main(String[] args) {
+		System.out.println(tran(1100));
+		System.out.println(tran(1001));
+		System.out.println(tran(20030));
+		System.out.println(tran(500005));
+		System.out.println(tran(500305));
+		
+		
+		System.out.println(tranToUpper(1100));
+		System.out.println(tranToUpper(1001));
+		System.out.println(tranToUpper(20030));
+		System.out.println(tranToUpper(500005));
+		System.out.println(tranToUpper(500305));
+		
+		System.out.println("======================");
+		
+		System.out.println(tranToUpper(500305D));
+		System.out.println(tranToUpper(500305.23D));
+		System.out.println(tranToUpper(500305.123D));
+		
+		System.out.println(tran(500305.23D));
+		System.out.println(tran(5003050.234D));
+		
+		System.out.println("======================");
+		System.out.println(tran(1004));
+		System.out.println(tran(2046));
+		System.out.println(tran(2932));
+		System.out.println(tran(9040));
+		System.out.println(tran(1001));
+		System.out.println(tran(327));
+		System.out.println(tran(8052));
+		System.out.println(tran(1503));
+		System.out.println(tran(1100));
+		System.out.println(tran(2500));
+		System.out.println(tran(970));
+		System.out.println(tran(1900));
+	}
+	*/
 
 }

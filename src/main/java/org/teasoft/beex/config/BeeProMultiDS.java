@@ -33,7 +33,7 @@ public class BeeProMultiDS {
 	private String matchEntityClassPath; //multiDsType=2
 	private String matchTable; //multiDsType=2
 	//	支持同时使用多种类型数据库的数据源.support different type muli-Ds at same time.
-	public Boolean differentDbType;
+	private Boolean differentDbType;
 
 	public Boolean getEnable() {
 		return enable;

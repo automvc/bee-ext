@@ -1,12 +1,25 @@
-package org.teasoft.beex.poi;
 /*
  * Copyright 2016-2021 the original author.All rights reserved.
- * Kingstar(aiteasoft@126.com)
- * The license,see the LICENSE file.
+ * Kingstar(honeysoft@126.com)
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
+package org.teasoft.beex.poi;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,8 +44,8 @@ import org.teasoft.honey.util.StringUtils;
  * @author Kingstar
  */
 public class ExcelReader {
-
-	public ExcelReader() {}
+	
+	private ExcelReader() {}
 
 	/**
 	 * 返回首个Excel sheet的所有行.Returns all rows of the first Excel sheet.
@@ -193,16 +206,15 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws Exception
 	 */
-	public static List<String[]> checkAndReadExcel(InputStream inputStream, String hopeTitleArray[], int titleRow) {
+	public static List<String[]> checkAndReadExcel(InputStream inputStream, String hopeTitleArray[],
+			int titleRow) {
 		Sheet sheet = getSheet(inputStream);
 
 		List<String[]> list = getListBySheet(sheet, 0, titleRow);
 
-		if (list != null) {
-			if (titleRow > (list.size() - 1)) {
-				Logger.warn("The title line number is greater than the maximum data line number!");
-				return null;
-			}
+		if (titleRow > (list.size() - 1)) {
+			Logger.warn("The title line number is greater than the maximum data line number!");
+			return null;
 		}
 
 		String msg = checkTitle(hopeTitleArray, list.get(titleRow));
@@ -211,7 +223,7 @@ public class ExcelReader {
 			if (msg.startsWith("Warn:")) {
 				Logger.warn(msg);
 			} else {
-				Logger.warn("Title wrong line: " + msg);
+				Logger.warn("Title wrong number is (start from 0): " + msg);
 			}
 
 			return null;
@@ -225,7 +237,7 @@ public class ExcelReader {
 	}
 
 	private static Sheet getSheet(InputStream inputStream, int sheetIndex) {
-		Workbook workbook;
+		Workbook workbook = null;
 		Sheet sheet = null;
 		try {
 			workbook = WorkbookFactory.create(inputStream);
@@ -233,12 +245,19 @@ public class ExcelReader {
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
 			throw ExceptionHelper.convert(e);
+		} finally {
+			try {
+				if (workbook != null) workbook.close();
+			} catch (IOException e2) {
+				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
+			}
+
 		}
 		return sheet;
 	}
 
 	private static Sheet getSheet(InputStream inputStream, String sheetName) {
-		Workbook workbook;
+		Workbook workbook = null;
 		Sheet sheet = null;
 		try {
 			workbook = WorkbookFactory.create(inputStream);
@@ -246,6 +265,13 @@ public class ExcelReader {
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
 			throw ExceptionHelper.convert(e);
+		} finally {
+			try {
+				if (workbook != null) workbook.close();
+			} catch (IOException e2) {
+				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
+			}
+
 		}
 
 		return sheet;
@@ -264,7 +290,8 @@ public class ExcelReader {
 	 */
 	private static List<String[]> getListBySheet(Sheet sheet, int startRow, int endRow) {
 		List<String[]> list = new ArrayList<>();
-		int rows = sheet.getLastRowNum(); //最后的行号,不是总行数.     如何判断是无数据的空行???  TODO
+		if(sheet==null) return list;
+		int rows = sheet.getLastRowNum(); //最后的行号,不是总行数.     如何判断是无数据的空行???  
 		//		int rows = sheet.getPhysicalNumberOfRows();
 		int columns = 0;
 		String[] colStr = null;
@@ -273,6 +300,7 @@ public class ExcelReader {
 		if (startRow > endRow) {
 			throw new BeeIllegalBusinessException("endRow need less than startRow!");
 		}
+		if (endRow > rows) endRow = rows;
 
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
 			Row row = sheet.getRow(r); // 获取单元格中指定的行对象
@@ -284,6 +312,8 @@ public class ExcelReader {
 					colStr[c] = trim(getValue(cell));
 				}
 				list.add(colStr);
+			}else {
+				list.add(new String[] {""}); // 空行
 			}
 		}
 		return list;
@@ -293,7 +323,7 @@ public class ExcelReader {
 		if (cell == null) {
 			return null;
 		}
-		String result = new String();
+		String result="";
 		//	        switch (cell.getCellType()) {  
 		switch (cell.getCellTypeEnum()) {
 			case NUMERIC:// 数字类型  
@@ -401,13 +431,13 @@ public class ExcelReader {
 		if (hopeTitleArray.length != excelTitle.length) {
 			return "Warn: the length of hopeTitleArray and excelTitle are diffenent!";
 		}
-		String msg = "";
+		StringBuilder msg = new StringBuilder();
 		for (int i = 0; i < hopeTitleArray.length; i++) {
 			if (!hopeTitleArray[i].trim().equals(excelTitle[i].trim())) {
-				msg += i + " ,";
+				msg.append(i).append(" ,");
 			}
 		}
-		return msg;
+		return msg.toString();
 	}
 
 }
