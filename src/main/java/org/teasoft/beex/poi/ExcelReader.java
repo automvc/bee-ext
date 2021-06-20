@@ -294,11 +294,19 @@ public class ExcelReader {
 			throw new BeeIllegalBusinessException("endRow need less than startRow!");
 		}
 		if (endRow > rows) endRow = rows;
-
+		
+		//从前三行中获取最大列数. 标题不应该超过第三行
+		int c1=sheet.getRow(startRow).getLastCellNum();
+		int c2=0;
+		int c3=0;
+		if(startRow+1<=endRow) c2=sheet.getRow(startRow).getLastCellNum();
+		if(startRow+2<=endRow) c3=sheet.getRow(startRow).getLastCellNum();
+		
+		columns=getMaxColumn(c1,c2,c3);
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
 			Row row = sheet.getRow(r); // 获取单元格中指定的行对象
 			if (row != null) {
-				columns = row.getLastCellNum();
+//				columns = row.getLastCellNum();
 				colStr = new String[columns];
 				for (int c = 0; c < columns; c++) { // 循环遍历行中的单元格
 					Cell cell = row.getCell(c);
@@ -310,6 +318,13 @@ public class ExcelReader {
 			}
 		}
 		return list;
+	}
+	
+	private static int getMaxColumn(int c1,int c2,int c3) {
+		int max=c1;
+		if(c2>max) max=c2;
+		if(c3>max) max=c3;
+		return max;
 	}
 
 	private static String getValue(Cell cell) {
