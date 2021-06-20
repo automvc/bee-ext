@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teasoft</groupId>
 	<artifactId>bee-ext</artifactId>
-	<version>1.9.5</version>
+	<version>1.9.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>bee-ext</name>
 
@@ -12,7 +12,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
-		<bee.version>1.9.5</bee.version>
+		<bee.version>1.9.8-SNAPSHOT</bee.version>
 	</properties>
 
 	<dependencies>
