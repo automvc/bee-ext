@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.1.7</version>
+			<version>1.2.3</version>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -93,6 +93,12 @@
 			<artifactId>poi-ooxml</artifactId>
 			<version>3.17</version>
 			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.9.10.7</version>
 		</dependency>
 
 	</dependencies>
