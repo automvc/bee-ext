@@ -28,6 +28,7 @@ public class BeeProSelectJson {
 	private Boolean timestampWithMillisecond;
 	private Boolean dateWithMillisecond;
 	private Boolean timeWithMillisecond;
+	private Boolean longToString;
 
 	public Boolean getIgnoreNull() {
 		return ignoreNull;
@@ -59,6 +60,14 @@ public class BeeProSelectJson {
 
 	public void setTimeWithMillisecond(Boolean timeWithMillisecond) {
 		this.timeWithMillisecond = timeWithMillisecond;
+	}
+
+	public Boolean getLongToString() {
+		return longToString;
+	}
+
+	public void setLongToString(Boolean longToString) {
+		this.longToString = longToString;
 	}
 
 }
