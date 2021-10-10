@@ -24,6 +24,8 @@ package org.teasoft.beex.config;
 public class BeePro {
 
 	private String loggerType; //v1.8
+	
+	private String sqlLoggerLevel; //v1.9.8
 
 	private Boolean logDonotPrintLevel;
 
@@ -45,6 +47,14 @@ public class BeePro {
 
 	public void setLoggerType(String loggerType) {
 		this.loggerType = loggerType;
+	}
+	
+	public String getSqlLoggerLevel() {
+		return sqlLoggerLevel;
+	}
+
+	public void setSqlLoggerLevel(String sqlLoggerLevel) {
+		this.sqlLoggerLevel = sqlLoggerLevel;
 	}
 
 	public Boolean getLogDonotPrintLevel() {
