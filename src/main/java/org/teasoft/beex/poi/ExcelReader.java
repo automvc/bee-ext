@@ -295,12 +295,12 @@ public class ExcelReader {
 		}
 		if (endRow > rows) endRow = rows;
 		
-		//从前三行中获取最大列数. 标题不应该超过第三行
+		//从前三行(从startRow开始)中获取最大列数. 
 		int c1=sheet.getRow(startRow).getLastCellNum();
 		int c2=0;
 		int c3=0;
-		if(startRow+1<=endRow) c2=sheet.getRow(startRow).getLastCellNum();
-		if(startRow+2<=endRow) c3=sheet.getRow(startRow).getLastCellNum();
+		if(startRow+1<=endRow) c2=sheet.getRow(startRow+1).getLastCellNum();
+		if(startRow+2<=endRow) c3=sheet.getRow(startRow+2).getLastCellNum();
 		
 		columns=getMaxColumn(c1,c2,c3);
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
