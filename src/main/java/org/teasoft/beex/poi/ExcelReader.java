@@ -355,10 +355,11 @@ public class ExcelReader {
 						sdf = new SimpleDateFormat("M月d日");
 					else if (formatType == 20)
 						sdf = new SimpleDateFormat("HH:mm");
-					else if (formatType == 32)
+//					else if (formatType == 32)
+					else   //32
 						sdf = new SimpleDateFormat("h时mm分");
-					else
-						sdf = new SimpleDateFormat("yyyy-MM-dd");
+//					else
+//						sdf = new SimpleDateFormat("yyyy-MM-dd");
 					//	                yyyy年m月d日--- 31
 					//	                yyyy年m月------- 57
 					//	                m月d日  ---------- 58
