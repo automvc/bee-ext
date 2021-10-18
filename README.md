@@ -16,7 +16,9 @@ Bee-Ext
 
 * 4.Support Chinese Upper Number and Upper Money Number 
 
-* 5.Bee cache with Redis(doing)	
+* 5.support to generate SQL Json Script	
+
+* 6.Bee cache with Redis(doing)	
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  

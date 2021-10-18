@@ -15,7 +15,9 @@ Bee-Ext
 
 * 4.支持中文数字大写和金额数字大写	
 
-* 5.Bee基于Redis的缓存(doing)		
+* 5.支持生成Json格式的SQL脚本(SQL Json Script)	
+
+* 6.Bee基于Redis的缓存(doing)		
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
