@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class SqlJsonScript {
 
-	public String tableJsonScript(String tableName) throws JsonProcessingException, IOException {
+	public static String tableJsonScript(String tableName) throws JsonProcessingException, IOException {
 
 		List<ColumnBean> list = ColumnUtil.getColumnList(tableName);
 

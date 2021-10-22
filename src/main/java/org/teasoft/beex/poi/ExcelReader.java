@@ -336,9 +336,6 @@ public class ExcelReader {
 		switch (cell.getCellTypeEnum()) {
 			case NUMERIC:// 数字类型  
 				short formatType = cell.getCellStyle().getDataFormat();
-				//	        	System.out.println(formatType);
-				//	        	System.out.println(cell.getCellStyle().getDataFormatString());
-				//	        	System.out.println(cell.getStringCellValue());
 
 				if (formatType == 14 || formatType == 31 || formatType == 57 || formatType == 58 || formatType == 20
 						|| formatType == 32) {
