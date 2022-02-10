@@ -11,7 +11,6 @@ import org.teasoft.bee.osql.Serializer;
 import org.teasoft.honey.osql.core.DefaultBeeExtCache;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.JdkSerializer;
-import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 import redis.clients.jedis.Jedis;
@@ -28,8 +27,10 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	Jedis jedis;
 	Serializer serializer;
 
-	private static final String id = "_SYS_BEE_REDIS_CACHE";
-	private static final byte[] idBytes = id.getBytes();
+	private static final String field = "Bee";
+	private static final byte[] fieldBytes = field.getBytes();
+	
+	private static final int timeout=HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
 
 	public BeeExtRedisCache() {
 		initRedis();
@@ -71,17 +72,19 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 
 	@Override
 	public Object getInExtCache(String key) {
-		return getSerializer().unserialize(getJedis().hget(idBytes, key.toString().getBytes()));
+		return getSerializer().unserialize(getJedis().hget(key.toString().getBytes(),fieldBytes));
 	}
 
 	@Override
 	public void addInExtCache(String key, Object result) {
-		getJedis().hset(idBytes, key.toString().getBytes(), getSerializer().serialize(result));
+		Jedis jedis=getJedis();
+		jedis.hset(key.toString().getBytes(),fieldBytes,getSerializer().serialize(result));
+		jedis.expire(key.toString().getBytes(), timeout);
 	}
 
 	@Override
 	public void clearInExtCache(String key) {
-		getJedis().hdel(id, key);
+		getJedis().hdel(key,field);
 	}
 
 	public JedisPool getJedisPool() {
