@@ -56,12 +56,16 @@ public class ManageConfig {
 	private BeeProSelectJson beeProSelectJson;
 
 	private BeeProShowSql beeProShowSql;
+	
+	//V1.11
+	private BeeProCacheRedis beeProCacheRedis;
 
 	public void updateConfig() {
 		Map<String, Object> newConfigMap = new LinkedHashMap<>();
 
 		newConfigMap.putAll(process(beePro, false));
 		newConfigMap.putAll(process(beeProCache));
+		newConfigMap.putAll(process(beeProCacheRedis)); //V1.11
 		newConfigMap.putAll(process(beeProDb, false));
 
 		newConfigMap.putAll(process(beeProGenid));
@@ -202,6 +206,14 @@ public class ManageConfig {
 
 	public void setBeeProShowSql(BeeProShowSql beeProShowSql) {
 		this.beeProShowSql = beeProShowSql;
+	}
+
+	public BeeProCacheRedis getBeeProCacheRedis() {
+		return beeProCacheRedis;
+	}
+
+	public void setBeeProCacheRedis(BeeProCacheRedis beeProCacheRedis) {
+		this.beeProCacheRedis = beeProCacheRedis;
 	}
 
 }
