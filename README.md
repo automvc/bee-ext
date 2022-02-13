@@ -18,7 +18,7 @@ Bee-Ext
 
 * 5.support to generate SQL Json Script	
 
-* 6.Bee cache with Redis(doing)	
+* 6.Bee cache with Redis 
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
