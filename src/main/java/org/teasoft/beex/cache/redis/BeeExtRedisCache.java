@@ -23,9 +23,9 @@ import redis.clients.jedis.Protocol;
  */
 public class BeeExtRedisCache extends DefaultBeeExtCache {
 
-	JedisPool jedisPool;
-	Jedis jedis;
-	Serializer serializer;
+	private JedisPool jedisPool;
+	private Jedis jedis;
+	private Serializer serializer;
 
 	private static final String field = "Bee";
 	private static final byte[] fieldBytes = field.getBytes();
