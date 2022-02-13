@@ -28,6 +28,8 @@ public class BeeProDb {
 	private String url;
 	private String username;
 	private String password;
+	private Boolean jndiType;
+	private String jndiName;
 
 	public String getDbName() {
 		return dbName;
@@ -67,6 +69,22 @@ public class BeeProDb {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public Boolean getJndiType() {
+		return jndiType;
+	}
+
+	public void setJndiType(Boolean jndiType) {
+		this.jndiType = jndiType;
+	}
+
+	public String getJndiName() {
+		return jndiName;
+	}
+
+	public void setJndiName(String jndiName) {
+		this.jndiName = jndiName;
 	}
 
 }
