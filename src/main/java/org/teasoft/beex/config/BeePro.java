@@ -40,6 +40,8 @@ public class BeePro {
 	private Integer insertBatchSize;
 
 	private Boolean showSQL;
+	
+	private String lang;
 
 	public String getLoggerType() {
 		return loggerType;
@@ -113,5 +115,12 @@ public class BeePro {
 		this.showSQL = showSQL;
 	}
 
+	public String getLang() {
+		return lang;
+	}
+
+	public void setLang(String lang) {
+		this.lang = lang;
+	}
 
 }
