@@ -56,7 +56,7 @@ public class ManageConfig {
 	private BeeProSelectJson beeProSelectJson;
 
 	private BeeProShowSql beeProShowSql;
-	
+
 	//V1.11
 	private BeeProCacheRedis beeProCacheRedis;
 
@@ -78,8 +78,8 @@ public class ManageConfig {
 		newConfigMap.putAll(process(beeProShowSql));
 
 //		Logger.info("[Bee] new config: "+newConfigMap);
-		HoneyContext.updateConfig(newConfigMap);  
-		Logger.info("[Bee] new config: "+newConfigMap);  //更新后再用日志,否则用不了新的信息.
+		HoneyContext.updateConfig(newConfigMap);
+		Logger.info("[Bee] new config: " + newConfigMap); //更新后再用日志,否则用不了新的信息.
 	}
 
 	private Map<String, Object> process(Object propObject) {
@@ -88,31 +88,28 @@ public class ManageConfig {
 	}
 
 	private Map<String, Object> process(Object propObject, boolean isNeedPrefix) {
-		
+
 		Map<String, Object> newConfigMap = new HashMap<>();
-		
-        if(propObject==null)  {
-        	Logger.warn(" propObject is null! ");
-        	return newConfigMap;
-        }
-        
+
+		if (propObject == null) {
+			Logger.warn(" propObject is null! ");
+			return newConfigMap;
+		}
+
 		Field fields[] = propObject.getClass().getDeclaredFields();
 		String modeFix = "";
 		if (isNeedPrefix) {
-			modeFix = NameUtil.firstLetterToLowerCase(propObject.getClass().getSimpleName().substring(6)) + "_";
+			modeFix = NameUtil.firstLetterToLowerCase(propObject.getClass().getSimpleName().substring(6))
+					+ "_";
 		}
 
 		int len = fields.length;
 		for (int i = 0; i < len; i++) {
 			try {
 				fields[i].setAccessible(true);
-
-				if (fields[i].get(propObject) == null || fields[i].isSynthetic()) {
-					continue;
-				} else {
+				if (!(fields[i].get(propObject) == null || fields[i].isSynthetic())) {
 					newConfigMap.put(modeFix + fields[i].getName(), fields[i].get(propObject));
 				}
-
 			} catch (IllegalAccessException e) {
 				throw ExceptionHelper.convert(e);
 			}

@@ -42,11 +42,9 @@ public class Slf4jImpl implements Log {
 				logger.getClass().getMethod("log", Marker.class, String.class, int.class, String.class, Object[].class, Throwable.class);
 				log = new Slf4jLocationAwareLoggerImpl((LocationAwareLogger) logger, true);
 				return;
-			} catch (SecurityException e) {
-
-			} catch (NoSuchMethodException e) {
-
-			}
+			} catch (SecurityException | NoSuchMethodException e) {
+                //do nothing
+			} 
 		}
 
 		log = new Slf4jLoggerImpl(logger);
@@ -61,14 +59,10 @@ public class Slf4jImpl implements Log {
 				logger.getClass().getMethod("log", Marker.class, String.class, int.class, String.class, Object[].class, Throwable.class);
 				log = new Slf4jLocationAwareLoggerImpl((LocationAwareLogger) logger, false);
 				return;
-			} catch (SecurityException e) {
-
-			} catch (NoSuchMethodException e) {
-
-			}
-
+			} catch (SecurityException | NoSuchMethodException e) {
+				//do nothing
+			} 
 		}
-
 		// Logger is not LocationAwareLogger or slf4j version < 1.6
 		log = new Slf4jLoggerImpl(logger);
 	}

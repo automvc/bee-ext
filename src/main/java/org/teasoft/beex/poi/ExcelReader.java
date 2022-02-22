@@ -150,7 +150,7 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws FileNotFoundException
 	 */
-	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitleArray[]) throws FileNotFoundException {
+	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray) throws FileNotFoundException {
 		return checkAndReadExcel(fullPath, hopeTitleArray, 0); //默认标题在第0行.
 	}
 
@@ -163,7 +163,7 @@ public class ExcelReader {
 	 * @throws FileNotFoundException
 	 */
 	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitles, int titleRow) throws FileNotFoundException {
-		String hopeTitleArray[] = hopeTitles.split(",");
+		String[] hopeTitleArray = hopeTitles.split(",");
 		return checkAndReadExcel(new FileInputStream(fullPath), hopeTitleArray, titleRow);
 	}
 
@@ -175,7 +175,7 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws FileNotFoundException
 	 */
-	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitleArray[], int titleRow)
+	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray, int titleRow)
 			throws FileNotFoundException {
 		return checkAndReadExcel(new FileInputStream(fullPath), hopeTitleArray, titleRow);
 	}
@@ -188,7 +188,7 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 */
 	public static List<String[]> checkAndReadExcel(InputStream inputStream, String hopeTitles, int titleRow) {
-		String hopeTitleArray[] = hopeTitles.split(",");
+		String[] hopeTitleArray = hopeTitles.split(",");
 		return checkAndReadExcel(inputStream, hopeTitleArray, titleRow);
 	}
 
@@ -199,7 +199,7 @@ public class ExcelReader {
 	 * @param titleRow 标题所在行(首行为0). line number of title row(start from 0)
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 */
-	public static List<String[]> checkAndReadExcel(InputStream inputStream, String hopeTitleArray[],
+	public static List<String[]> checkAndReadExcel(InputStream inputStream, String[] hopeTitleArray,
 			int titleRow) {
 		Sheet sheet = getSheet(inputStream);
 
@@ -285,7 +285,6 @@ public class ExcelReader {
 		List<String[]> list = new ArrayList<>();
 		if(sheet==null) return list;
 		int rows = sheet.getLastRowNum(); //最后的行号,不是总行数.     如何判断是无数据的空行???  
-		//		int rows = sheet.getPhysicalNumberOfRows();
 		int columns = 0;
 		String[] colStr = null;
 
@@ -306,7 +305,6 @@ public class ExcelReader {
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
 			Row row = sheet.getRow(r); // 获取单元格中指定的行对象
 			if (row != null) {
-//				columns = row.getLastCellNum();
 				colStr = new String[columns];
 				for (int c = 0; c < columns; c++) { // 循环遍历行中的单元格
 					Cell cell = row.getCell(c);
@@ -332,7 +330,6 @@ public class ExcelReader {
 			return null;
 		}
 		String result="";
-		//	        switch (cell.getCellType()) {  
 		switch (cell.getCellTypeEnum()) {
 			case NUMERIC:// 数字类型  
 				short formatType = cell.getCellStyle().getDataFormat();
@@ -342,7 +339,6 @@ public class ExcelReader {
 					// 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)  
 					SimpleDateFormat sdf = null;
 					if (formatType == 14)
-						//						sdf = new SimpleDateFormat("yyyy-MM-dd");
 						sdf = new SimpleDateFormat("yyyy/M/dd");
 					else if (formatType == 31)
 						sdf = new SimpleDateFormat("yyyy年MM月dd日");
@@ -352,17 +348,8 @@ public class ExcelReader {
 						sdf = new SimpleDateFormat("M月d日");
 					else if (formatType == 20)
 						sdf = new SimpleDateFormat("HH:mm");
-//					else if (formatType == 32)
 					else   //32
 						sdf = new SimpleDateFormat("h时mm分");
-//					else
-//						sdf = new SimpleDateFormat("yyyy-MM-dd");
-					//	                yyyy年m月d日--- 31
-					//	                yyyy年m月------- 57
-					//	                m月d日  ---------- 58
-					//	                HH:mm----------- 20
-					//	                h时mm分  ------- 32
-
 					double value = cell.getNumericCellValue();
 					Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);
 					result = sdf.format(date);
@@ -419,7 +406,6 @@ public class ExcelReader {
 				result = String.valueOf(cell.getBooleanCellValue());
 				break;
 			default:
-				//	            result = "";  
 				result = cell.getStringCellValue();
 				break;
 		}
@@ -431,7 +417,7 @@ public class ExcelReader {
 		return str.trim();
 	}
 
-	public static String checkTitle(String hopeTitleArray[], String excelTitle[]) {
+	public static String checkTitle(String[] hopeTitleArray, String[] excelTitle) {
 		if (StringUtils.isEmpty(hopeTitleArray) || StringUtils.isEmpty(excelTitle))
 			return "Warn: hopeTitleArray or excelTitle is empty!";
 		if (hopeTitleArray.length != excelTitle.length) {

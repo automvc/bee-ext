@@ -26,9 +26,9 @@ import java.util.Map;
  */
 public class CnNum {
 	
-	private static String uint[]= {"","十","百","千","万","十万","百万","千万","亿","十亿","百亿","千亿"};
-	private static String upperUint[]= {"","拾","佰","仟","万","拾万","百万","仟万","亿","拾亿","百亿","仟亿"};//"","拾","佰","仟"
-	private static String upperDecimalUint[]= {"角","分","厘","","",""};
+	private static String[] uint= {"","十","百","千","万","十万","百万","千万","亿","十亿","百亿","千亿"};
+	private static String[] upperUint= {"","拾","佰","仟","万","拾万","百万","仟万","亿","拾亿","百亿","仟亿"};//"","拾","佰","仟"
+	private static String[] upperDecimalUint= {"角","分","厘","","",""};
 	
 	private static Map<String,String> numMap=new HashMap<>();
 	private static Map<String,String> numUpperMap=new HashMap<>();
@@ -97,10 +97,8 @@ public class CnNum {
 	
 	private static String tran(String longNumText,boolean isUpperNum) {
 		
-		char ch[]=longNumText.toCharArray();
+		char[] ch=longNumText.toCharArray();
 		StringBuffer sbu=new StringBuffer();
-//		sbu.append(ch[0]);
-//		sbu.append(numMap.get(ch[0]+""));
 		if (isUpperNum) {
 			sbu.append(numUpperMap.get(ch[0] + ""));
 			sbu.append(upperUint[ch.length-1]);
@@ -118,7 +116,6 @@ public class CnNum {
 					sbu.append("零");
 					hasZero=false;
 				}
-//				sbu.append(ch[i]);
 				if (isUpperNum) {
 					sbu.append(numUpperMap.get(ch[i] + ""));
 					sbu.append(upperUint[ch.length-1-i]);
@@ -126,7 +123,6 @@ public class CnNum {
 					sbu.append(numMap.get(ch[i] + ""));
 					sbu.append(uint[ch.length-1-i]);
 				}
-				
 			}
 		}
 		
@@ -134,14 +130,13 @@ public class CnNum {
 	}
 	
 	private static String tranDecimal(String longNumText,boolean isUpperNum) {
-		char ch[]=longNumText.toCharArray();
+		char[] ch=longNumText.toCharArray();
 		StringBuffer sbu=new StringBuffer();
 		if (isUpperNum) {
 			sbu.append(numUpperMap.get(ch[0] + ""));
 			sbu.append(upperDecimalUint[0]);
 		}else {
 			sbu.append(numMap.get(ch[0] + ""));
-//			sbu.append(uint[ch.length-1]);
 		}
 		
 		boolean hasZero=false;
@@ -155,16 +150,12 @@ public class CnNum {
 				}
 				if (isUpperNum) {
 					sbu.append(numUpperMap.get(ch[i] + ""));
-//					sbu.append(upperUint[ch.length-1-i]);
 					sbu.append(upperDecimalUint[i]);
 				}else {
 					sbu.append(numMap.get(ch[i] + ""));
-//					sbu.append(uint[ch.length-1-i]);
 				}
-				
 			}
 		}
-		
 		return sbu.toString();
 	}
 

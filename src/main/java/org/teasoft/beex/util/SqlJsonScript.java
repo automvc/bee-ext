@@ -12,7 +12,6 @@ import java.util.List;
 import org.teasoft.honey.osql.autogen.ColumnBean;
 import org.teasoft.honey.osql.autogen.ColumnUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -21,13 +20,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class SqlJsonScript {
 
-	public static String tableJsonScript(String tableName) throws JsonProcessingException, IOException {
+	private SqlJsonScript() {}
+
+	public static String tableJsonScript(String tableName) throws IOException {
 
 		List<ColumnBean> list = ColumnUtil.getColumnList(tableName);
 
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString(list);
-		return json;
+		
+		return mapper.writeValueAsString(list);
 	}
 
 }

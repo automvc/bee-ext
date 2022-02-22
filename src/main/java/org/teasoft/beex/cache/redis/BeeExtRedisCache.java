@@ -28,10 +28,10 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	private Jedis jedis;
 	private Serializer serializer;
 
-	private static final String field = "Bee";
-	private static final byte[] fieldBytes = field.getBytes();
+	private static final String FIELD = "Bee";
+	private static final byte[] FIELD_BYTES = FIELD.getBytes();
 
-	private static final int timeout = HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
+	private static final int TIMEOUT = HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
 
 	public BeeExtRedisCache() {
 		initRedis();
@@ -74,35 +74,35 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	@Override
 	public Object getInExtCache(String key) {
 		Object obj = null;
-		Jedis jedis = getJedis();
+		Jedis jedis0 = getJedis();
 		try {
-			obj = getSerializer().unserialize(jedis.hget(key.toString().getBytes(), fieldBytes));
+			obj = getSerializer().unserialize(jedis0.hget(key.getBytes(), FIELD_BYTES));
 		} catch (Exception e) {
 			Logger.warn(e.getMessage(), e);
 		} finally {
-			jedis.close();
+			jedis0.close();
 		}
 		return obj;
 	}
 
 	@Override
 	public void addInExtCache(String key, Object result) {
-		Jedis jedis = getJedis();
+		Jedis jedis1 = getJedis();
 		try {
-			jedis.hset(key.toString().getBytes(), fieldBytes, getSerializer().serialize(result));
-			jedis.expire(key.toString().getBytes(), timeout);
+			jedis1.hset(key.getBytes(), FIELD_BYTES, getSerializer().serialize(result));
+			jedis1.expire(key.getBytes(), TIMEOUT);
 		} finally {
-			jedis.close();
+			jedis1.close();
 		}
 	}
 
 	@Override
 	public void clearInExtCache(String key) {
-		Jedis jedis = getJedis();
+		Jedis jedis2 = getJedis();
 		try {
-			jedis.hdel(key, field);
+			jedis2.hdel(key, FIELD);
 		} finally {
-			jedis.close();
+			jedis2.close();
 		}
 	}
 

@@ -6,8 +6,6 @@
 
 package org.teasoft.beex.config;
 
-import org.teasoft.bee.osql.annotation.SysValue;
-
 /**
  * @author Kingstar
  * @since  1.11
@@ -15,21 +13,21 @@ import org.teasoft.bee.osql.annotation.SysValue;
 public class BeeProCacheRedis {
 
 	//  prefix= "cacheRedis_"
-	public String host;
+	private String host;
 
-	public Integer port;
+	private Integer port;
 
-	public String password;
+	private String password;
 
-	public Integer connectionTimeout;
+	private Integer connectionTimeout;
 
-	public Integer soTimeout;
+	private Integer soTimeout;
 
-	public Integer database;
+	private Integer database;
 
-	public String clientName;
+	private String clientName;
 
-	public Boolean ssl;
+	private Boolean ssl;
 
 	public String getHost() {
 		return host;
