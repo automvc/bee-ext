@@ -295,11 +295,26 @@ public class ExcelReader {
 		if (endRow > rows) endRow = rows;
 		
 		//从前三行(从startRow开始)中获取最大列数. 
-		int c1=sheet.getRow(startRow).getLastCellNum();
-		int c2=0;
-		int c3=0;
-		if(startRow+1<=endRow) c2=sheet.getRow(startRow+1).getLastCellNum();
-		if(startRow+2<=endRow) c3=sheet.getRow(startRow+2).getLastCellNum();
+		int c1 = 0;
+		int c2 = 0;
+		int c3 = 0;
+		try {
+			c1=sheet.getRow(startRow).getLastCellNum();
+		} catch (Exception e) {
+			c1 = 0;
+		}
+
+		try {
+			if (startRow + 1 <= endRow) c2 = sheet.getRow(startRow + 1).getLastCellNum();
+		} catch (Exception e) {
+			c2 = 0;
+		}
+
+		try {
+			if (startRow + 2 <= endRow) c3 = sheet.getRow(startRow + 2).getLastCellNum();
+		} catch (Exception e) { //获取空行会报异常  V1.11 fixed bug
+			c3 = 0;
+		}
 		
 		columns=getMaxColumn(c1,c2,c3);
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
