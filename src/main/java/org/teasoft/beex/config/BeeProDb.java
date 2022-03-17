@@ -28,7 +28,9 @@ public class BeeProDb {
 	private String url;
 	private String username;
 	private String password;
+	private String schemaName;
 	private Boolean jndiType;
+	
 	private String jndiName;
 
 	public String getDbName() {
@@ -69,6 +71,14 @@ public class BeeProDb {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	
+	public String getSchemaName() {
+		return schemaName;
+	}
+
+	public void setSchemaName(String schemaName) {
+		this.schemaName = schemaName;
 	}
 
 	public Boolean getJndiType() {
