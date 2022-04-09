@@ -37,6 +37,8 @@ public class BeeProCache {
 	private Boolean keyUseMD5;
 
 	private Boolean nocache;
+	
+	private Integer prototype;
 
 	private Integer workResultSetSize;
 
@@ -100,6 +102,14 @@ public class BeeProCache {
 
 	public void setNocache(Boolean nocache) {
 		this.nocache = nocache;
+	}
+	
+	public Integer getPrototype() {
+		return prototype;
+	}
+
+	public void setPrototype(Integer prototype) {
+		this.prototype = prototype;
 	}
 
 	public Integer getWorkResultSetSize() {

@@ -4,15 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teasoft</groupId>
 	<artifactId>bee-ext</artifactId>
-	<version>1.11.0.3.20-SNAPSHOT</version>
+	<version>1.11.0.4.22-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>bee-ext</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
-		<bee.version>1.11.0.3.20-SNAPSHOT</bee.version>
+		<bee.version>1.11.0.4.22-SNAPSHOT</bee.version>
 	</properties>
 
 	<dependencies>
@@ -104,7 +103,6 @@
 	   <dependency>
 		  <groupId>redis.clients</groupId>
 		  <artifactId>jedis</artifactId>
-<!-- 		  <version>4.0.1</version> -->
 		  <version>3.5.2</version>
 		  <scope>provided</scope>
 	   </dependency>

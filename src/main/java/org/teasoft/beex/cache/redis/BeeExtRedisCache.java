@@ -81,6 +81,20 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 		this.jedisPool = new JedisPool(new GenericObjectPoolConfig<Jedis>(), host, port,
 				connectionTimeout, soTimeout, password, database, clientName, ssl);
 	}
+	
+	@Override
+	public void addInExtCache(String key, Object result) {
+		Jedis jedis1 = getJedis();
+		try {
+			jedis1.hset(key.getBytes(), FIELD_BYTES, getSerializer().serialize(result));
+			jedis1.expire(key.getBytes(), TIMEOUT);
+		} catch (Exception e) {
+			Logger.warn(e.getMessage(), e);
+		}
+		finally {
+			jedis1.close();
+		}
+	}
 
 	@Override
 	public Object getInExtCache(String key) {
@@ -94,17 +108,6 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 			jedis0.close();
 		}
 		return obj;
-	}
-
-	@Override
-	public void addInExtCache(String key, Object result) {
-		Jedis jedis1 = getJedis();
-		try {
-			jedis1.hset(key.getBytes(), FIELD_BYTES, getSerializer().serialize(result));
-			jedis1.expire(key.getBytes(), TIMEOUT);
-		} finally {
-			jedis1.close();
-		}
 	}
 
 	@Override

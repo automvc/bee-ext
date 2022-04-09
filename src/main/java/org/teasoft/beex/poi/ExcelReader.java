@@ -128,6 +128,11 @@ public class ExcelReader {
 			throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath), sheetName, startRow, endRow);
 	}
+	
+	public static List<String[]> readExcel(String fullPath, int sheetIndex, int startRow, int endRow)
+			throws FileNotFoundException {
+		return readExcel(new FileInputStream(fullPath), sheetIndex, startRow, endRow);
+	}
 
 	/**
 	 * 返回首个Excel sheet中从开始行到结束行的记录.
@@ -140,6 +145,11 @@ public class ExcelReader {
 	 */
 	public static List<String[]> readExcel(InputStream inputStream, String sheetName, int startRow, int endRow) {
 		Sheet sheet = getSheet(inputStream, sheetName);
+		return getListBySheet(sheet, startRow, endRow);
+	}
+	
+	public static List<String[]> readExcel(InputStream inputStream, int sheetIdex, int startRow, int endRow) {
+		Sheet sheet = getSheet(inputStream, sheetIdex);
 		return getListBySheet(sheet, startRow, endRow);
 	}
 
@@ -165,6 +175,11 @@ public class ExcelReader {
 	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitles, int titleRow) throws FileNotFoundException {
 		String[] hopeTitleArray = hopeTitles.split(",");
 		return checkAndReadExcel(new FileInputStream(fullPath), hopeTitleArray, titleRow);
+	}
+	
+	public static List<String[]> checkAndReadExcel(String fullPath, int sheetIndex, String hopeTitles, int titleRow) throws FileNotFoundException {
+		String[] hopeTitleArray = hopeTitles.split(",");
+		return checkAndReadExcel(new FileInputStream(fullPath),sheetIndex, hopeTitleArray, titleRow);
 	}
 
 	/**
@@ -203,6 +218,17 @@ public class ExcelReader {
 			int titleRow) {
 		Sheet sheet = getSheet(inputStream);
 
+		return _check(sheet,hopeTitleArray, titleRow);
+	}
+	
+	public static List<String[]> checkAndReadExcel(InputStream inputStream,int sheetIndex, String[] hopeTitleArray,
+			int titleRow) {
+		Sheet sheet = getSheet(inputStream,sheetIndex);
+
+		return _check(sheet,hopeTitleArray, titleRow);
+	}
+	
+	private static List<String[]> _check(Sheet sheet, String[] hopeTitleArray,int titleRow){
 		List<String[]> list = getListBySheet(sheet, 0, titleRow);
 
 		if (titleRow > (list.size() - 1)) {
@@ -224,6 +250,7 @@ public class ExcelReader {
 
 		return getListBySheet(sheet);
 	}
+	
 
 	private static Sheet getSheet(InputStream inputStream) {
 		return getSheet(inputStream, 0);
@@ -278,7 +305,7 @@ public class ExcelReader {
 	 * 
 	 * @param sheet
 	 * @param startRow 开始行,从0开始
-	 * @param endRow 结束行(包括)
+	 * @param endRow 结束行(包括),如果小于0,则获取所有行
 	 * @return
 	 */
 	private static List<String[]> getListBySheet(Sheet sheet, int startRow, int endRow) {
