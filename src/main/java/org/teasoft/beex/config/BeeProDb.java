@@ -29,9 +29,11 @@ public class BeeProDb {
 	private String username;
 	private String password;
 	private String schemaName;
-	private Boolean jndiType;
 	
+	private Boolean jndiType;
 	private String jndiName;
+	
+	private Boolean pagingWithLimitOffset;
 
 	public String getDbName() {
 		return dbName;
@@ -97,4 +99,12 @@ public class BeeProDb {
 		this.jndiName = jndiName;
 	}
 
+	public Boolean getPagingWithLimitOffset() {
+		return pagingWithLimitOffset;
+	}
+
+	public void setPagingWithLimitOffset(Boolean pagingWithLimitOffset) {
+		this.pagingWithLimitOffset = pagingWithLimitOffset;
+	}
+	
 }
