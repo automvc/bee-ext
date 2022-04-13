@@ -37,6 +37,8 @@ public class BeePro {
 
 	private Boolean notUpdateWholeRecords;
 	
+	private Boolean notCatchModifyDuplicateException;
+	
 	private Boolean notShowModifyDuplicateException;
 
 	private Integer insertBatchSize;
@@ -101,6 +103,14 @@ public class BeePro {
 		this.notUpdateWholeRecords = notUpdateWholeRecords;
 	}
 	
+	public Boolean getNotCatchModifyDuplicateException() {
+		return notCatchModifyDuplicateException;
+	}
+
+	public void setNotCatchModifyDuplicateException(Boolean notCatchModifyDuplicateException) {
+		this.notCatchModifyDuplicateException = notCatchModifyDuplicateException;
+	}
+
 	public Boolean getNotShowModifyDuplicateException() {
 		return notShowModifyDuplicateException;
 	}
