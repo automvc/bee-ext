@@ -12,6 +12,7 @@ import java.util.List;
 import org.teasoft.bee.osql.PreparedSql;
 import org.teasoft.beex.poi.ExcelReader;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
+import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
@@ -67,7 +68,11 @@ public class DdlViaExcel {
 				
 				create_sql = addTableComment(create_sql, tableComment);
 				
+				boolean old=HoneyConfig.getHoneyConfig().showSql_showExecutableSql;
+				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=false;
 				preparedSql.modify(create_sql);
+				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=old;
+				
 			}
 
 		} catch (FileNotFoundException e) {
@@ -114,6 +119,8 @@ public class DdlViaExcel {
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 
+				boolean old=HoneyConfig.getHoneyConfig().showSql_showExecutableSql;
+				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=false;
 				boolean second = false;
 				try {
 					String sql0 = "";
@@ -134,6 +141,10 @@ public class DdlViaExcel {
 						}
 					}
 				}
+				
+				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=old;
+				
+				
 			} //end for 
 		} //end if
 		createTable(excelFullPath, sheetNames, checkTitle);
@@ -152,8 +163,19 @@ public class DdlViaExcel {
 		sqlBuffer.append(CREATE_TABLE + tableName + " (").append(LINE_SEPARATOR);
 
 		String col[] = null;
+        boolean isFirst=true;		
 		for (int i = 0; list != null && i < list.size(); i++) {
 			col = list.get(i);
+			if(StringUtils.isBlank(col[0])) continue;
+			
+			if (isFirst) {  //首次不加逗号,当有下一行时,才为上一行加逗号
+//				sqlBuffer.append("  ");
+				isFirst=false;
+			}else {
+				sqlBuffer.append(",  ");
+				sqlBuffer.append(LINE_SEPARATOR);
+			}
+			
 			//0:column name; 1: type; 2:comment
 			sqlBuffer.append(col[0]).append("  ");
 			if ("id".equalsIgnoreCase(col[0])) {
@@ -178,15 +200,9 @@ public class DdlViaExcel {
 				sqlBuffer.append("'");
 			}
 			
-
-			if (i != list.size() - 1)
-				sqlBuffer.append(",  ");
-			else
-				sqlBuffer.append("  ");
-			sqlBuffer.append(LINE_SEPARATOR);
 		}
+		sqlBuffer.append(LINE_SEPARATOR);
 		sqlBuffer.append(" )");
-
 		return sqlBuffer.toString();
 
 	}
