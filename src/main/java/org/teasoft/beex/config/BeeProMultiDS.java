@@ -18,6 +18,7 @@
 package org.teasoft.beex.config;
 
 /**
+ * BeeProMultiDS
  * @author Kingstar
  * @since  1.9
  */

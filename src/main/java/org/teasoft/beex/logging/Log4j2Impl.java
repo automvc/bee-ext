@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.teasoft.bee.logging.Log;
 
 /**
+ * 兼容Log4j2的实现类.Implements class compatible for Log4j2.
  * @author Kingstar
  * @since  1.8
  */

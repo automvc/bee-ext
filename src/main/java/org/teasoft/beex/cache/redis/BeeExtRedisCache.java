@@ -30,6 +30,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
 
 /**
+ * 扩展的Redis缓存.Bee Ext Redis Cache.
  * @author Kingstar
  * @since  1.11
  */

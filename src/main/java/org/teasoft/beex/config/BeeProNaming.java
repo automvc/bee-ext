@@ -18,6 +18,7 @@
 package org.teasoft.beex.config;
 
 /**
+ * BeeProNaming
  * @author Kingstar
  * @since  1.9
  */

@@ -18,6 +18,7 @@
 package org.teasoft.beex.config;
 
 /**
+ * BeeProSelectJson
  * @author Kingstar
  * @since  1.9
  */

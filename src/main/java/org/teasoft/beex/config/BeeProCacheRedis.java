@@ -7,6 +7,7 @@
 package org.teasoft.beex.config;
 
 /**
+ * BeeProCacheRedis
  * @author Kingstar
  * @since  1.11
  */

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 中文的货币数字.Chinese currency Number.
  * @author Kingstar
  * @since  1.9
  */

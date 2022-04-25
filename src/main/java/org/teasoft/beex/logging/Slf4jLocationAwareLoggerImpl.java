@@ -23,6 +23,7 @@ import org.slf4j.spi.LocationAwareLogger;
 import org.teasoft.bee.logging.Log;
 
 /**
+ * 兼容Slf4jLocationAwareLogger的实现类.Implements class compatible for Slf4jLocationAwareLogger.
  * @author Kingstar
  * @since  1.8
  */

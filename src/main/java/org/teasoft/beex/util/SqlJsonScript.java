@@ -15,6 +15,7 @@ import org.teasoft.honey.osql.autogen.ColumnUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * Json格式的Sql脚本.Sql Json Script.
  * @author Kingstar
  * @since  1.9.8
  */

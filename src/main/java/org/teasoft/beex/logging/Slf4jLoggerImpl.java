@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.teasoft.bee.logging.Log;
 
 /**
+ * 兼容Slf4jLogger的实现类.Implements class compatible for Slf4jLogger.
  * @author Kingstar
  * @since  1.8
  */

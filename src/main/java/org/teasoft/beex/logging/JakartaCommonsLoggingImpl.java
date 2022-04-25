@@ -18,6 +18,7 @@
 package org.teasoft.beex.logging;
 
 /**
+ * 兼容JakartaCommonsLogging的实现类.Implements class compatible for JakartaCommonsLogging.
  * @author Kingstar
  * @since  1.8
  */

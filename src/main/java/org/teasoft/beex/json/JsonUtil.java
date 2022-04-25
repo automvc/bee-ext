@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * Json工具.Json Util.
  * @author Kingstar
  * @since  1.11
  */

@@ -7,6 +7,7 @@
 package org.teasoft.beex.util;
 
 /**
+ * BeeExt Version
  * @author Kingstar
  * @since  1.11
  */
