@@ -40,6 +40,8 @@ public class ManageConfig {
 	private BeeProCache beeProCache;
 
 	private BeeProDb beeProDb;
+	
+	private BeeProProfiles beeProProfiles;//V1.11
 
 	private BeeProGenid beeProGenid;
 
@@ -67,6 +69,7 @@ public class ManageConfig {
 		newConfigMap.putAll(process(beeProCache));
 		newConfigMap.putAll(process(beeProCacheRedis)); //V1.11
 		newConfigMap.putAll(process(beeProDb, false));
+		newConfigMap.putAll(process(beeProProfiles, false));
 
 		newConfigMap.putAll(process(beeProGenid));
 		newConfigMap.putAll(process(beeProMoreTable));
@@ -139,6 +142,19 @@ public class ManageConfig {
 
 	public void setBeeProDb(BeeProDb beeProDb) {
 		this.beeProDb = beeProDb;
+	}
+	
+	/**
+	 * get instance of BeeProProfiles
+	 * @return instance of BeeProProfiles
+	 * @since 1.11
+	 */
+	public BeeProProfiles getBeeProProfiles() {
+		return beeProProfiles;
+	}
+
+	public void setBeeProProfiles(BeeProProfiles beeProProfiles) {
+		this.beeProProfiles = beeProProfiles;
 	}
 
 	public BeeProGenid getBeeProGenid() {
