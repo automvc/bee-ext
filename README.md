@@ -20,6 +20,8 @@ Bee-Ext
 
 * 6.Bee cache with Redis 
 
+* 7.Create table according to the information read from Excel	
+
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 
