@@ -102,7 +102,6 @@
 		</dependency>
 		
 		
-<!-- 		导致用jdk1.7编译不了 ; bee-ext也会引起bee-spring-boot用jdk1.7编译不了-->
 	   <dependency>
 		  <groupId>redis.clients</groupId>
 		  <artifactId>jedis</artifactId>
