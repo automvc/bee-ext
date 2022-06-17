@@ -84,13 +84,13 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
 					.getCreateAndUpgrade().newInstance();
 			if (instance != null) {
-				HoneyContext.setCurrentAndroidDB(db); // put it in context first , prevent:getDatabase called recursively
+				HoneyContext.setCurrentAppDB(db); // put it in context first , prevent:getDatabase called recursively
 				instance.onCreate();
 			}
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
 		} finally {
-			HoneyContext.removeCurrentAndroidDB();
+			HoneyContext.removeCurrentAppDB();
 		}
 	}
 
@@ -105,13 +105,13 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
 					.getCreateAndUpgrade().newInstance();
 			if (instance != null) {
-				HoneyContext.setCurrentAndroidDB(db);// put it in context first , prevent:getDatabase called recursively
+				HoneyContext.setCurrentAppDB(db);// put it in context first , prevent:getDatabase called recursively
 				instance.onUpgrade(oldVersion, newVersion);
 			}
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
 		} finally {
-			HoneyContext.removeCurrentAndroidDB();
+			HoneyContext.removeCurrentAppDB();
 		}
 	}
 }

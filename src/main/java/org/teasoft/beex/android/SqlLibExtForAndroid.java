@@ -13,7 +13,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.teasoft.bee.android.BeeSqlForAndroid;
+import org.teasoft.bee.app.BeeSqlForApp;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.TypeHandler;
@@ -36,21 +36,21 @@ import android.database.sqlite.SQLiteStatement;
  * @author Kingstar
  * @since 1.17
  */
-public class SqlLibExtForAndroid implements BeeSqlForAndroid {
+public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 	private SQLiteDatabase database; // 有事务管理.
 
 	public SQLiteDatabase getDatabase() {
 
 		// 从上下文获取
-		Object obj = HoneyContext.getCurrentAndroidDB();
+		Object obj = HoneyContext.getCurrentAppDB();
 		if (obj != null) return (SQLiteDatabase) obj;
 
 		if (database == null) {
 			database = getWritableDB();
 			if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase(); // change just return ???
 		}//不为null时,则使用原来的
-		HoneyContext.setCurrentAndroidDBIfNeed(database);
+		HoneyContext.setCurrentAppDBIfNeed(database);
 
 		return database;
 	}
@@ -581,7 +581,7 @@ public class SqlLibExtForAndroid implements BeeSqlForAndroid {
 	private void close(SQLiteDatabase db) {
 		try {
 			if (db != null) {
-				if (HoneyContext.getCurrentAndroidDB() == null) // 当前没有连接时,才删除
+				if (HoneyContext.getCurrentAppDB() == null) // 当前没有连接时,才删除
 					db.close();
 			}
 		} catch (Exception e) {

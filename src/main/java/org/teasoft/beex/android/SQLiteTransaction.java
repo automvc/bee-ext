@@ -33,7 +33,7 @@ public class SQLiteTransaction implements Transaction {
 		//将db放入缓存.  TODO
 		db.beginTransaction();
 		isBegin = true;
-		HoneyContext.setCurrentAndroidDB(db);
+		HoneyContext.setCurrentAppDB(db);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class SQLiteTransaction implements Transaction {
 			} catch (BeeSQLException e) {
 				throw ExceptionHelper.convert(e);
 			} finally {
-				HoneyContext.removeCurrentAndroidDB(); //事务结束时要删除上下文
+				HoneyContext.removeCurrentAppDB(); //事务结束时要删除上下文
 			}
 		}
 	}
