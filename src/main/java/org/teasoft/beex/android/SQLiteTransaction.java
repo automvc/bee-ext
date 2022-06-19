@@ -30,10 +30,9 @@ public class SQLiteTransaction implements Transaction {
 		Logger.info("[Bee] SQLiteTransaction begin. ");
 		
 		db=	BeeSQLiteOpenHelper.getWritableDB();	
-		//将db放入缓存.  TODO
 		db.beginTransaction();
 		isBegin = true;
-		HoneyContext.setCurrentAppDB(db);
+		HoneyContext.setCurrentAppDB(db);//将db放入缓存.
 	}
 
 	@Override
@@ -55,7 +54,12 @@ public class SQLiteTransaction implements Transaction {
 	@Override
 	public void rollback() {
 		Logger.info("[Bee] SQLiteTransaction rollback. ");
-		db.endTransaction();
+		try {
+			db.endTransaction();
+		} finally {
+			_close();
+			isBegin = false;
+		}
 	}
 	
 	private void _close() {

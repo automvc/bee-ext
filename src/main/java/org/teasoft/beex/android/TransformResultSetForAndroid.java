@@ -42,7 +42,7 @@ public class TransformResultSetForAndroid {
 		String value;
 		while (cursor.moveToNext()) {
 			json.append(",{");
-			for (int i = 1; i <= columnCount; i++) { // 1..n
+			for (int i = 0; i < columnCount; i++) { // 0..n-1
 				columnName = cursor.getColumnName(i);
 				value = cursor.getString(cursor.getColumnIndex(columnName));
 				if (value == null && ignoreNull) {

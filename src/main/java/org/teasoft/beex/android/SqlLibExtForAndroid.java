@@ -426,11 +426,11 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 				st.bindString(i + 1, ((BigDecimal) value).toPlainString()); // 可以转成字符串?? 数据库里要是字符串类型
 				break;
 			case 12:
-//				st.bindTime(i + 1, (Time) value);  //可以转成字符串 TODO
+//				st.bindTime(i + 1, (Time) value);  //可以转成字符串 
 				st.bindString(i + 1, value.toString());
 				break;
 			case 13:
-//				st.bindTimestamp(i + 1, (Timestamp) value);  //可以转成Long  TODO
+//				st.bindTimestamp(i + 1, (Timestamp) value);  //可以转成Long
 				st.bindString(i + 1, value.toString());
 				break;
 //			case 17:
