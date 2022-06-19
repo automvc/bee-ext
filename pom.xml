@@ -109,6 +109,14 @@
 			<systemPath>F:\JavaWeb\android-sdk-windows\platforms\android-23\android.jar</systemPath>
 		</dependency>
 		
+		<dependency>
+			<groupId>ohos</groupId>
+			<artifactId>harmony</artifactId>
+			<version>4</version>
+			<scope>system</scope>
+			<systemPath>D:\JavaWeb\Huawei\Sdk\java\2.1.1.21\api\ohos.jar</systemPath>
+		</dependency>
+		
 		
 <!-- 		导致用jdk1.7编译不了 ; bee-ext也会引起bee-spring-boot用jdk1.7编译不了-->
 	   <dependency>
