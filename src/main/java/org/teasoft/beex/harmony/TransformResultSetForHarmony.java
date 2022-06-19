@@ -52,9 +52,8 @@ public class TransformResultSetForHarmony {
 		String value;
 		while (rs.goToNextRow()) {
 			json.append(",{");
-			for (int i = 1; i <= columnCount; i++) { // 1..n
-				columnName = rs.getColumnNameForIndex(i);  //TODO 起始从??0还是1
-//				value = rs.getString(rs.getColumnIndexForName(columnName));
+			for (int i = 0; i < columnCount; i++) { // 0..n-1
+				columnName = rs.getColumnNameForIndex(i);  //从0开始
 				value = rs.getString(i);
 				
 				if (value == null && ignoreNull) {

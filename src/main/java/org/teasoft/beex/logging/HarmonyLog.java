@@ -26,7 +26,7 @@ import ohos.hiviewdfx.HiLogLabel;
  */
 public class HarmonyLog implements org.teasoft.bee.logging.Log {
 	private static final String TAG = "HarmonyLog";
-	private static final HiLogLabel LABEL_LOG = new HiLogLabel(3, 0xD000F00, TAG);
+	private static final HiLogLabel LABEL_LOG = new HiLogLabel(HiLog.LOG_APP, 0x00003, TAG);
 
 	@Override
 	public boolean isTraceEnabled() {

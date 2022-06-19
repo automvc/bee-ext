@@ -27,12 +27,11 @@ import ohos.data.rdb.RdbStore;
 import ohos.data.rdb.StoreConfig;
 
 /**
+ * Bee use DatabaseHelper 
  * @author Kingstar
  * @since  1.17
  */
 public class BeeDatabaseHelper {
-
-//	private static int num = 1;
 
 	private static String DBNAME;
 	private static int VERSION;
@@ -43,6 +42,7 @@ public class BeeDatabaseHelper {
 	private static RdbOpenCallback rdbOpenCallback = null;
 	private static RdbStore rdbStore = null;
 	private static boolean isInit=true;
+	
 	static {
 		Context temp = ContextRegistry.getContext();
 		if (temp != null) {
@@ -69,13 +69,6 @@ public class BeeDatabaseHelper {
 	public BeeDatabaseHelper(Context context) {}
 
 	public static RdbStore getRdbStore() {
-//		return rdbStore; // TODO 就只拿一个static的, 关闭了怎么办??  isOpen()判断,重新获取
-
-		// 要是每次都这样获取, rdbOpenCallback会重复执行吗???  官方论坛有人回复说会.
-		// rdbStore = databaseHelper.getRdbStore(config, VERSION, rdbOpenCallback, null);
-		
-//		rdbStore 底层线程管理逻辑????
-		
 		RdbStore tempDb=rdbStore;
 		if(! isInit && (tempDb==null || ! tempDb.isOpen()) ) {//非首次, 要是中途关了,可以重新获取,但callback置为null
 			DBNAME=HoneyConfig.getHoneyConfig().harmonyDbName;

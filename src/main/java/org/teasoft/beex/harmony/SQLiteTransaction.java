@@ -65,7 +65,12 @@ public class SQLiteTransaction implements Transaction {
 	@Override
 	public void rollback() {
 		Logger.info("[Bee] SQLiteTransaction rollback. ");
-		db.endTransaction();
+		try {
+			db.endTransaction();
+		} finally {
+			_close();
+			isBegin = false;
+		}
 	}
 	
 	private void _close() {

@@ -22,6 +22,7 @@ import org.teasoft.bee.osql.Registry;
 import ohos.data.rdb.RdbStore;
 
 /**
+ * RdbStore Registry
  * @author Kingstar
  * @since 1.17
  */

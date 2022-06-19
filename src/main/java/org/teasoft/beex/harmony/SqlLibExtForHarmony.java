@@ -50,6 +50,7 @@ import ohos.data.resultset.ResultSet;
 //2. 用RdbStore直接操作或者 拿到Statement再操作.
 
 /**
+ * SqlLib Extend For Harmony.
  * @author Kingstar
  * @since  1.17
  */
@@ -66,10 +67,10 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		Object obj = HoneyContext.getCurrentAppDB();
 		if (obj != null) return (RdbStore) obj;
 
-		if (rdbStore == null) {
+		if (rdbStore == null || !rdbStore.isOpen()) {
 			rdbStore = getRdbStoreFromHelper();
 			if (rdbStore == null) rdbStore = BeeRdbStoreRegistry.getRdbStore();
-		} // 不为null时,则使用原来的
+		} //esle,则使用原来的
 		HoneyContext.setCurrentAppDBIfNeed(rdbStore);
 
 		return rdbStore;
@@ -83,16 +84,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		return BeeDatabaseHelper.getRdbStore();
 	}
 
-//	public Statement getStatement(String sql) {   //不能关闭getRdbStore()获取的RdbStore
-//		Statement st=getRdbStore().buildStatement(sql);
-//		return st;
-//	}
-
 	public <T> List<T> select(String sql, T entity, String[] sqlArgs) {
-//		Statement st=getStatement(sql);
-		// TODO 1 如何查询集合???
-//		ResultSet rs=store.querySql(sql, sqlArgs);  //TODO 是否有防止SQL注入 ; 是否还要绑定??
-
 		T targetObj = null;
 		List<T> rsList = null;
 		Map<String, Field> map = null;
@@ -100,7 +92,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		String name = null;
 		boolean isFirst = true;
 		String columnName;
-		RdbStore db = null; // TODO
+		RdbStore db = null; 
 		ResultSet rs= null;
 		try {
 			db = getRdbStore();
@@ -115,7 +107,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 
 				for (int i = 0; i < columnCount; i++) {
 					try {
-//						columnName = cursor.getColumnName(i + 1);// 会有异常,但提示不明确. Exception: datatype mismatch
 						columnName = rs.getColumnNameForIndex(i); // 列下标,从0开始
 						name = _toFieldName(columnName, entity.getClass());
 						if (isFirst) {
@@ -192,7 +183,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 //		hasException = true;
 			throw ExceptionHelper.convert(e);
 		} finally {
-//			close(db);  //TODO
+//			close(db);  
 			closeRs(rs);
 		}
 
@@ -202,8 +193,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 
 	@Override
 	public String selectFun(String sql, String[] sqlArgs) {
-		// 1 TODO
-		
 		String fun = "";
 		RdbStore db = null;
 		Statement st = null;
@@ -219,10 +208,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 			close(st, db);
 		}
 		return fun;
-
-		// 2 拿到rs,再取结果 TODO
-//		ResultSet rs = getRdbStore().querySql(sql, sqlArgs);
-//		rs.close();
 	}
 
 	@Override
@@ -316,8 +301,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 
 	@Override
 	public int batchInsert(String sql0, List<Object[]> listBindArgs) {
-		// TODO 如何循环??
-		// ohos底层也是每次都生成事务吗???
 
 		if (sql0 == null || listBindArgs == null || listBindArgs.size() < 1) return 0;
 
@@ -430,11 +413,11 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 				st.setString(i + 1, ((BigDecimal) value).toPlainString()); // 可以转成字符串?? 数据库里要是字符串类型
 				break;
 			case 12:
-//				st.setTime(i + 1, (Time) value);  //可以转成字符串 TODO
+//				st.setTime(i + 1, (Time) value);  //可以转成字符串 
 				st.setString(i + 1, value.toString());
 				break;
 			case 13:
-//				st.setTimestamp(i + 1, (Timestamp) value);  //可以转成Long  TODO
+//				st.setTimestamp(i + 1, (Timestamp) value);
 				st.setString(i + 1, value.toString());
 				break;
 //			case 17:
@@ -507,53 +490,53 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 			case 6:
 				return st.getShort(columnIndex);
 //			case 7:
-//				return cursor.getByte(columnIndex);
+//				return st.getByte(columnIndex);
 //			case 8:
-//				return cursor.getBytes(columnIndex);
+//				return st.getBytes(columnIndex);
 //			case 9:
-//				return cursor.getBoolean(columnIndex);
+//				return st.getBoolean(columnIndex);
 			case 10:
 				return new BigDecimal(st.getString(columnIndex));
 //			case 11:
-//				return cursor.getDate(columnIndex);
+//				return st.getDate(columnIndex);
 //			case 12:
-//				return cursor.getTime(columnIndex);
+//				return st.getTime(columnIndex);
 			case 13:
-//				return cursor.getTimestamp(columnIndex);
+//				return st.getTimestamp(columnIndex);
 				return st.getLong(columnIndex);
 			case 14:
 				return st.getBlob(columnIndex);
 //			case 15:
-//				return cursor.getClob(columnIndex);
+//				return st.getClob(columnIndex);
 //			case 16:
-//				return cursor.getNClob(columnIndex);
+//				return st.getNClob(columnIndex);
 //			case 17:
-//				return cursor.getRowId(columnIndex);
+//				return st.getRowId(columnIndex);
 //			case 18:
-//				return cursor.getSQLXML(columnIndex);
+//				return st.getSQLXML(columnIndex);
 
 //				19: BigInteger
 //				20:char
 
 //				 21:java.util.Date 
 //			case 21:	
-//				return cursor.getTimestamp(columnIndex);//改动态???
+//				return st.getTimestamp(columnIndex);//改动态???
 //			case 22:
-//				return cursor.getArray(columnIndex);  //java.sql.Array
+//				return st.getArray(columnIndex);  //java.sql.Array
 //			case 23:
-//				return cursor.getBinaryStream(columnIndex); //java.io.InputStream
+//				return st.getBinaryStream(columnIndex); //java.io.InputStream
 //			case 24:
-//				return cursor.getCharacterStream(columnIndex); //java.io.Reader
+//				return st.getCharacterStream(columnIndex); //java.io.Reader
 //			case 25:
-//				return cursor.getRef(columnIndex);  //java.sql.Ref	
+//				return st.getRef(columnIndex);  //java.sql.Ref	
 
 //			case 27:
-//				return cursor.getURL(columnIndex);
+//				return st.getURL(columnIndex);
 
 //			case 19:
 //	        	no  getBigInteger
 //			default:
-//				return cursor.getObject(columnIndex);
+//				return st.getObject(columnIndex);
 
 			default:
 				return st.getString(columnIndex);

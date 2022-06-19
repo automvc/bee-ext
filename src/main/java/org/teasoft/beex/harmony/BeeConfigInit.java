@@ -22,16 +22,17 @@ import java.io.InputStream;
 import org.teasoft.honey.osql.core.HoneyConfig;
 
 /**
+ * Config init for Harmony with Bee.
  * @author Kingstar
  * @since  1.17
  */
 public class BeeConfigInit {
 
 	public static void init() {
-		//here is config, set first
+		// here is confirm, set first
 		HoneyConfig.getHoneyConfig().setLoggerType("harmonyLog");
-		HoneyConfig.getHoneyConfig().isHarmony=true;
-		
+		HoneyConfig.getHoneyConfig().isHarmony = true;
+
 		String folderPath = "assets/entry/resources/rawfile/";
 		String filePath = folderPath + "bee.properties";
 
@@ -42,6 +43,7 @@ public class BeeConfigInit {
 				HoneyConfig.getHoneyConfig().resetBeeProperties(inputStream);
 			}
 		} catch (Exception e) {
+
 		}
 	}
 }

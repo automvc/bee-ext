@@ -22,10 +22,12 @@ import org.teasoft.bee.osql.Registry;
 import ohos.app.Context;
 
 /**
+ * Context Registry
  * @author Kingstar
  * @since  1.17
  */
 public class ContextRegistry implements Registry {
+	
 	private static Context context;
 
 	private ContextRegistry() {}

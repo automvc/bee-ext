@@ -22,7 +22,7 @@ import org.teasoft.bee.osql.Registry;
 import ohos.data.rdb.RdbOpenCallback;
 
 /**
- * CreateAndUpgrade Registry
+ * RdbOpenCallback Registry
  * @author Kingstar
  * @since  1.17
  */
