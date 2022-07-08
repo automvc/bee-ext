@@ -16,6 +16,6 @@ public final class BeeExtVersion {
 	private BeeExtVersion() {}
 
 	public static final String version = "V1.17";
-	public static final String buildId = "V1.17.0.6.10";
+	public static final String buildId = "V1.17.0.7.1";
 
 }
