@@ -50,8 +50,13 @@ public class BeeDatabaseHelper {
 //			context.getApplicationContext();
 			DBNAME=HoneyConfig.getHoneyConfig().harmonyDbName;
 			VERSION=HoneyConfig.getHoneyConfig().harmonyDbVersion;
+			boolean harmonyDbReadonly=HoneyConfig.getHoneyConfig().harmonyDbReadonly;
 			DatabaseHelper databaseHelper = new DatabaseHelper(context);
-			config = StoreConfig.newDefaultConfig(DBNAME);
+			
+			if (harmonyDbReadonly)
+				config = StoreConfig.newReadOnlyConfig(DBNAME);
+			else
+				config = StoreConfig.newDefaultConfig(DBNAME);
 			rdbOpenCallback = RdbOpenCallbackRegistry.getRdbOpenCallback();
 			try {
 			rdbStore = databaseHelper.getRdbStore(config, VERSION, rdbOpenCallback, null);
