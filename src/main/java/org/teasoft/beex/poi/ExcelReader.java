@@ -321,29 +321,51 @@ public class ExcelReader {
 		}
 		if (endRow > rows) endRow = rows;
 		
-		//从前三行(从startRow开始)中获取最大列数. 
-		int c1 = 0;
-		int c2 = 0;
-		int c3 = 0;
-		try {
-			c1=sheet.getRow(startRow).getLastCellNum();
-		} catch (Exception e) {
-			c1 = 0;
-		}
-
-		try {
-			if (startRow + 1 <= endRow) c2 = sheet.getRow(startRow + 1).getLastCellNum();
-		} catch (Exception e) {
-			c2 = 0;
-		}
-
-		try {
-			if (startRow + 2 <= endRow) c3 = sheet.getRow(startRow + 2).getLastCellNum();
-		} catch (Exception e) { //获取空行会报异常  V1.11 fixed bug
-			c3 = 0;
-		}
+//		//从前三行(从startRow开始)中获取最大列数. 
+//		int c1 = 0;
+//		int c2 = 0;
+//		int c3 = 0;
+//		try {
+//			c1=sheet.getRow(startRow).getLastCellNum();
+//			if(startRow!=0) { //要考虑首行，可能是标题行，一般都会有多列些
+//				int c0=sheet.getRow(0).getLastCellNum();
+//				if(c0>c1) c1=c0;
+//			}
+//		} catch (Exception e) {
+//			c1 = 0;
+//		}
+//
+//		try {
+//			if (startRow + 1 <= endRow) c2 = sheet.getRow(startRow + 1).getLastCellNum();
+//		} catch (Exception e) {
+//			c2 = 0;
+//		}
+//
+//		try {
+//			if (startRow + 2 <= endRow) c3 = sheet.getRow(startRow + 2).getLastCellNum();
+//		} catch (Exception e) { //获取空行会报异常  V1.11 fixed bug
+//			c3 = 0;
+//		}
 		
-		columns=getMaxColumn(c1,c2,c3);
+//		long t1=System.currentTimeMillis();
+		int maxCol = 0;
+		int temp =0;
+		//find max Col
+		for (int t = startRow; t <= endRow; t++) {
+			try {
+				temp = sheet.getRow(t).getLastCellNum();
+			} catch (Exception e) {
+				temp = 0;
+			}
+			if (temp > maxCol) maxCol = temp;
+		}
+//		long t2=System.currentTimeMillis();
+//		System.out.println("==============================");
+//		System.out.println(t2-t1);
+		
+//		columns=getMaxColumn(c1,c2,c3);
+		
+		columns=maxCol;
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
 			Row row = sheet.getRow(r); // 获取单元格中指定的行对象
 			if (row != null) {
@@ -360,12 +382,12 @@ public class ExcelReader {
 		return list;
 	}
 	
-	private static int getMaxColumn(int c1,int c2,int c3) {
-		int max=c1;
-		if(c2>max) max=c2;
-		if(c3>max) max=c3;
-		return max;
-	}
+//	private static int getMaxColumn(int c1,int c2,int c3) {
+//		int max=c1;
+//		if(c2>max) max=c2;
+//		if(c3>max) max=c3;
+//		return max;
+//	}
 
 	private static String getValue(Cell cell) {
 		if (cell == null) {

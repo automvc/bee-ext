@@ -320,7 +320,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		} finally {
-			db.endTransaction();
+			if (db != null) db.endTransaction();
 			close(st, db);
 		}
 		return r;

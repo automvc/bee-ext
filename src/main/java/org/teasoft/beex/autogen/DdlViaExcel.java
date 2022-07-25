@@ -194,7 +194,7 @@ public class DdlViaExcel {
 			}
 			
 //			COMMENT
-			if(StringUtils.isNotBlank(col[2])) {
+			if(col.length>2 && StringUtils.isNotBlank(col[2])) {
 				sqlBuffer.append(" COMMENT '");
 				sqlBuffer.append(col[2]);
 				sqlBuffer.append("'");
