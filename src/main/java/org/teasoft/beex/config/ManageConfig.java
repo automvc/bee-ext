@@ -82,7 +82,7 @@ public class ManageConfig {
 
 //		Logger.info("[Bee] new config: "+newConfigMap);
 		HoneyContext.updateConfig(newConfigMap);
-		Logger.info("[Bee] new config: " + newConfigMap); //更新后再用日志,否则用不了新的信息.
+		Logger.info("[Bee] new part config: " + newConfigMap); //更新后再用日志,否则用不了新的信息.
 	}
 
 	private Map<String, Object> process(Object propObject) {

@@ -28,6 +28,8 @@ public class BeeProNaming {
 	private Boolean toLowerCaseBefore;
 
 	private Integer translateType;
+	
+	private Boolean useMoreTranslateType;
 
 	private String entity2tableMappingList;
 
@@ -45,6 +47,14 @@ public class BeeProNaming {
 
 	public void setTranslateType(Integer translateType) {
 		this.translateType = translateType;
+	}
+	
+	public Boolean getUseMoreTranslateType() {
+		return useMoreTranslateType;
+	}
+
+	public void setUseMoreTranslateType(Boolean useMoreTranslateType) {
+		this.useMoreTranslateType = useMoreTranslateType;
 	}
 
 	public String getEntity2tableMappingList() {
