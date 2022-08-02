@@ -20,19 +20,20 @@ import org.teasoft.honey.osql.core.SessionFactory;
 
 /**
  * @author Kingstar
- * @since 1.17
+ * @since  1.17
  */
 @Aspect
 public class TranHandler {
-	
+
 	private static final String MSG = "[Bee] Tran annotation intercept in TranHandler,";
 
-	@Around("@annotation(org.teasoft.bee.osql.transaction.Tran)")
+	@Around("@within(org.teasoft.bee.osql.transaction.Tran) || @annotation(org.teasoft.bee.osql.transaction.Tran)")
 	public Object tranAround(ProceedingJoinPoint joinPoint) throws Throwable {
 
-		Logger.info(MSG + " start......");
-		Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
-		Tran annotation = method.getAnnotation(Tran.class);
+		Logger.info(MSG + " start...");
+
+		Tran annotation = getTargetAnnotation(joinPoint);
+
 		String readOnly = annotation.readOnly();
 		TransactionIsolationLevel isolation = annotation.isolation();
 
@@ -56,8 +57,18 @@ public class TranHandler {
 			Logger.warn(e.getMessage(), e);
 		}
 
-		Logger.info(MSG + " end......");
+		Logger.info(MSG + " end...");
 		return returnValue;
+	}
+
+	private Tran getTargetAnnotation(ProceedingJoinPoint joinPoint)
+			throws NoSuchMethodException {
+		Tran annotation = joinPoint.getTarget().getClass().getAnnotation(Tran.class);
+		if (annotation == null) {
+			Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+			annotation = method.getAnnotation(Tran.class);
+		}
+		return annotation;
 	}
 
 }
