@@ -19,7 +19,11 @@ Bee-Ext
 
 * 6.Bee基于Redis的缓存	
 
-* 7.从Excel获取信息生成数据库表	
+* 7.从Excel获取信息生成数据库表(DdlViaExcel)	
+
+* 8.支持Android和HarmonyOS访问数据库	
+
+* 9.@Tran注解	
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
