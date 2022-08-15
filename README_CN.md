@@ -2,7 +2,7 @@
 Bee-Ext
 =========
 **Bee-Ext** 是Bee的一个扩展工具包。  
-**Bee** 是一个 Java ORM框架利器, 它的开发速度快, 编码少, 还很简单！       
+**Bee** 是一个 Java ORM框架利器, 它的开发速度快, 编码少, 概念简单, 性能还很好！       
 **Bee** 是一个具有人工智能(AI)特性，省时/优雅、简易、自动( **AiTea:** Timesaving/Tasteful, Easy, Automatic) 的ORM软件框架(AiTeaSoft)(IT-->AiTea 的思维转变!)。  
 
 **我们希望通过扩展Bee,提供更多更好用的工具!&nbsp;**
