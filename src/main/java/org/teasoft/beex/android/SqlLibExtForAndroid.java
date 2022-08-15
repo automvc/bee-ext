@@ -46,7 +46,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		Object obj = HoneyContext.getCurrentAppDB();
 		if (obj != null) return (SQLiteDatabase) obj;
 
-		if (database == null) {
+		if (database == null || !database.isOpen()) {
 			database = getWritableDB();
 			if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase(); // change just return ???
 		}//不为null时,则使用原来的
@@ -60,6 +60,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	}
 
 	private SQLiteDatabase getWritableDB() {
+		
 		return BeeSQLiteOpenHelper.getWritableDB();
 	}
 
