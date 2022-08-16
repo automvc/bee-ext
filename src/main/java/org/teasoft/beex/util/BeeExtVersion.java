@@ -6,6 +6,8 @@
 
 package org.teasoft.beex.util;
 
+import org.teasoft.honey.osql.core.Logger;
+
 /**
  * BeeExt Version
  * @author Kingstar
@@ -16,6 +18,11 @@ public final class BeeExtVersion {
 	private BeeExtVersion() {}
 
 	public static final String version = "V1.17";
-	public static final String buildId = "V1.17.0.9";
+	public static final String buildId = "V1.17.0.10";
+	
+	static {
+		Logger.info("[Bee] ========= BeeExt Version is: "+version);
+		Logger.debug("[Bee] ========= BeeExt buildId is: "+buildId);
+	}
 
 }
