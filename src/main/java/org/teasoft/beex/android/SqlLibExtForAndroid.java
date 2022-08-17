@@ -362,7 +362,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		  Logger.debug(e2.getMessage(), e2);
 		}finally {
 			try {
-				db.endTransaction();	
+				if (db != null) db.endTransaction();	
 			} catch (Exception e) {
 				Logger.debug(e.getMessage(), e);
 			}
