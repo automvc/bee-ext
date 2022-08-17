@@ -4,15 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teasoft</groupId>
 	<artifactId>bee-ext</artifactId>
-	<version>1.17.0.9-SNAPSHOT</version>
+	<version>1.17</version>
 	<packaging>jar</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
-<!-- 		<bee.version>1.11</bee.version> -->
-		<bee.version>1.17.0.9-SNAPSHOT</bee.version>
+		<bee.version>1.17</bee.version>
 	</properties>
 
 	<dependencies>
@@ -32,12 +31,12 @@
 		</dependency>
 
         <!-- log4j -->
-<!-- 		<dependency>
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 			<scope>provided</scope>
-		</dependency> -->
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -101,21 +100,30 @@
 			<scope>provided</scope>
 		</dependency>
 		
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.google.android</groupId>
 			<artifactId>android</artifactId>
 			<version>23</version>
 			<scope>system</scope>
 			<systemPath>F:\JavaWeb\android-sdk-windows\platforms\android-23\android.jar</systemPath>
-		</dependency>
+		    <systemPath>${project.basedir}\src\main\resources\jar\android.jar</systemPath>
+		</dependency> -->
 		
 		<dependency>
+			<groupId>com.google.android</groupId>
+			<artifactId>android</artifactId>
+			<version>4.1.1.4</version>
+			<scope>provided</scope>
+		</dependency>
+		
+<!-- if necessary, can import the ohos.jar to java build path -->
+<!-- 		<dependency>
 			<groupId>ohos</groupId>
 			<artifactId>harmony</artifactId>
 			<version>4</version>
 			<scope>system</scope>
-			<systemPath>D:\JavaWeb\Huawei\Sdk\java\2.1.1.21\api\ohos.jar</systemPath>
-		</dependency>
+			<systemPath>${project.basedir}\src\main\resources\jar\ohos.jar</systemPath>
+		</dependency> -->
 		
 		
 <!-- 		导致用jdk1.7编译不了 ; bee-ext也会引起bee-spring-boot用jdk1.7编译不了-->
