@@ -21,6 +21,10 @@ public final class BeeExtVersion {
 	public static final String buildId = "V1.17.0.10";
 	
 	static {
+		printVersion();
+	}
+	
+	private static void printVersion() {
 		Logger.info("[Bee] ========= BeeExt Version is: "+version);
 		Logger.debug("[Bee] ========= BeeExt buildId is: "+buildId);
 	}
