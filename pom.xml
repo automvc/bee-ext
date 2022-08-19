@@ -100,15 +100,6 @@
 			<scope>provided</scope>
 		</dependency>
 		
-<!-- 		<dependency>
-			<groupId>com.google.android</groupId>
-			<artifactId>android</artifactId>
-			<version>23</version>
-			<scope>system</scope>
-			<systemPath>F:\JavaWeb\android-sdk-windows\platforms\android-23\android.jar</systemPath>
-		    <systemPath>${project.basedir}\src\main\resources\jar\android.jar</systemPath>
-		</dependency> -->
-		
 		<dependency>
 			<groupId>com.google.android</groupId>
 			<artifactId>android</artifactId>
