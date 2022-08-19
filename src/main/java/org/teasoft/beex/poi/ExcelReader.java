@@ -268,6 +268,7 @@ public class ExcelReader {
 		} finally {
 			try {
 				if (workbook != null) workbook.close();
+				if(inputStream!=null) inputStream.close();
 			} catch (IOException e2) {
 				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
 			}
@@ -288,6 +289,7 @@ public class ExcelReader {
 		} finally {
 			try {
 				if (workbook != null) workbook.close();
+				if(inputStream!=null) inputStream.close();
 			} catch (IOException e2) {
 				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
 			}
