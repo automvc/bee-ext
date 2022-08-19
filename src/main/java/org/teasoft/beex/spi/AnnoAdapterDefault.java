@@ -49,15 +49,13 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 
 		if (field.isAnnotationPresent(Column.class)) {
 			Column column = field.getAnnotation(Column.class);
-			String defineColumn = column.value();
-			return defineColumn;
+			return column.value();
 		}
 
 		if (field.isAnnotationPresent(javax.persistence.Column.class)) {
 			javax.persistence.Column column = field
 					.getAnnotation(javax.persistence.Column.class);
-			String defineColumn = column.name();
-			return defineColumn;
+			return column.name();
 		}
 
 		return "";
