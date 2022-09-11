@@ -113,7 +113,7 @@
 			<artifactId>harmony</artifactId>
 			<version>4</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}\src\main\resources\jar\ohos.jar</systemPath>
+			<systemPath>${project.basedir}\src\main\resources\lib\ohos.jar</systemPath>
 		</dependency> -->
 		
 		
@@ -167,6 +167,29 @@
 	</resources>
 	
 		<plugins>
+		
+					<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.1</version>
+    <!-- 编译时使用 lib 目录下的 jar 包 -->
+    <configuration>
+        <encoding>UTF-8</encoding>
+        <compilerArguments>
+<!--             <extdirs>${project.basedir}/lib</extdirs> -->
+            <extdirs>${project.basedir}/src/main/resources/lib</extdirs>
+        </compilerArguments>
+    </configuration>
+    <executions>
+        <execution>
+            <phase>compile</phase>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+		
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -191,13 +214,20 @@
 						</goals>
 					</execution>
 				</executions>
+				
+				<configuration>
+					<excludes>
+						<exclude>/**/*-info.java</exclude>
+					</excludes>
+				</configuration>
+				
 			</plugin>
 			
 			<!-- Javadoc -->
-           <!--  <plugin>
+             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>3.0.0</version>
                 <configuration>
                     <charset>UTF-8</charset>
                     <encoding>UTF-8</encoding>
@@ -212,8 +242,8 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin> -->
-			
+            </plugin> 
+
 
 		</plugins>
 	</build>
