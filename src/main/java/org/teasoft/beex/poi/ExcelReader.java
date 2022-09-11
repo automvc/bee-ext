@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -391,6 +390,7 @@ public class ExcelReader {
 //		return max;
 //	}
 
+	@SuppressWarnings("deprecation")
 	private static String getValue(Cell cell) {
 		if (cell == null) {
 			return null;
@@ -442,7 +442,7 @@ public class ExcelReader {
 					sdf = new SimpleDateFormat("yyyy-MM-dd");
 					Date date = cell.getDateCellValue();
 					result = sdf.format(date);
-				} else if (HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式  
+				} else if (org.apache.poi.hssf.usermodel.HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式  
 					SimpleDateFormat sdf = null;
 					if (cell.getCellStyle().getDataFormat() == HSSFDataFormat.getBuiltinFormat("h:mm")) {
 						sdf = new SimpleDateFormat("HH:mm");
