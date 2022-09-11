@@ -40,15 +40,6 @@ import ohos.data.rdb.RdbStore;
 import ohos.data.rdb.Statement;
 import ohos.data.resultset.ResultSet;
 
-//1. 从DatabaseHelper中获取得RdbStore
-
-//RdbStore	getRdbStore​(StoreConfig config, int version, RdbOpenCallback openCallback)	
-//Obtains an RDB store.
-//RdbStore	getRdbStore​(StoreConfig config, int version, RdbOpenCallback openCallback, ResultSetHook resultSetHook)	
-//Obtains an RDB store.
-
-//2. 用RdbStore直接操作或者 拿到Statement再操作.
-
 /**
  * SqlLib Extend For Harmony.
  * @author Kingstar
@@ -59,7 +50,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 	private static boolean openFieldTypeHandler = HoneyConfig
 			.getHoneyConfig().openFieldTypeHandler;
 
-	private RdbStore rdbStore; // 如何传入 
+	private RdbStore rdbStore; 
 
 	public RdbStore getRdbStore() {
 
@@ -84,6 +75,8 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		return BeeDatabaseHelper.getRdbStore();
 	}
 
+	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> List<T> select(String sql, T entity, String[] sqlArgs) {
 		T targetObj = null;
 		List<T> rsList = null;

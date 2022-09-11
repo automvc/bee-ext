@@ -61,7 +61,7 @@ public class ExcelReader {
 	 * 返回首个Excel sheet的所有行.Returns all rows of the first Excel sheet.
 	 * @param fullPath 完整的Excel文件路径(包含文件名).Full Excel file path (including file name)
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> readExcel(String fullPath) throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath));
@@ -83,7 +83,7 @@ public class ExcelReader {
 	 * @param fullPath 完整的Excel文件路径(包含文件名).Full Excel file path (including file name)
 	 * @param sheetName sheet name
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> readExcel(String fullPath, String sheetName) throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath), sheetName);
@@ -109,7 +109,7 @@ public class ExcelReader {
 	 * @param startRow 开始行(首行为0).start row(0,1,...)
 	 * @param endRow 结束行.end row.
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> readExcel(String fullPath, int startRow, int endRow) throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath), startRow, endRow);
@@ -158,7 +158,7 @@ public class ExcelReader {
 	 * @param fullPath 完整的Excel文件路径(包含文件名).Full Excel file path (including file name)
 	 * @param hopeTitleArray 期望的标题数组.Expected title array.
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray) throws FileNotFoundException {
 		return checkAndReadExcel(fullPath, hopeTitleArray, 0); //默认标题在第0行.
@@ -170,7 +170,7 @@ public class ExcelReader {
 	 * @param hopeTitles 期望的标题(用逗号隔开).Expected title (separated by commas).
 	 * @param titleRow 标题所在行(首行为0). line number of title row(start from 0)
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitles, int titleRow) throws FileNotFoundException {
 		String[] hopeTitleArray = hopeTitles.split(",");
@@ -188,7 +188,7 @@ public class ExcelReader {
 	 * @param hopeTitleArray 期望的标题数组.Expected title array.
 	 * @param titleRow 标题所在行(首行为0). line number of title row(start from 0)
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
-	 * @throws FileNotFoundException
+	 * @throws FileNotFoundException  if the file does not exist
 	 */
 	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray, int titleRow)
 			throws FileNotFoundException {

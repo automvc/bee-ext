@@ -1,7 +1,18 @@
 /*
- * Copyright 2016-2022 the original author.All rights reserved.
+ * Copyright 2020-2022 the original author.All rights reserved.
  * Kingstar(honeysoft@126.com)
- * The license,see the LICENSE file.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.teasoft.beex.autogen;
@@ -32,10 +43,11 @@ public class DdlViaExcel {
 	
 	/**
 	 * 
-	 * @param excelFullPath
-	 * @param sheetNames
+	 * @param excelFullPath excel FullPath
+	 * @param sheetNames  sheetNames
 	 * @param checkTitle  order:  0:column name; 1: type; 2:comment
-	 */                
+	 */
+	@SuppressWarnings("deprecation")
 	public static void createTable(String excelFullPath, String sheetNames[],
 			String checkTitle) {
 
@@ -104,6 +116,7 @@ public class DdlViaExcel {
 		return create_sql;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static void createTable(String excelFullPath, String sheetNames[], String checkTitle,
 			boolean isDropExistTable) {
 
