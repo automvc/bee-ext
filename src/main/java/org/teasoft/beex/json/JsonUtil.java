@@ -20,17 +20,19 @@ package org.teasoft.beex.json;
 import org.teasoft.honey.osql.core.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Json工具.Json Util.
  * @author Kingstar
- * @since  1.11
+ * @since  2.0
  */
 public class JsonUtil {
-
+	
 	public static <T> T toEntity(String json, Class<T> clazz) {
 		try {
+			if(json==null) return null;
 			ObjectMapper mapper = new ObjectMapper();
 			return (T) mapper.readValue(json, clazz);
 		} catch (Exception e) {
@@ -44,6 +46,19 @@ public class JsonUtil {
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(obj);
 		} catch (JsonProcessingException e) {
+			Logger.error(e.getMessage(), e);
+		}
+		return null;
+	}
+	
+	public static <T> T toEntity(String json, Class<T> clazz, Class elementClass) {
+		try {
+			if(json==null) return null;
+			ObjectMapper mapper = new ObjectMapper();
+			JavaType javaType = mapper.getTypeFactory().constructParametricType(clazz, elementClass);
+			return (T)mapper.readValue(json, javaType);
+			
+		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
 		}
 		return null;
