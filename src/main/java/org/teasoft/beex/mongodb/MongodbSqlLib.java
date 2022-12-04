@@ -24,14 +24,16 @@ import java.util.Map;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.teasoft.bee.mongodb.MongodbBeeSql;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.FunctionType;
 import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.ObjSQLException;
 import org.teasoft.bee.osql.OrderType;
-import org.teasoft.honey.mongodb.MongodbBeeSql;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.ExceptionHelper;
+import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
 import org.teasoft.honey.osql.core.Logger;
@@ -44,7 +46,9 @@ import org.teasoft.honey.util.ObjectUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
@@ -63,6 +67,20 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
 	}
 	
+	private MongoDatabase getMongoDatabase() {
+		System.err.println("multiDS_enable:"+HoneyConfig.getHoneyConfig().multiDS_enable);
+		if (!HoneyConfig.getHoneyConfig().multiDS_enable) {
+			return SingleMongodbFactory.getMongoDb();
+		} else {
+			MongoClient client = (MongoClient) HoneyContext.getDatabaseClient();
+//			client.getDatabase(databaseName);
+//			return client.getDatabase("bee");
+			
+			MongoDatabase db=client.getDatabase("bee");
+			return db;
+		}
+	}
+	
 	@Override
 	public <T> List<T> select(T entity) {
 
@@ -72,9 +90,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		Document doc =toDocument(entity);
 		FindIterable<Document> docIterable = null;
 		if (doc != null)
-			docIterable = MongodbFactory.getCollection(tableName).find(doc);
+			docIterable = getMongoDatabase().getCollection(tableName).find(doc);
 		else
-			docIterable = MongodbFactory.getCollection(tableName).find();
+			docIterable = getMongoDatabase().getCollection(tableName).find();
 
 		return TransformResult.toListEntity(docIterable, entity);
 	}
@@ -102,9 +120,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		FindIterable<Document> docIterable = null;
 		Bson sortBson=ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
 		if (doc != null)
-			docIterable = MongodbFactory.getCollection(tableName).find(doc);
+			docIterable = getMongoDatabase().getCollection(tableName).find(doc);
 		else
-			docIterable = MongodbFactory.getCollection(tableName).find();
+			docIterable = getMongoDatabase().getCollection(tableName).find();
 		
 		if(sortBson!=null)  docIterable=docIterable.sort(sortBson);
 
@@ -162,7 +180,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			doc=new Document(map);
 			Document updateDocument=new Document("$set",doc);
 			
-			UpdateResult rs=MongodbFactory.getCollection(tableName).updateMany(filter, updateDocument);
+			UpdateResult rs=getMongoDatabase().getCollection(tableName).updateMany(filter, updateDocument);
 			return (int)rs.getModifiedCount();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -178,7 +196,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 //			doc = ConvertUtil.toBson(entity);
 			Map<String,Object> map = ParaConvertUtil.toMap(entity);
 			doc=new Document(map);
-			MongodbFactory.getCollection(tableName).insertOne(doc);
+			getMongoDatabase().getCollection(tableName).insertOne(doc);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return 0;
@@ -193,7 +211,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		try {
 			Map<String,Object> map = ParaConvertUtil.toMap(entity);
 			doc=new Document(map);
-			DeleteResult rs=MongodbFactory.getCollection(tableName).deleteMany(doc);
+			DeleteResult rs=getMongoDatabase().getCollection(tableName).deleteMany(doc);
 			return (int)rs.getDeletedCount();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -322,9 +340,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		FindIterable<Document> docIterable = null;
 		if (doc != null)
-			docIterable = MongodbFactory.getCollection(tableName).find(doc);
+			docIterable = getMongoDatabase().getCollection(tableName).find(doc);
 		else
-			docIterable = MongodbFactory.getCollection(tableName).find();
+			docIterable = getMongoDatabase().getCollection(tableName).find();
 		
 		if (condition == null) return docIterable;
 		
@@ -372,9 +390,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 //		FindIterable<Document> docIterable = null;
 		DeleteResult rs=null;
 		if (filter != null)
-			 rs = MongodbFactory.getCollection(tableName).deleteMany(filter);
+			 rs = getMongoDatabase().getCollection(tableName).deleteMany(filter);
 		else
-			 rs = MongodbFactory.getCollection(tableName).deleteMany(null);  //TODO
+			 rs = getMongoDatabase().getCollection(tableName).deleteMany(null);  //TODO
 		
 		return (int)rs.getDeletedCount();
 	}
@@ -419,7 +437,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			newDoc = new Document(newMap);
 			Document updateDocument = new Document("$set", newDoc);
 
-			UpdateResult rs = MongodbFactory.getCollection(tableName).updateMany(oldDoc,
+			UpdateResult rs = getMongoDatabase().getCollection(tableName).updateMany(oldDoc,
 					updateDocument);
 			return (int) rs.getModifiedCount();
 		} catch (Exception e) {
@@ -496,7 +514,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			Document doc = toDocumentExcludeSome(entity[i-1], excludeFields);
 			list.add(doc);
 			if (i % batchSize == 0 || i == len) {
-				InsertManyResult irs=MongodbFactory.getCollection(tableName).insertMany(list);
+				InsertManyResult irs=getMongoDatabase().getCollection(tableName).insertMany(list);
 				System.out.println(irs.getInsertedIds());
 				count+=irs.getInsertedIds().size();
 //				MongoUtils.getCollection(tableName).bulkWrite(list);
@@ -609,9 +627,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		FindIterable<Document> docIterable = null;
 		if (moreFilter != null)
-			docIterable = MongodbFactory.getCollection(tableName).find(moreFilter);
+			docIterable = getMongoDatabase().getCollection(tableName).find(moreFilter);
 		else
-			docIterable = MongodbFactory.getCollection(tableName).find(one);
+			docIterable = getMongoDatabase().getCollection(tableName).find(one);
 
 		return TransformResult.toListEntity(docIterable, entity);
 	}
@@ -672,9 +690,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		DeleteResult rs = null;
 		if (moreFilter != null)
-			rs = MongodbFactory.getCollection(tableName).deleteMany(moreFilter);
+			rs = getMongoDatabase().getCollection(tableName).deleteMany(moreFilter);
 		else
-			rs = MongodbFactory.getCollection(tableName).deleteOne(one);
+			rs = getMongoDatabase().getCollection(tableName).deleteOne(one);
 		
 		return (int)rs.getDeletedCount();
 	}
@@ -687,9 +705,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		Document filter = toDocument(entity, condition);
 		int c;
 		if (filter != null)
-			c = (int) MongodbFactory.getCollection(tableName).countDocuments(filter);
+			c = (int) getMongoDatabase().getCollection(tableName).countDocuments(filter);
 		else
-			c = (int) MongodbFactory.getCollection(tableName).countDocuments();
+			c = (int) getMongoDatabase().getCollection(tableName).countDocuments();
 
 		return c;
 	}
@@ -704,7 +722,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			condition=BF.getCondition().setIncludeType(includeType);
 		Document doc=toDocument(entity, condition);
 		
-		return MongodbFactory.getCollection(tableName).insertOne(doc).getInsertedId().asInt64().longValue();
+		return getMongoDatabase().getCollection(tableName).insertOne(doc).getInsertedId().asInt64().longValue();
 	}
 	
 	
@@ -720,7 +738,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 //		map.put("$name", "mongodb99");
 //		Document filter=new Document(map);  //过滤条件,要放在match里
 
-		MongoCollection<Document> collection = MongodbFactory.getCollection(tableName);
+		MongoCollection<Document> collection = getMongoDatabase().getCollection(tableName);
 
 		List<Bson> listBson = new ArrayList<>();
 		Bson funBson = null;
