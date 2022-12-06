@@ -57,12 +57,14 @@ public class MongodbManager {
 		
 //		uri = url.substring(0, index1);
 		StringBuffer s=new StringBuffer(url);
-//		s.delete(index1 + 1,end);
-		s.delete(index1,end);
+		s.delete(index1 + 1,end);
+//		s.delete(index1,end);
 		if(StringUtils.isNotBlank(username)) {
 			s.insert(10, username+":"+password+"@");
 		}
-		uri=s.toString();
+		if (s.charAt(s.length() - 1) == '/') s.delete(s.length() - 1, s.length());
+		
+		uri = s.toString();
 		
 		System.out.println(uri);
 	}
