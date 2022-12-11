@@ -4,7 +4,9 @@
  * The license,see the LICENSE file.
  */
 
-package org.teasoft.beex.mongodb;
+package org.teasoft.beex.mongodb.ds;
+
+import java.io.IOException;
 
 import org.teasoft.honey.database.ClientDataSource;
 
@@ -24,7 +26,7 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 	private String password;
 
 	private boolean inited = false;
-
+	
 	public MongodbSimpleDataSource() {}
 
 	public MongodbSimpleDataSource(String url, String username, String password) {
@@ -45,32 +47,26 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 		inited = true;
 	}
 	
-	
 	@Override
-	public MongoClient getDatabaseClient() {
-		System.out.println("----------getDatabaseClient----------");
-		return mongodbManager.getMongoClient();
+	public Object getDbConnection() {
+		return getMongoDb();
 	}
 	
-	public MongoClient getMongoClient() {
-		return mongodbManager.getMongoClient();
-	}
-
-	public MongoDatabase getMongoDb() {
-		MongoClient client=getMongoClient();
+	private MongoDatabase getMongoDb() {
+		MongoClient client=mongodbManager.getMongoClient();
 		//从资源池中拿, 或放到上下文or当前线程中管理.   TODO
+		MongoContext.setCurrentMongoClient(client);
 		return client.getDatabase(mongodbManager.getDatabaseName());
 	}
 
-//	public MongoCollection<Document> getCollection(String name) {
-//		return getMongoDb().getCollection(name);
-//	}
-
-//	@Override
-//	public Connection getConnection() throws SQLException {
-//		return new MongodbConnection();// 为了兼容JDBC
-//	}
-
+	@Override
+	public void close() throws IOException {
+		//TODO 
+		MongoContext.removeMongoClient();
+	}
+	
+	
+	
 	// get,set
 	public void setUrl(String url) {
 		this.url = url;

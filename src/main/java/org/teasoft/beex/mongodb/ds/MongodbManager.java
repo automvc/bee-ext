@@ -4,7 +4,7 @@
  * The license,see the LICENSE file.
  */
 
-package org.teasoft.beex.mongodb;
+package org.teasoft.beex.mongodb.ds;
 
 import org.teasoft.honey.util.StringUtils;
 
@@ -30,20 +30,23 @@ public class MongodbManager {
 		initConfig();
 	}
 
-//	{
-//		initConfig();
-//	}
-
 	private void initConfig() {
 //		HoneyConfig config = HoneyConfig.getHoneyConfig();
 //		url = config.getUrl();
 //		username = config.getUsername();
 //		password = config.getPassword();
+		
+		if (StringUtils.isBlank(url)) return;
+		
 		if (url != null) url = url.trim();
 
-		if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
+		if (url != null && url.endsWith("/")) url = url.substring(0, url.length() - 1);
 		
-		int index0=url.lastIndexOf('?');
+		int index0 = -1;
+		if (url != null) {
+			index0 = url.lastIndexOf('?');
+		}
+		
 		int index1 = -1;
 		int end;
 		if(index0>0) {
@@ -66,7 +69,7 @@ public class MongodbManager {
 		
 		uri = s.toString();
 		
-		System.out.println(uri);
+//		System.out.println(uri);
 	}
 
 	public MongoClient getMongoClient() {
@@ -74,17 +77,8 @@ public class MongodbManager {
 		return mongoClient;
 	}
 
-//	public MongoDatabase getMongoDb() {
-//		MongoClient mongoClient = getMongoClient();
-//		return mongoClient.getDatabase(databaseName);
-//	}
-//
-//	public MongoCollection<Document> getCollection(String name) {
-//		MongoDatabase mongoDatabase = getMongoDb();
-//		MongoCollection<Document> collection = mongoDatabase.getCollection(name);
-//		return collection;
-//	}
 
+	
 	// get,set
 	public String getUrl() {
 		return url;
@@ -114,8 +108,7 @@ public class MongodbManager {
 		return databaseName;
 	}
 	
-	
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 //      uri = "mongodb://localhost:27017/bee";
 //		url = "mongodb://username:test123456@localhost:27017/bee?tls=false
 		MongodbManager m=new MongodbManager("mongodb://localhost:27017/bee","","");
@@ -123,6 +116,6 @@ public class MongodbManager {
 		
 		MongodbManager m2=new MongodbManager("mongodb://localhost:27017/beeaa?tls=false","username","test123456");
 		System.out.println(m2.getDatabaseName());
-	}
+	}*/
 
 }

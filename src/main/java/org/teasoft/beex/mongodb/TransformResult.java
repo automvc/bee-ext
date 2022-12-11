@@ -23,8 +23,8 @@ import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 import org.teasoft.honey.osql.util.AnnoUtil;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
 
 /**
  * @author Jade
@@ -40,10 +40,10 @@ public class TransformResult {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static Object jsonHandlerProcess(Field field, Object obj, TypeHandler jsonHandler) {
 		if (List.class.isAssignableFrom(field.getType())) {
-			Object newOjb[] = new Object[2];
-			newOjb[0] = obj;
-			newOjb[1] = field;
-			obj = jsonHandler.process(field.getType(), newOjb);
+			Object newObj[] = new Object[2];
+			newObj[0] = obj;
+			newObj[1] = field;
+			obj = jsonHandler.process(field.getType(), newObj);
 		} else {
 			obj = jsonHandler.process(field.getType(), obj);
 		}
@@ -322,7 +322,7 @@ public class TransformResult {
 		return targetObj;
 	}
 
-	public static <T> List<T> toListEntity(FindIterable<Document> docIterable, T entity) {
+	public static <T> List<T> toListEntity(MongoIterable<Document> docIterable, T entity) {
 		List<T> list = new ArrayList<>();
 
 		try {

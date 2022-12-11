@@ -4,13 +4,11 @@
  * The license,see the LICENSE file.
  */
 
-package org.teasoft.beex.mongodb;
+package org.teasoft.beex.mongodb.ds;
 
-import org.bson.Document;
 import org.teasoft.honey.osql.core.HoneyConfig;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 public class SingleMongodbFactory {
@@ -22,14 +20,8 @@ public class SingleMongodbFactory {
 		HoneyConfig config = HoneyConfig.getHoneyConfig();
 		manager = new MongodbManager(config.getUrl(), config.getUsername(),
 				config.getPassword());
-		
-		mongoClient=manager.getMongoClient();
-	}
 
-	public static MongoClient getMongoClient() {
-		return mongoClient;
-//		System.err.println("--------getMongoClient----------");
-//		return manager.getMongoClient();
+		mongoClient = manager.getMongoClient();
 	}
 
 	public static MongoDatabase getMongoDb() {
@@ -38,10 +30,6 @@ public class SingleMongodbFactory {
 //		getMongoClient(); //可以一下生成多个 
 //		System.err.println("--------getMongoDb----------");
 //		return getMongoClient().getDatabase(manager.getDatabaseName());
-	}
-
-	public static MongoCollection<Document> getCollection(String name) {
-		return getMongoDb().getCollection(name);
 	}
 
 }
