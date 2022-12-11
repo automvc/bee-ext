@@ -113,7 +113,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		} finally {
 			close(conn);
 		}
-
 	}
 
 	@Override
@@ -136,25 +135,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		} finally {
 			close(conn);
 		}
-	}
-
-	public <T> String selectJson(T entity) {
-
-//		String tableName = _toTableName(entity); // 1 TODO 分片时,看下是否带下标
-////		MongoUtils.getCollection(tableName)   //2. TODO 分片时 要使用 动态获取的ds拿db.
-//
-//		Document doc =toDocument(entity);
-//		FindIterable<Document> docIterable = null;
-//		if (doc != null)
-//			docIterable = MongoUtils.getCollection(tableName).find(doc);
-//		else
-//			docIterable = MongoUtils.getCollection(tableName).find();
-//		
-//		return "";
-//        //TODO 要转成String.
-////		return ConvertUtil.toListEntity(docIterable, entity);
-
-		return selectJson(entity, null);
 	}
 
 	@Override
@@ -247,7 +227,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		}
 	}
 
-	int getIncludeType(Condition condition) {
+	private int getIncludeType(Condition condition) {
 		if (condition == null) return -1;
 		return condition.getIncludeType() == null ? -1 : condition.getIncludeType().getValue();
 	}
@@ -317,7 +297,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 //        [{"_id": {"$numberLong": "10003"}, "name": "mongodb", "abc": ""},
 	}
 
-	// 这种如何关闭?? TODO
 	public <T> FindIterable<Document> findIterableDocument(T entity, Condition condition) {
 		
 		if(condition!=null) condition.setSuidType(SuidType.SELECT);
@@ -365,7 +344,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 						.projection(fields(include(selectFields), excludeId()));
 		}
 
-//				 cols.find().projection(fields(include("username","pwd"),excludeId()));//返回username与pwd字段且不返回_id字段
+//		 cols.find().projection(fields(include("username","pwd"),excludeId()));//返回username与pwd字段且不返回_id字段
 
 		Bson sortBson = ParaConvertUtil.toSortBson(condition);
 		if (sortBson != null) docIterable = docIterable.sort(sortBson);
@@ -384,7 +363,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		Document filter = toDocument(entity, condition);
 		try {
-//		FindIterable<Document> docIterable = null;
 			DeleteResult rs = null;
 			if (filter != null)
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
@@ -424,10 +402,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		return update(reMap[0], reMap[1], tableName, condition);
 	}
 	
-//	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName) {
-//		return update(filterMap, newMap, tableName, null);
-//	}
-
 	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName,Condition condition) {
 		Document oldDoc = null;
 		Document newDoc = null;
@@ -902,10 +876,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			close(conn);
 		}
 	}
-	
-	
-	
-	
 	
 
 	@Override
