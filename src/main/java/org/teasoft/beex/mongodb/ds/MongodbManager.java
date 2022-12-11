@@ -35,41 +35,43 @@ public class MongodbManager {
 //		url = config.getUrl();
 //		username = config.getUsername();
 //		password = config.getPassword();
-		
-		if (StringUtils.isBlank(url)) return;
-		
-		if (url != null) url = url.trim();
 
-		if (url != null && url.endsWith("/")) url = url.substring(0, url.length() - 1);
-		
-		int index0 = -1;
-		if (url != null) {
+		if (StringUtils.isBlank(url)) {
+			return;
+		} else {
+
+			url = url.trim();
+
+			if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
+
+			int index0 = -1;
+
 			index0 = url.lastIndexOf('?');
-		}
-		
-		int index1 = -1;
-		int end;
-		if(index0>0) {
-			index1=url.substring(0,index0).lastIndexOf('/');
-			end=index0;
-		}else {
-			index1=url.lastIndexOf('/');
-			end=url.length();
-		}
-		databaseName = url.substring(index1 + 1,end);
-		
-//		uri = url.substring(0, index1);
-		StringBuffer s=new StringBuffer(url);
-		s.delete(index1 + 1,end);
-//		s.delete(index1,end);
-		if(StringUtils.isNotBlank(username)) {
-			s.insert(10, username+":"+password+"@");
-		}
-		if (s.charAt(s.length() - 1) == '/') s.delete(s.length() - 1, s.length());
-		
-		uri = s.toString();
-		
+
+			int index1 = -1;
+			int end;
+			if (index0 > 0) {
+				index1 = url.substring(0, index0).lastIndexOf('/');
+				end = index0;
+			} else {
+				index1 = url.lastIndexOf('/');
+				end = url.length();
+			}
+			databaseName = url.substring(index1 + 1, end);
+
+//		    uri = url.substring(0, index1);
+			StringBuffer s = new StringBuffer(url);
+			s.delete(index1 + 1, end);
+//		    s.delete(index1,end);
+			if (StringUtils.isNotBlank(username)) {
+				s.insert(10, username + ":" + password + "@");
+			}
+			if (s.charAt(s.length() - 1) == '/') s.delete(s.length() - 1, s.length());
+
+			uri = s.toString();
 //		System.out.println(uri);
+		}
+
 	}
 
 	public MongoClient getMongoClient() {

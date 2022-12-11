@@ -18,6 +18,7 @@ import static com.mongodb.client.model.Projections.include;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.ObjSQLException;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
+import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.honey.database.DatabaseClientConnection;
 import org.teasoft.honey.osql.core.ConditionImpl;
@@ -175,8 +177,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 					updateDocument);
 			return (int) rs.getModifiedCount();
 		} catch (Exception e) {
-			e.printStackTrace();
-			return 0;
+			// e.printStackTrace();
+			Logger.warn(e.getMessage());
+			return -1;
 		} finally {
 			close(conn);
 		}
@@ -193,7 +196,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			getMongoDatabase(conn).getCollection(tableName).insertOne(doc);
 		} catch (Exception e) {
 			Logger.warn(e.getMessage(), e);
-			return 0;
+			return -1;
 		} finally {
 			close(conn);
 		}
@@ -210,21 +213,34 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 	@Override
 	public <T> int delete(T entity) {
-		String tableName = _toTableName(entity);
-		Document doc = null;
-		DatabaseClientConnection conn = null;
-		try {
-			Map<String, Object> map = ParaConvertUtil.toMap(entity);
-			doc = new Document(map);
-			conn = getConn();
-			DeleteResult rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(doc);
-			return (int) rs.getDeletedCount();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return 0;
-		} finally {
-			close(conn);
-		}
+		
+		return delete(entity, null);
+		
+//		String tableName = _toTableName(entity);
+//		Document doc = null;
+//		DatabaseClientConnection conn = null;
+//		try {
+//
+//			Map<String, Object> map = ParaConvertUtil.toMap(entity);
+//			conn = getConn();
+//			DeleteResult rs = null;
+//			if (ObjectUtils.isNotEmpty(map)) {
+//				doc = new Document(map);
+//				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(doc);
+//			} else {
+//				doc = new Document(new HashMap()); //删除所有数据
+//				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(doc);
+////				 getMongoDatabase(conn).getCollection(tableName).drop(); //会连表(集合)结构一起删除
+////				 return 0;
+//			}
+//			return (int) rs.getDeletedCount();
+//		} catch (Exception e) {
+//			// e.printStackTrace();
+//			return 0;
+//		} finally {
+//			close(conn);
+//		}
+		
 	}
 
 	private int getIncludeType(Condition condition) {
@@ -244,7 +260,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
 
 		} catch (Exception e) {
-//			e.printStackTrace();
+//			// e.printStackTrace();
 			throw ExceptionHelper.convert(e);
 		}
 
@@ -284,7 +300,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 ////				 https://www.likecs.com/ask-1223565.html
 //			}
 //		} catch (Exception e) {
-//			e.printStackTrace();
+//			// e.printStackTrace();
 //		}
 //		if (json.length() > 0) {
 //			json.deleteCharAt(0);
@@ -364,12 +380,22 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		Document filter = toDocument(entity, condition);
 		try {
 			DeleteResult rs = null;
-			if (filter != null)
+			if (filter != null) {
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
+			}else {
+				boolean notDeleteWholeRecords = HoneyConfig.getHoneyConfig().notDeleteWholeRecords;
+				if (notDeleteWholeRecords) {
+					throw new BeeIllegalBusinessException("BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).");
+				}
+				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap())); 
+			}
+			if (rs != null)
+				return (int) rs.getDeletedCount();
 			else
-				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(null); // TODO
-
-			return (int) rs.getDeletedCount();
+				return 0;
+		}catch(Exception e) {
+			Logger.warn(e.getMessage());
+			return -1;
 		} finally {
 			close(conn);
 		}
@@ -532,7 +558,8 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			Logger.warn(e.getMessage());
 		}
 		return doc;
 	}
@@ -543,7 +570,8 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			Map<String, Object> map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
 			doc = new Document(map);
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			Logger.warn(e.getMessage());
 		}
 		return doc;
 	}
