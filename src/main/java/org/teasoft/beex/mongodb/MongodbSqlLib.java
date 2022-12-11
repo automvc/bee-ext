@@ -385,7 +385,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			}else {
 				boolean notDeleteWholeRecords = HoneyConfig.getHoneyConfig().notDeleteWholeRecords;
 				if (notDeleteWholeRecords) {
-					throw new BeeIllegalBusinessException("BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).");
+					throw new BeeIllegalBusinessException("BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).If need, you can change the config in bee.osql.notDeleteWholeRecords !");
 				}
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap())); 
 			}
@@ -433,6 +433,15 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		Document newDoc = null;
 		DatabaseClientConnection conn = null;
 		try {
+			
+			boolean notUpdateWholeRecords = HoneyConfig.getHoneyConfig().notUpdateWholeRecords;
+			if (notUpdateWholeRecords && ObjectUtils.isEmpty(filterMap)) {
+				throw new BeeIllegalBusinessException(
+						"BeeIllegalBusinessException: It is not allowed update whole documents(records) in one collection(table). If need, you can change the config in bee.osql.notUpdateWholeRecords !");
+			}
+			
+			if (filterMap == null) filterMap = new HashMap<>();
+			
 			oldDoc = new Document(filterMap); // filter
 			List<Bson> updateBsonList=new ArrayList<>();
 			
