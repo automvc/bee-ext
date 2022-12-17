@@ -143,6 +143,8 @@ public class ParaConvertUtil {
 	
 	public static Bson toSortBson(Condition condition) {
 		
+		if(condition==null) return null;
+		
 		ConditionImpl conditionImpl = (ConditionImpl) condition;
 		ShardingSortStruct struct=ShardingUtil.parseOrderByMap(conditionImpl.getOrderByMap());
 		
