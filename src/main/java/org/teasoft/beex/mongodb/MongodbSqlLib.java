@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -60,7 +61,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.BsonField;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
@@ -69,6 +69,7 @@ import com.mongodb.client.result.UpdateResult;
 
 /**
  * @author Jade
+ * @author Kingstar
  * @since  2.0
  */
 public class MongodbSqlLib implements MongodbBeeSql {
@@ -153,14 +154,12 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			if (pks.length < 1) throw new ObjSQLException(
 					"ObjSQLException: in the update(T entity) or update(T entity,IncludeType includeType), the id field is missing !");
 
-//			doc = ConvertUtil.toBson(entity);
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 
 			Document filter = new Document();
 			String column = "";
 			for (int i = 0; i < pks.length; i++) {
 				column = pks[i];
-//				System.out.println("column:    "+column);
 				if ("id".equalsIgnoreCase(column)) {// 替换id为_id
 					column = IDKEY;
 				}
@@ -177,7 +176,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 					updateDocument);
 			return (int) rs.getModifiedCount();
 		} catch (Exception e) {
-			// e.printStackTrace();
 			Logger.warn(e.getMessage());
 			return -1;
 		} finally {
@@ -213,34 +211,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 	@Override
 	public <T> int delete(T entity) {
-		
 		return delete(entity, null);
-		
-//		String tableName = _toTableName(entity);
-//		Document doc = null;
-//		DatabaseClientConnection conn = null;
-//		try {
-//
-//			Map<String, Object> map = ParaConvertUtil.toMap(entity);
-//			conn = getConn();
-//			DeleteResult rs = null;
-//			if (ObjectUtils.isNotEmpty(map)) {
-//				doc = new Document(map);
-//				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(doc);
-//			} else {
-//				doc = new Document(new HashMap()); //删除所有数据
-//				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(doc);
-////				 getMongoDatabase(conn).getCollection(tableName).drop(); //会连表(集合)结构一起删除
-////				 return 0;
-//			}
-//			return (int) rs.getDeletedCount();
-//		} catch (Exception e) {
-//			// e.printStackTrace();
-//			return 0;
-//		} finally {
-//			close(conn);
-//		}
-		
 	}
 
 	private int getIncludeType(Condition condition) {
@@ -286,34 +257,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		JsonResultWrap wrap = TransformResult.toJson(docIterable.iterator(), entity);
 		return wrap.getResultJson();
-
-//		StringBuffer json = new StringBuffer("");
-//		try {
-//			MongoCursor<Document> cursor = docIterable.iterator();
-//			while (cursor.hasNext()) {
-//				json.append(",");
-//				Document document = cursor.next();
-//				//https://blog.csdn.net/weixin_43744732/article/details/124400357
-//				JsonWriterSettings settings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build();
-//				 json.append(document.toJson(settings));
-////				 [{"_id": 10003, "name": "mongodb", "abc": ""},    //字段名转换. TODO
-////				 https://www.likecs.com/ask-1223565.html
-//			}
-//		} catch (Exception e) {
-//			// e.printStackTrace();
-//		}
-//		if (json.length() > 0) {
-//			json.deleteCharAt(0);
-//		}
-//		json.insert(0, "[");
-//		json.append("]");
-//
-//        return json.toString();
-
-//        [{"_id": {"$numberLong": "10003"}, "name": "mongodb", "abc": ""},
 	}
 
-	public <T> FindIterable<Document> findIterableDocument(T entity, Condition condition) {
+	private <T> FindIterable<Document> findIterableDocument(T entity, Condition condition) {
 		
 		if(condition!=null) condition.setSuidType(SuidType.SELECT);
 
@@ -333,6 +279,9 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		if (condition == null) return docIterable;
 
 		ConditionImpl conditionImpl = (ConditionImpl) condition;
+		
+		Bson sortBson = ParaConvertUtil.toSortBson(condition);
+		if (sortBson != null) docIterable = docIterable.sort(sortBson);
 
 		Integer size = conditionImpl.getSize();
 		Integer start = conditionImpl.getStart();
@@ -359,12 +308,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 				docIterable = docIterable
 						.projection(fields(include(selectFields), excludeId()));
 		}
-
-//		 cols.find().projection(fields(include("username","pwd"),excludeId()));//返回username与pwd字段且不返回_id字段
-
-		Bson sortBson = ParaConvertUtil.toSortBson(condition);
-		if (sortBson != null) docIterable = docIterable.sort(sortBson);
-		
 		}finally {
 			close(conn);
 		}
@@ -607,7 +550,6 @@ public class MongodbSqlLib implements MongodbBeeSql {
 				}
 				moreFilter = Filters.or(idFilters);
 			} else {
-//				System.out.println("idType: " + idType);
 				if ("String".equals(idType) && isMongodbId(ids[0]))
 					one.put(IDKEY, new ObjectId(ids[0]));
 				else
@@ -815,23 +757,21 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			}
 			listBson.add(funBson);
 			
-			
-			
-			////////
-			System.out.println("--------------------start--");
-			AggregateIterable<Document> iterable= collection.aggregate(listBson);
-			MongoCursor<Document> it=iterable.iterator();
-			while(it.hasNext()) {
-				System.out.println(it.next().toJson());
-			}
-			System.out.println("--------------------end--");
-			////////
+//			////////
+//			System.out.println("--------------------start--");
+//			AggregateIterable<Document> iterable= collection.aggregate(listBson);
+//			MongoCursor<Document> it=iterable.iterator();
+//			while(it.hasNext()) {
+//				System.out.println(it.next().toJson());
+//			}
+//			System.out.println("--------------------end--");
+//			////////
 
 			Document rs = collection.aggregate(listBson).first();
 			
 			if(rs==null) return "";
 
-		System.err.println(rs.toJson());
+//		System.err.println(rs.toJson());
 
 			Map<String, Object> jsonMap = null;
 			try {
@@ -854,12 +794,8 @@ public class MongodbSqlLib implements MongodbBeeSql {
 	
 	
 	
-//	group("$name", sum("maxWords", 1))));  // 改成这个,用于group by
-	
 	private <T> List<T> selectWithGroupBy(T entity,Condition condition) {
 		
-		BsonField[] bsonFieldArray = selectFunBsonField(condition);
-
 		String tableName = _toTableName(entity);
 
 		Document filter = toDocument(entity, condition); // 加过滤条件. TODO
@@ -868,52 +804,55 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		try {
 			MongoCollection<Document> collection = getMongoDatabase(conn).getCollection(tableName);
 			
-//			String groupByColumn="name"; //分组字段
-			String groupByColumn=condition.getGroupByFields().get(0); //分组字段   TODO  多个字段分组??
-			if ("id".equalsIgnoreCase(groupByColumn)) groupByColumn = IDKEY;
-			
-			groupByColumn="$"+groupByColumn;
-			
+			 List<String> groupNameslist=condition.getGroupByFields();
+			 int size=groupNameslist.size();
+	         
+	         StringBuffer groupColumn=new StringBuffer("  '_id' : {");
+	         
+	         for (int i = 0;groupNameslist!=null &&  i < size; i++) {
+	        	 if(i!=0) groupColumn.append(" , ");
+	        	 groupColumn.append("'");
+	        	 groupColumn.append(groupNameslist.get(i));
+	        	 groupColumn.append("':'$");
+	        	 groupColumn.append(groupNameslist.get(i));
+	        	 groupColumn.append("'");
+			 }
+	         groupColumn.append("}");
+	         
+	         StringBuffer groupSearch=new StringBuffer("{ '$group' : {");
+	         groupSearch.append(groupColumn);
+	         
+	     	String[] selectFunBsonFieldArray = selectFunBsonField(condition);
+	         for (int i = 0; selectFunBsonFieldArray!=null && i < selectFunBsonFieldArray.length; i++) {
+	        	 groupSearch.append(",");
+	        	 groupSearch.append(selectFunBsonFieldArray[i]);
+			}
+	         
+	         groupSearch.append("}}");
 			
 			List<Bson> listBson = new ArrayList<>();
-			Bson funBson = null;
 			
 			if (filter != null) listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
 			
-			funBson=group(groupByColumn,bsonFieldArray);
 
-			listBson.add(funBson);
+			listBson.add(BsonDocument.parse(groupSearch.toString()));
+			
 			AggregateIterable<Document> iterable= collection.aggregate(listBson);
 			
 			//////// test start
 			System.out.println("--------------------start--");
 			MongoCursor<Document> it=iterable.iterator();
 			while(it.hasNext()) {
-//				System.out.println(it.next().toJson());
-				Document d=it.next();
-				System.out.println(d.get("_id") + "    "+ d.get("min_total"));
-//				10277    77.77  //可以使用这种方法解析
+				System.out.println(it.next().toJson());
 			}
-//			System.out.println("--------------------end--");
-			
-//			{"_id": 10276, "id": 10276, "min_total": {"$numberDecimal": "76.76"}}
-//			{"_id": 10125, "id": 10125, "min_total": null}    //"_id"对应的值是排序字段的值
-			
-			//返回结果中,_id是分组的字段;  _fun_rs是上面定义统计返回结果的变量
-//			{"_id": "test bee ", "_fun_rs": 121}
-//			{"_id": "test bee , update!", "_fun_rs": 3}
-			
 			return null;   
 	        //////// test end
-			
-//			return TransformResult.toListEntity(iterable, entity); //TODO 要转换结果
 			
 
 		} finally {
 			close(conn);
 		}
 	}
-	
 
 	@Override
 	public <T> List<String[]> selectString(T entity, Condition condition) { // TODO
@@ -927,13 +866,13 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		return NameTranslateHandle.toTableName(c.getName());
 	}
 	
-	private BsonField[] selectFunBsonField(Condition condition) {
+	private String[] selectFunBsonField(Condition condition) {
 		
-		BsonField[] bsonFieldArray = null;
+		String[] bsonFieldArray = null;
 		ConditionImpl conditionImpl = (ConditionImpl) condition;
 		List<FunExpress> funExpList = conditionImpl.getFunExpList();
 		for (int i = 0; funExpList != null && i < funExpList.size(); i++) {
-			if (i == 0) bsonFieldArray = new BsonField[funExpList.size()];
+			if (i == 0) bsonFieldArray = new String[funExpList.size()];
 
 			String functionType = funExpList.get(i).getFunctionType();
 			String alias = funExpList.get(i).getAlias();
@@ -943,28 +882,21 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			if ("id".equalsIgnoreCase(fieldForFun)) fieldForFun = IDKEY;
 			
 			if (FunctionType.MAX.getName().equals(functionType)) {
-				bsonFieldArray[i] = max(alias, "$" + fieldForFun); // max(变量名, $+聚合的字段)
+				bsonFieldArray[i] ="'XfieldX1' : { '$max' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.MIN.getName().equals(functionType)) {
-				bsonFieldArray[i] = min(alias, "$" + fieldForFun);
+				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.AVG.getName().equals(functionType)) {
-				bsonFieldArray[i] = avg(alias, "$" + fieldForFun);
+				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.SUM.getName().equals(functionType)) {
-				bsonFieldArray[i] = sum(alias, "$" + fieldForFun); // 统计的值为null时, sum: 0
+				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.COUNT.getName().equals(functionType)) {
-				bsonFieldArray[i] = sum(alias, 1);
+				bsonFieldArray[i] ="'_countX1' : { '$sum' : 1 }".replace("_countX1", alias);
 			}
-			
-//			group("$abc", max("maxWords", "$_id")))); //用abc分组,求 _id列的最大值
-			
-			//分组后,有多个聚合; 类似:select name,count(*),max(id),min(total) from orders group by name;
-//			group("$abc", sum("totalWords", "$total"),avg("averageWords", "$total"),max("maxWords", "$total"), min("minWords", "$total"))
-//			group("$分组列名", sum("变量名", "$聚合用的列名")
 		}
 		
 		if(bsonFieldArray==null && conditionImpl.hasGroupBy()==Boolean.TRUE) {
-			bsonFieldArray=new BsonField[1];
-			bsonFieldArray[0] = sum("_count", 1);
-//			group("$name", sum("maxWords", 1))));
+			bsonFieldArray=new String[1];
+			bsonFieldArray[0] = "'_count' : { '$sum' : 1 }";
 		}
 		
 		return bsonFieldArray;

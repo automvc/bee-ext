@@ -118,7 +118,7 @@ public class ParaConvertUtil {
 		if (orderTypes.length == 1) {
 			int order = -1;
 			if (orderTypes[0] == OrderType.ASC) order = 1;
-			return new Document(orderFields[0], order);
+			return new Document(tranferId(orderFields[0]), order);
 		}
 
 		Bson b[] = new Bson[orderTypes.length];
@@ -128,10 +128,17 @@ public class ParaConvertUtil {
 				order = 1;
 			else
 				order = -1;
-			b[i] = new Document(orderFields[i], order);
+			b[i] = new Document(tranferId(orderFields[i]), order);
 		}
 
 		return Filters.and(b);
+	}
+	
+	private static String tranferId(String fieldName) {
+		if ("id".equalsIgnoreCase(fieldName))
+			return "_id";
+		else
+			return fieldName;
 	}
 	
 	public static Bson toSortBson(Condition condition) {
