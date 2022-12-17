@@ -16,6 +16,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
+import org.teasoft.bee.osql.Cache;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.FunctionType;
 import org.teasoft.bee.osql.IncludeType;
@@ -38,6 +40,8 @@ import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.honey.database.DatabaseClientConnection;
+import org.teasoft.honey.osql.core.AbstractBase;
+import org.teasoft.honey.osql.core.BeeFactory;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.ConditionImpl.FunExpress;
 import org.teasoft.honey.osql.core.ExceptionHelper;
@@ -50,6 +54,7 @@ import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
 import org.teasoft.honey.osql.name.NameUtil;
 import org.teasoft.honey.osql.shortcut.BF;
+import org.teasoft.honey.sharding.ShardingUtil;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
@@ -72,8 +77,11 @@ import com.mongodb.client.result.UpdateResult;
  * @author Kingstar
  * @since  2.0
  */
-public class MongodbSqlLib implements MongodbBeeSql {
-
+//public class MongodbSqlLib implements MongodbBeeSql {
+public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serializable {
+	
+	private static final long serialVersionUID = 1596710362261L;
+	
 	private static final String IDKEY = "_id";
 
 	private static String _toTableName(Object entity) {
@@ -95,27 +103,58 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		if(conn==null) return SingleMongodbFactory.getMongoDb();  //单个数据源时,
 		return (MongoDatabase) conn.getDbConnection();
 	}
+	
+	private boolean isShardingMain() {//有分片(多个)
+		return   HoneyContext.getSqlIndexLocal() == null && ShardingUtil.hadSharding(); //前提要是HoneyContext.hadSharding()
+	}
+	
+	//table,where:doc.toJson(),sort:   skip: size:  selectFields:
 
 	@Override
 	public <T> List<T> select(T entity) {
 
 		String tableName = _toTableName(entity); // 1 TODO 分片时,看下是否带下标
 //		MongoUtils.getCollection(tableName)   //2. TODO 分片时 要使用 动态获取的ds拿db.
-
-		DatabaseClientConnection conn = getConn();  // tableName与ds,要哪个先拿??
+		
+		Document doc = toDocument(entity);
+		//TODO 检测缓存
+//		tableName;
+	    String sql=	genSqlForCache("List<T>",tableName, doc.toJson());
+		
+	    boolean isReg = updateInfoInCache(sql, "List<T>", SuidType.SELECT);
+		if (isReg) {
+			initRoute(SuidType.SELECT, entity.getClass(), sql);
+			Object cacheObj = getCache().get(sql); //这里的sql还没带有值
+			if (cacheObj != null) {
+				clearContext(sql);
+				List<T> list = (List<T>) cacheObj;
+				logSelectRows(list.size());
+				return list;
+			}
+		}
+		if(isShardingMain()) return null; //sharding时,主线程没有缓存就返回.
+		
+		
+		DatabaseClientConnection conn =null;
 		try {
-			Document doc = toDocument(entity);
+			conn = getConn();  // tableName与ds,要哪个先拿??
+			
 			FindIterable<Document> docIterable = null;
 			if (doc != null)
 				docIterable = getMongoDatabase(conn).getCollection(tableName).find(doc);
 			else
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find();
+				docIterable = getMongoDatabase(conn).getCollection(tableName).find();  //TODO
 
-			return TransformResult.toListEntity(docIterable, entity);
+			return TransformResult.toListEntity(docIterable, toClassT(entity));
 
 		} finally {
 			close(conn);
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> Class<T> toClassT(T entity) {
+		return (Class<T>)entity.getClass();
 	}
 
 	@Override
@@ -134,7 +173,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 			if (sortBson != null) docIterable = docIterable.sort(sortBson);
 
-			return TransformResult.toListEntity(docIterable, entity);
+			return TransformResult.toListEntity(docIterable, toClassT(entity));
 		} finally {
 			close(conn);
 		}
@@ -247,7 +286,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			return selectWithGroupBy(entity, condition);
 		} else {
 			FindIterable<Document> docIterable = findIterableDocument(entity, condition);
-			return TransformResult.toListEntity(docIterable, entity);
+			return TransformResult.toListEntity(docIterable, toClassT(entity));
 		}
 	}
 
@@ -259,6 +298,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		return wrap.getResultJson();
 	}
 
+	//table,where:doc.toJson(),sort:   skip:   limit:  selectFields:
 	private <T> FindIterable<Document> findIterableDocument(T entity, Condition condition) {
 		
 		if(condition!=null) condition.setSuidType(SuidType.SELECT);
@@ -278,11 +318,10 @@ public class MongodbSqlLib implements MongodbBeeSql {
 
 		if (condition == null) return docIterable;
 
-		ConditionImpl conditionImpl = (ConditionImpl) condition;
-		
 		Bson sortBson = ParaConvertUtil.toSortBson(condition);
 		if (sortBson != null) docIterable = docIterable.sort(sortBson);
 
+		ConditionImpl conditionImpl = (ConditionImpl) condition;
 		Integer size = conditionImpl.getSize();
 		Integer start = conditionImpl.getStart();
 		if (size != null && size > 0) {
@@ -593,11 +632,11 @@ public class MongodbSqlLib implements MongodbBeeSql {
 	}
 
 	@Override
-	public <T> List<T> selectById(T entity, Object id) {
+	public <T> List<T> selectById(Class<T> entityClass, Object id) {
 
-		String tableName = _toTableName(entity);
+		String tableName = _toTableNameByClass(entityClass);
 
-		Object[] obj = processId(entity.getClass(), id);
+		Object[] obj = processId(entityClass, id);
 		Document one = (Document) obj[0];
 		Bson moreFilter = (Bson) obj[1];
 
@@ -609,7 +648,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 			else
 				docIterable = getMongoDatabase(conn).getCollection(tableName).find(one);
 
-			return TransformResult.toListEntity(docIterable, entity);
+			return TransformResult.toListEntity(docIterable, entityClass);
 		} finally {
 			close(conn);
 		}
@@ -792,7 +831,7 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		}
 	}
 	
-	
+	//table,where:doc.toJson(),  group:     orderyBy:   skip:   limit:  selectFields:   
 	
 	private <T> List<T> selectWithGroupBy(T entity,Condition condition) {
 		
@@ -901,4 +940,57 @@ public class MongodbSqlLib implements MongodbBeeSql {
 		
 		return bsonFieldArray;
 	}
+	
+	private Cache cache;
+	public Cache getCache() {
+		if(cache==null) {
+			cache=BeeFactory.getHoneyFactory().getCache();
+		}
+		return cache;
+	}
+
+	public void setCache(Cache cache) {
+		this.cache = cache;
+	}
+	
+	private String genSqlForCache(String returnType,String tableName,String filter) {
+		return  genSqlForCache("List<T>",tableName, filter, "", "", -2, -2, "");
+	}
+	//table, where :doc.toJson(),  group:     orderyBy:   skip:   limit:  selectFields:   [returnType]:
+	private String genSqlForCache(String returnType,String tableName,String filter,String groupBy,
+			String orderyBy,int skip,int limit,String selectFields) {
+		
+		StringBuffer strBuf=new StringBuffer();
+		
+		strBuf.append("[table]: ");
+		strBuf.append(tableName);
+		strBuf.append("[where]: ");
+		strBuf.append(filter);
+		strBuf.append("[groupBy]: ");
+		strBuf.append(groupBy);
+		strBuf.append("[orderyBy]: ");
+		strBuf.append(orderyBy);
+		strBuf.append("[skip]: ");
+		strBuf.append(skip);
+		strBuf.append("[limit]: ");
+		strBuf.append(limit);
+		strBuf.append("[selectFields]: ");
+		strBuf.append(selectFields);
+		strBuf.append("[returnType]: ");
+		strBuf.append(returnType);
+		
+		return strBuf.toString();
+	
+	}
+	
+	
+//	@SuppressWarnings("rawtypes")
+//	protected void initRoute(SuidType suidType, Class clazz, String sql) {
+//		boolean enableMultiDs=HoneyConfig.getHoneyConfig().multiDS_enable;
+////		if (!enableMultiDs) return;  //close in 1.17
+//		if (!enableMultiDs && !HoneyContext.useStructForLevel2()) return; //1.17 fixed
+//		if(HoneyContext.isNeedRealTimeDb() && HoneyContext.isAlreadySetRoute()) return; // already set in parse entity to sql.
+//		//enableMultiDs=true,且还没设置的,都要设置   因此,清除时,也是这样清除.
+//		HoneyContext.initRoute(suidType, clazz, sql);
+//	}
 }

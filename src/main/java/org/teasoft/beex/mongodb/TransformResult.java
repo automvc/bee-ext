@@ -243,14 +243,14 @@ public class TransformResult {
 //	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
 	private static boolean openFieldTypeHandler = false;  //TODO 会有启动问题
 
-	public static <T> T toEntity(Document document, T entity) throws Exception {
+	public static <T> T toEntity(Document document, Class<T> entityClass) throws Exception {
 
 //		Set<Map.Entry<String, Object>> set=document.entrySet();
 //		int columnCount=set.size();
 
 //      public static <T> T rowToEntity(ResultSet rs, T entity) throws SQLException,IllegalAccessException,InstantiationException {
 
-		T targetObj = (T) entity.getClass().newInstance();
+		T targetObj = (T) entityClass.newInstance();
 //  		ResultSetMetaData rmeta = rs.getMetaData();
 
 //  		if(rs.isBeforeFirst()) rs.next();
@@ -265,11 +265,11 @@ public class TransformResult {
 //  			System.out.println("key: "+entry.getKey());
 //  			System.out.println("value: "+entry.getValue());
 			try {
-				name = _toFieldName(entry.getKey(), entity.getClass());
+				name = _toFieldName(entry.getKey(), entityClass);
 				if ("_id".equalsIgnoreCase(name)) {// 替换id为_id
 					name = "id";
 				}
-				field = entity.getClass().getDeclaredField(name);// 可能会找不到Javabean的字段
+				field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 			} catch (NoSuchFieldException e) {
 				continue;
 			}
@@ -322,14 +322,14 @@ public class TransformResult {
 		return targetObj;
 	}
 
-	public static <T> List<T> toListEntity(MongoIterable<Document> docIterable, T entity) {
+	public static <T> List<T> toListEntity(MongoIterable<Document> docIterable, Class<T> entityClass) {
 		List<T> list = new ArrayList<>();
 
 		try {
 			MongoCursor<Document> cursor = docIterable.iterator();
 			while (cursor.hasNext()) {
 				Document document = cursor.next();
-				list.add(toEntity(document, entity));
+				list.add(toEntity(document, entityClass));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -77,7 +77,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> List<T> select(String sql, T entity, String[] sqlArgs) {
+	public <T> List<T> select(String sql, Class<T> entityClass, String[] sqlArgs) {
 		T targetObj = null;
 		List<T> rsList = null;
 		Map<String, Field> map = null;
@@ -96,14 +96,14 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 			map = new Hashtable<>();
 
 			while (rs.goToNextRow()) {
-				targetObj = (T) entity.getClass().newInstance();
+				targetObj = (T) entityClass.newInstance();
 
 				for (int i = 0; i < columnCount; i++) {
 					try {
 						columnName = rs.getColumnNameForIndex(i); // 列下标,从0开始
-						name = _toFieldName(columnName, entity.getClass());
+						name = _toFieldName(columnName, entityClass);
 						if (isFirst) {
-							field = entity.getClass().getDeclaredField(name);// 可能会找不到Javabean的字段
+							field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 							map.put(name, field);
 						} else {
 							field = map.get(name);

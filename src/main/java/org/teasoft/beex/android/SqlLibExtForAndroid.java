@@ -80,7 +80,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> List<T> select(String sql, T entity, String[] selectionArgs) {
+	public <T> List<T> select(String sql, Class<T> entityClass, String[] selectionArgs) {
 
 		T targetObj = null;
 		List<T> rsList = null;
@@ -98,15 +98,15 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			map = new Hashtable<>();
 
 			while (cursor.moveToNext()) {
-				targetObj = (T) entity.getClass().newInstance();
+				targetObj = (T) entityClass.newInstance();
 
 				for (int i = 0; i < columnCount; i++) {
 					try {
 //						columnName = cursor.getColumnName(i + 1);// 会有异常,但提示不明确. Exception: datatype mismatch
 						columnName = cursor.getColumnName(i); // 列下标,从0开始
-						name = _toFieldName(columnName, entity.getClass());
+						name = _toFieldName(columnName, entityClass);
 						if (isFirst) {
-							field = entity.getClass().getDeclaredField(name);// 可能会找不到Javabean的字段
+							field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 							map.put(name, field);
 						} else {
 							field = map.get(name);
