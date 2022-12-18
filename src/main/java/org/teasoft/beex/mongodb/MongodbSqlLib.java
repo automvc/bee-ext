@@ -30,6 +30,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
 import org.teasoft.bee.osql.Cache;
 import org.teasoft.bee.osql.Condition;
@@ -56,6 +57,7 @@ import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
 import org.teasoft.honey.osql.name.NameUtil;
 import org.teasoft.honey.osql.shortcut.BF;
 import org.teasoft.honey.sharding.ShardingUtil;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectEngine;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
@@ -234,43 +236,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 		return 1;
 	}
-
-	private void close(DatabaseClientConnection conn) {
-		try {
-			if (conn != null) conn.close();
-		} catch (IOException e) {
-			Logger.error(e.getMessage(), e);
-		}
-	}
-
+	
 	@Override
 	public <T> int delete(T entity) {
 		return delete(entity, null);
-	}
-
-	private int getIncludeType(Condition condition) {
-		if (condition == null) return -1;
-		return condition.getIncludeType() == null ? -1 : condition.getIncludeType().getValue();
-	}
-
-	private <T> Document toDocument(T entity, Condition condition) {
-		Document doc = null;
-		try {
-			Map<String, Object> map = ParaConvertUtil.toMap(entity, getIncludeType(condition));
-			if (condition == null && ObjectUtils.isNotEmpty(map)) return new Document(map);
-			
-			Map<String, Object> map2 = MongoConditionHelper.processCondition(condition);
-			if (ObjectUtils.isNotEmpty(map) && ObjectUtils.isNotEmpty(map2))
-				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.
-			else if (ObjectUtils.isEmpty(map)) map = map2;
-
-			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
-
-		} catch (Exception e) {
-			throw ExceptionHelper.convert(e);
-		}
-
-		return doc;
 	}
 
 ////String tableName = _toTableName(entity); // 1 TODO 分片时,看下是否带下标
@@ -328,18 +297,21 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 	//用于判断单源和分片的, selectById也可以用
-	private <T> List<T> select(MongoSqlStruct struct, Class<T> entityClass) {
+	@Override
+	public <T> List<T> select(MongoSqlStruct struct, Class<T> entityClass) {
 		if (!ShardingUtil.hadSharding()) {
 			return _select(struct, entityClass); // 不用分片走的分支
 		} else {
+			
+			if(struct==null) {} //TODO 从缓存拿出来.
+			
 			if (HoneyContext.getSqlIndexLocal() == null) {
 				List<T> list =_select(struct, entityClass); //检测缓存的
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
 					logDsTab();
 					return list; 
 				}
-//				List<T> rsList =new ShardingSelectEngine().asynProcess(sql, entity, this); // 应该还要传suid类型
-				List<T> rsList = null; //TODO
+				List<T> rsList =new MongodbShardingSelectEngine().asynProcess(entityClass, this); 
 				addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
 				logSelectRows(rsList.size());
 				return rsList;
@@ -351,7 +323,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 //	public <T> List<T> _select(MongoSqlStruct struct, T entity) {
-	public <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
+	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 
 		String sql = struct.getSql();
 		HoneyContext.addInContextForCache(sql, struct.tableName);
@@ -413,7 +385,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 
-	public <T> String _selectJson(MongoSqlStruct struct, T entity) {
+	private <T> String _selectJson(MongoSqlStruct struct, T entity) {
 		String sql = struct.getSql();
 		HoneyContext.addInContextForCache(sql, struct.tableName);
 
@@ -466,7 +438,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 	
-	public <T> List<String[]> _selectString(MongoSqlStruct struct, T entity,
+	private <T> List<String[]> _selectString(MongoSqlStruct struct, T entity,
 			String[] selectFields) {
 		
 		String sql = struct.getSql();
@@ -532,8 +504,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	private <T> FindIterable<Document> findIterableDocument(MongoSqlStruct struct) {
 
 		String tableName = struct.tableName;
-		Bson filter = struct.filter;
-		Bson sortBson = struct.sortBson;
+		Bson filter = (Bson)struct.filter;
+		Bson sortBson = (Bson)struct.sortBson;
 
 		Integer size = struct.size;
 		Integer start = struct.start;
@@ -1171,4 +1143,41 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 //		//enableMultiDs=true,且还没设置的,都要设置   因此,清除时,也是这样清除.
 //		HoneyContext.initRoute(suidType, clazz, sql);
 //	}
+	
+	
+	private void close(DatabaseClientConnection conn) {
+		try {
+			if (conn != null) conn.close();
+		} catch (IOException e) {
+			Logger.error(e.getMessage(), e);
+		}
+	}
+
+	private int getIncludeType(Condition condition) {
+		if (condition == null) return -1;
+		return condition.getIncludeType() == null ? -1 : condition.getIncludeType().getValue();
+	}
+
+	private <T> Document toDocument(T entity, Condition condition) {
+		Document doc = null;
+		try {
+			Map<String, Object> map = ParaConvertUtil.toMap(entity, getIncludeType(condition));
+			if (condition == null) { 
+				if(ObjectUtils.isNotEmpty(map)) return new Document(map);
+				else return null;
+			}
+			
+			Map<String, Object> map2 = MongoConditionHelper.processCondition(condition);
+			if (ObjectUtils.isNotEmpty(map) && ObjectUtils.isNotEmpty(map2))
+				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.
+			else if (ObjectUtils.isEmpty(map)) map = map2;
+
+			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
+
+		} catch (Exception e) {
+			throw ExceptionHelper.convert(e);
+		}
+
+		return doc;
+	}
 }
