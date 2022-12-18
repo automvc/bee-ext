@@ -17,6 +17,7 @@ import org.bson.Document;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.TypeHandler;
 import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
@@ -258,9 +259,9 @@ public class TransformResult {
 //  		int columnCount = rmeta.getColumnCount();
 		Field field = null;
 		String name = null;
-		boolean firstRow = true;
+		boolean first = true;
 //  		for (int i = 0; i < columnCount; i++) {
-
+		Field idField = null;
 		for (Map.Entry<String, Object> entry : document.entrySet()) {
 //  			System.out.println("key: "+entry.getKey());
 //  			System.out.println("value: "+entry.getValue());
@@ -271,7 +272,17 @@ public class TransformResult {
 				}
 				field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 			} catch (NoSuchFieldException e) {
-				continue;
+//				System.err.println(e.getMessage());
+				if ("id".equalsIgnoreCase(name)) {
+					if (first && idField == null) {
+						idField = HoneyUtil.getPkField(entityClass);
+						first=false;
+					}
+					field = idField;
+					if(field==null) continue;
+				} else {
+					continue;
+				}
 			}
 //  			if(firstRow) { //2.0
 //  				firstRow=false;
@@ -301,6 +312,7 @@ public class TransformResult {
 //  			if (!processAsJson) obj = rs.getObject(i + 1);
 				if (!processAsJson) obj = entry.getValue();
 //				System.err.println(obj.getClass().getTypeName());
+//				System.err.println(obj.toString());
 				if (isRegHandlerPriority) {
 					obj = TypeHandlerRegistry.handlerProcess(field.getType(), obj);
 					field.set(targetObj, obj); // 对相应Field设置
@@ -311,6 +323,8 @@ public class TransformResult {
 					if(field.getType()==Integer.class && obj!=null && obj instanceof Double) obj=((Double)obj).intValue();
 					else if(field.getType()==BigDecimal.class && obj!=null) obj=new BigDecimal(obj.toString());
 					else if(field.getType()==BigInteger.class && obj!=null) obj=new BigDecimal(obj.toString());
+					else if(field.getType()==String.class && obj!=null && obj.getClass()==org.bson.types.ObjectId.class) obj=obj.toString();
+					
 					//TODO 类型转换
 					
 					field.set(targetObj, obj); // 对相应Field设置

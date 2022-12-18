@@ -145,27 +145,34 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		return (Class<T>)entity.getClass();
 	}
 
-	@Override
-	public <T> List<T> selectOrderBy(T entity, String orderFields, OrderType[] orderTypes) {
-		String tableName = _toTableName(entity);
-		DatabaseClientConnection conn = getConn();
-
-		Document doc = toDocument(entity);
-		FindIterable<Document> docIterable = null;
-		try {
-			Bson sortBson = ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
-			if (doc != null)
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find(doc);
-			else
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find();
-
-			if (sortBson != null) docIterable = docIterable.sort(sortBson);
-
-			return TransformResult.toListEntity(docIterable, toClassT(entity));
-		} finally {
-			close(conn);
-		}
-	}
+//	@Override
+//	public <T> List<T> selectOrderBy(T entity, String orderFields, OrderType[] orderTypes) {
+//		String tableName = _toTableName(entity);
+//		
+//		Bson filter = toDocument(entity);
+//		Bson sortBson = ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
+//		
+//		return select(struct, entityClass);
+//		
+//
+////		Document filter = toDocument(entity);
+////		Bson sortBson = ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
+////		
+////		DatabaseClientConnection conn = getConn();
+////		FindIterable<Document> docIterable = null;
+////		try {
+////			if (filter != null)
+////				docIterable = getMongoDatabase(conn).getCollection(tableName).find(filter);
+////			else
+////				docIterable = getMongoDatabase(conn).getCollection(tableName).find();
+////
+////			if (sortBson != null) docIterable = docIterable.sort(sortBson);
+////
+////			return TransformResult.toListEntity(docIterable, toClassT(entity));
+////		} finally {
+////			close(conn);
+////		}
+//	}
 
 	@Override
 	public <T> int update(T entity) {
@@ -266,83 +273,225 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		return doc;
 	}
 
+////String tableName = _toTableName(entity); // 1 TODO 分片时,看下是否带下标
+////MongoUtils.getCollection(tableName)   //2. TODO 分片时 要使用 动态获取的ds拿db.
+	
 	@Override
 	public <T> List<T> select(T entity, Condition condition) {
-////		String tableName = _toTableName(entity); // 1 TODO 分片时,看下是否带下标
-////		MongoUtils.getCollection(tableName)   //2. TODO 分片时 要使用 动态获取的ds拿db.
-
 		if (condition != null && condition.hasGroupBy() == Boolean.TRUE) {
 			return selectWithGroupBy(entity, condition);
 		} else {
-			
+
 			if (entity == null) return Collections.emptyList();
-			
-			MongoSqlStruct struct=parseMongoSqlStruct(entity, condition, "List<T>");
-			
-			if (!ShardingUtil.hadSharding()) {
-				return _select(struct, entity); // 1.x版本及不用分片走的分支
-			} else {
-				if (HoneyContext.getSqlIndexLocal() == null) {
-					List<T> list =_select(struct, entity); //检测缓存的
-					if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
-						logDsTab();
-						return list; 
-					}
-//					List<T> rsList =new ShardingSelectEngine().asynProcess(sql, entity, this); // 应该还要传suid类型
-					List<T> rsList = null; //TODO
-					addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
-					logSelectRows(rsList.size());
-					return rsList;
-					
-				} else { // 子线程执行
-					return _select(struct, entity);
+
+			MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "List<T>");
+			Class<T> entityClass = toClassT(entity);
+
+			return select(struct, entityClass);
+		}
+	}
+	
+	@Override
+	public <T> List<T> selectById(Class<T> entityClass, Object id) {
+
+		String tableName = _toTableNameByClass(entityClass);
+
+		Object[] obj = processId(entityClass, id);
+		Document one = (Document) obj[0];
+		Bson moreFilter = (Bson) obj[1];
+		Bson filter = null;
+		if (moreFilter != null)
+			filter = moreFilter;
+		else
+			filter = one;
+
+		MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, filter, null, null,
+				null, null, true);
+
+		return select(struct, entityClass);
+	}
+	
+	@Override
+	public <T> List<T> selectOrderBy(T entity, String orderFields, OrderType[] orderTypes) {
+		String tableName = _toTableName(entity);
+		
+		Bson filter = toDocument(entity);
+		Bson sortBson = ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
+		
+		MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, filter, sortBson, null,
+				null, null, true);
+		
+		Class<T> entityClass = toClassT(entity);
+		
+		return select(struct, entityClass);
+		
+	}
+	
+	//用于判断单源和分片的, selectById也可以用
+	private <T> List<T> select(MongoSqlStruct struct, Class<T> entityClass) {
+		if (!ShardingUtil.hadSharding()) {
+			return _select(struct, entityClass); // 不用分片走的分支
+		} else {
+			if (HoneyContext.getSqlIndexLocal() == null) {
+				List<T> list =_select(struct, entityClass); //检测缓存的
+				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
+					logDsTab();
+					return list; 
 				}
+//				List<T> rsList =new ShardingSelectEngine().asynProcess(sql, entity, this); // 应该还要传suid类型
+				List<T> rsList = null; //TODO
+				addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
+				logSelectRows(rsList.size());
+				return rsList;
+				
+			} else { // 子线程执行
+				return _select(struct, entityClass);
 			}
 		}
 	}
 	
-	public <T> List<T> _select(MongoSqlStruct struct,T entity) {
-		
-		
-		HoneyContext.addInContextForCache(struct.getSql(), struct.tableName);
-		
-//		boolean isReg = updateInfoInCache(struct.getSql(), "List<T>", SuidType.SELECT);
-//		if (isReg) {
-			initRoute(SuidType.SELECT, entity.getClass(), struct.getSql());
-			Object cacheObj = getCache().get(struct.getSql());
-			if (cacheObj != null) {
-				clearContext(struct.getSql());
-				List<T> list = (List<T>) cacheObj;
-				logSelectRows(list.size());
-				return list;
-			}
-//		}
-		if(isShardingMain()) return null; //sharding时,主线程没有缓存就返回.
-		
+//	public <T> List<T> _select(MongoSqlStruct struct, T entity) {
+	public <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
+
+		String sql = struct.getSql();
+		HoneyContext.addInContextForCache(sql, struct.tableName);
+//		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
+		initRoute(SuidType.SELECT, entityClass, sql);
+		Object cacheObj = getCache().get(sql);
+		if (cacheObj != null) {
+			clearContext(sql);
+			List<T> list = (List<T>) cacheObj;
+			logSelectRows(list.size());
+			return list;
+		}
+		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
+
 		List<T> rsList = null;
-		
-		
+
 		FindIterable<Document> docIterable = findIterableDocument(struct);
-		rsList= TransformResult.toListEntity(docIterable, toClassT(entity));
-		
-		addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
-		
+//		rsList = TransformResult.toListEntity(docIterable, toClassT(entity));
+		rsList = TransformResult.toListEntity(docIterable, entityClass);
+
+		addInCache(sql, rsList, rsList.size());
+
 		logSelectRows(rsList.size());
 
 		return rsList;
 	}
 	
 	
-	
-
 	@Override
 	public <T> String selectJson(T entity, Condition condition) {
-		MongoSqlStruct struct=parseMongoSqlStruct(entity, condition, "StringJson");
-		
+
+		MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "StringJson");
+
+		if (entity == null) return null;
+
+		String sql = struct.getSql();
+
+		if (!ShardingUtil.hadSharding()) { // 无分片
+			return _selectJson(struct, entity);
+		} else { // 有分片
+			if (HoneyContext.getSqlIndexLocal() == null) { // 有分片的主线程
+
+				String cacheValue = _selectJson(struct, entity); // 检测缓存的
+				if (cacheValue != null) {
+					logDsTab();
+					return cacheValue;
+				}
+
+//				JsonResultWrap wrap = new ShardingSelectJsonEngine().asynProcess(sql, this,JsonType,entityClass); // 应该还要传suid类型
+				JsonResultWrap wrap = null; // TODO
+				logSelectRows(wrap.getRowCount());
+				String json = wrap.getResultJson();
+				addInCache(sql, json, "StringJson", SuidType.SELECT, -1); // 没有作最大结果集判断
+
+				return json;
+			} else { // 子线程执行
+				return _selectJson(struct, entity);
+			}
+		}
+	}
+
+	public <T> String _selectJson(MongoSqlStruct struct, T entity) {
+		String sql = struct.getSql();
+		HoneyContext.addInContextForCache(sql, struct.tableName);
+
+		initRoute(SuidType.SELECT, entity.getClass(), sql);
+		Object cacheObj = getCache().get(sql); // 这里的sql还没带有值
+		if (cacheObj != null) {
+			clearContext(sql);
+			return (String) cacheObj;
+		}
+		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
+
+		String json = "";
+
 		FindIterable<Document> docIterable = findIterableDocument(struct);
 
 		JsonResultWrap wrap = TransformResult.toJson(docIterable.iterator(), entity);
-		return wrap.getResultJson();
+		json = wrap.getResultJson();
+
+		logSelectRows(wrap.getRowCount());
+		addInCache(sql, json, -1); // 没有作最大结果集判断
+
+		return json;
+	}
+	
+	@Override
+	public <T> List<String[]> selectString(T entity, Condition condition) {
+		if (entity == null) return Collections.emptyList();
+
+		MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "List<String[]>");
+		String sql = struct.getSql();
+
+		if (!ShardingUtil.hadSharding()) {
+			return _selectString(struct, entity, condition.getSelectField()); // 不用分片走的分支
+		} else {
+			if (HoneyContext.getSqlIndexLocal() == null) {
+				List<String[]> list = _selectString(struct, entity, condition.getSelectField()); // 检测缓存的
+				if (list != null) {
+					logDsTab();
+					return list;
+				}
+//				List<String[]> rsList = new ShardingSelectListStringArrayEngine().asynProcess(sql, this, entity.getClass());
+				List<String[]> rsList = null; // TODO
+				addInCache(sql, rsList, "List<String[]>", SuidType.SELECT, rsList.size());
+
+				return rsList;
+
+			} else { // 子线程执行
+				return _selectString(struct, entity, condition.getSelectField());
+			}
+		}
+	}
+	
+	public <T> List<String[]> _selectString(MongoSqlStruct struct, T entity,
+			String[] selectFields) {
+		
+		String sql = struct.getSql();
+		HoneyContext.addInContextForCache(sql, struct.tableName);
+		
+		initRoute(SuidType.SELECT, entity.getClass(), sql);
+		Object cacheObj = getCache().get(sql); // 这里的sql还没带有值
+		if (cacheObj != null) {
+			clearContext(sql);
+			List<String[]> list = (List<String[]>) cacheObj;
+			logSelectRows(list.size());
+			return list;
+		}
+		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
+
+		List<String[]> list = new ArrayList<>();
+
+		FindIterable<Document> docIterable = findIterableDocument(struct);
+
+		list = TransformResult.toListString(docIterable.iterator(), entity, selectFields);
+
+		logSelectRows(list.size());
+		addInCache(sql, list, "List<String[]>", SuidType.SELECT, list.size());
+
+		return list;
 	}
 	
 	
@@ -383,7 +532,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	private <T> FindIterable<Document> findIterableDocument(MongoSqlStruct struct) {
 
 		String tableName = struct.tableName;
-		Document filter = struct.filter;
+		Bson filter = struct.filter;
 		Bson sortBson = struct.sortBson;
 
 		Integer size = struct.size;
@@ -697,28 +846,29 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		return true;
 	}
 
-	@Override
-	public <T> List<T> selectById(Class<T> entityClass, Object id) {
-
-		String tableName = _toTableNameByClass(entityClass);
-
-		Object[] obj = processId(entityClass, id);
-		Document one = (Document) obj[0];
-		Bson moreFilter = (Bson) obj[1];
-
-		DatabaseClientConnection conn = getConn();
-		try {
-			FindIterable<Document> docIterable = null;
-			if (moreFilter != null)
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find(moreFilter);
-			else
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find(one);
-
-			return TransformResult.toListEntity(docIterable, entityClass);
-		} finally {
-			close(conn);
-		}
-	}
+//	@Override
+//	public <T> List<T> selectById(Class<T> entityClass, Object id) {
+//
+//		String tableName = _toTableNameByClass(entityClass);
+//
+//		Object[] obj = processId(entityClass, id);
+//		Document one = (Document) obj[0];
+//		Bson moreFilter = (Bson) obj[1];
+//		
+//
+////		DatabaseClientConnection conn = getConn();
+////		try {
+////			FindIterable<Document> docIterable = null;
+////			if (moreFilter != null)
+////				docIterable = getMongoDatabase(conn).getCollection(tableName).find(moreFilter);
+////			else
+////				docIterable = getMongoDatabase(conn).getCollection(tableName).find(one);
+////
+////			return TransformResult.toListEntity(docIterable, entityClass);
+////		} finally {
+////			close(conn);
+////		}
+//	}
 
 	@SuppressWarnings("rawtypes")
 	private String getIdType(Class clazz, String pkName) {
@@ -952,16 +1102,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		} finally {
 			close(conn);
 		}
-	}
-
-	@Override
-	public <T> List<String[]> selectString(T entity, Condition condition) { // TODO
-		MongoSqlStruct struct=parseMongoSqlStruct(entity, condition, "List<String[]>");
-		
-		FindIterable<Document> docIterable = findIterableDocument(struct);
-		
-		return TransformResult.toListString(docIterable.iterator(), entity,
-				condition.getSelectField());
 	}
 
 	@SuppressWarnings("rawtypes")

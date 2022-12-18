@@ -6,7 +6,6 @@
 
 package org.teasoft.beex.mongodb;
 
-import org.bson.Document;
 import org.bson.conversions.Bson;
 
 /**
@@ -17,22 +16,23 @@ import org.bson.conversions.Bson;
 public class MongoSqlStruct {
 
 	String returnType;
-	
+
 	String tableName;
-	Document filter;
-	
+//	Document filter;
+	Bson filter;
+
 //	String group;
-	Bson sortBson; //orderyBy
+	Bson sortBson; // orderyBy
 
 	Integer start;
 	Integer size;
 
 	String[] selectFields;
 	boolean hasId;
-	
+
 	private String sql;
-	
-	public MongoSqlStruct(String returnType, String tableName, Document filter, Bson sortBson,
+
+	public MongoSqlStruct(String returnType, String tableName, Bson filter, Bson sortBson,
 			Integer start, Integer size, String[] selectFields, boolean hasId) {
 		super();
 		this.returnType = returnType;
@@ -44,37 +44,40 @@ public class MongoSqlStruct {
 		this.selectFields = selectFields;
 		this.hasId = hasId;
 	}
-	
-	public String getSql() { //just for cache
-		if(this.sql==null) sql=toSql();
+
+	public String getSql() { // just for cache
+		if (this.sql == null) sql = toSql();
 		return sql;
 	}
-	
+
 	private String toSql() {
-		
-		StringBuffer strBuf=new StringBuffer();
-		
+
+		StringBuffer strBuf = new StringBuffer();
+
 		strBuf.append("[table]: ");
 		strBuf.append(tableName);
-		strBuf.append("[where]: ");
-		if(filter!=null)
-		  strBuf.append(filter.toJson());
+		strBuf.append(" , [where/filter]: ");
+//		if (filter != null) strBuf.append(filter.toJson());
+		if (filter != null) strBuf.append(filter.toString());
 //		strBuf.append("[groupBy]: ");
 //		strBuf.append(groupBy);
-		strBuf.append("[orderyBy]: ");
-		if(sortBson!=null)
-		  strBuf.append(sortBson.toString());
-		strBuf.append("[skip]: ");
+		strBuf.append(" , [orderyBy/sort]: ");
+		if (sortBson != null) strBuf.append(sortBson.toString());
+		strBuf.append(" , [skip]: ");
 		strBuf.append(start);
-		strBuf.append("[limit]: ");
+		strBuf.append(" , [limit]: ");
 		strBuf.append(size);
-		strBuf.append("[selectFields]: ");
-		strBuf.append(selectFields);
-		strBuf.append("[returnType]: ");
+		strBuf.append(" , [selectFields]: ");
+		if (selectFields != null) {
+			for (int i = 0; i < selectFields.length; i++) {
+				if (i != 0) strBuf.append(",");
+				strBuf.append(selectFields[i]);
+			}
+		}
+		strBuf.append(" , [returnType]: ");
 		strBuf.append(returnType);
-		
+
 		return strBuf.toString();
 	}
-	
-	
+
 }
