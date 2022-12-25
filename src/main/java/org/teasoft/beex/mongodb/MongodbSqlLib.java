@@ -53,6 +53,7 @@ import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
 import org.teasoft.honey.osql.name.NameUtil;
 import org.teasoft.honey.osql.shortcut.BF;
@@ -103,7 +104,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 	private MongoDatabase getMongoDatabase(DatabaseClientConnection conn) {
-		if(conn==null) return SingleMongodbFactory.getMongoDb();  //单个数据源时,
+		
+		if(conn==null) {
+			System.err.println("-------------------conn==null------------------------");
+			return SingleMongodbFactory.getMongoDb();  //单个数据源时,
+		}
 		return (MongoDatabase) conn.getDbConnection();
 	}
 	
@@ -303,15 +308,17 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			return _select(struct, entityClass); // 不用分片走的分支
 		} else {
 			
-			if(struct==null) {} //TODO 从缓存拿出来.
-			
 			if (HoneyContext.getSqlIndexLocal() == null) {
+				
+				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
+				struct.tableName=  struct.tableName.replace(StringConst.ShardingTableIndexStr, tabNameList.toString());
+				
 				List<T> list =_select(struct, entityClass); //检测缓存的
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
 					logDsTab();
 					return list; 
 				}
-				List<T> rsList =new MongodbShardingSelectEngine().asynProcess(entityClass, this); 
+				List<T> rsList = new MongodbShardingSelectEngine().asynProcess(entityClass, this, struct);
 				addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
 				logSelectRows(rsList.size());
 				return rsList;
@@ -324,8 +331,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	
 //	public <T> List<T> _select(MongoSqlStruct struct, T entity) {
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
-
+		
 		String sql = struct.getSql();
+		
 		HoneyContext.addInContextForCache(sql, struct.tableName);
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
 		initRoute(SuidType.SELECT, entityClass, sql);
@@ -343,10 +351,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		FindIterable<Document> docIterable = findIterableDocument(struct);
 //		rsList = TransformResult.toListEntity(docIterable, toClassT(entity));
 		rsList = TransformResult.toListEntity(docIterable, entityClass);
-
+		
 		addInCache(sql, rsList, rsList.size());
 
 		logSelectRows(rsList.size());
+		
 
 		return rsList;
 	}

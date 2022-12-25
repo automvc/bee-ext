@@ -324,7 +324,7 @@ public class TransformResult {
 					else if(field.getType()==BigDecimal.class && obj!=null) obj=new BigDecimal(obj.toString());
 					else if(field.getType()==BigInteger.class && obj!=null) obj=new BigDecimal(obj.toString());
 					else if(field.getType()==String.class && obj!=null && obj.getClass()==org.bson.types.ObjectId.class) obj=obj.toString();
-					
+					else if(field.getType()==Long.class && obj!=null && obj instanceof Integer) obj=Long.parseLong(obj.toString());
 					//TODO 类型转换
 					
 					field.set(targetObj, obj); // 对相应Field设置
