@@ -308,12 +308,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			return _select(struct, entityClass); // 不用分片走的分支
 		} else {
 			
-			if (HoneyContext.getSqlIndexLocal() == null) {
+			if (HoneyContext.getSqlIndexLocal() == null) { //分片,主线程
 				
 				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
 				struct.tableName=  struct.tableName.replace(StringConst.ShardingTableIndexStr, tabNameList.toString());
-				
-				List<T> list =_select(struct, entityClass); //检测缓存的
+				List<T> list =_select(struct, entityClass); //检测缓存的           
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
 					logDsTab();
 					return list; 
@@ -329,7 +328,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 	
-//	public <T> List<T> _select(MongoSqlStruct struct, T entity) {
+//	单表查,一次只涉及一张表
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
@@ -349,13 +348,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		List<T> rsList = null;
 
 		FindIterable<Document> docIterable = findIterableDocument(struct);
-//		rsList = TransformResult.toListEntity(docIterable, toClassT(entity));
 		rsList = TransformResult.toListEntity(docIterable, entityClass);
 		
 		addInCache(sql, rsList, rsList.size());
-
 		logSelectRows(rsList.size());
-		
 
 		return rsList;
 	}
