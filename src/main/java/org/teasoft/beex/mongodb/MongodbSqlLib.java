@@ -32,37 +32,18 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
-import org.teasoft.bee.osql.Cache;
-import org.teasoft.bee.osql.Condition;
-import org.teasoft.bee.osql.FunctionType;
-import org.teasoft.bee.osql.IncludeType;
-import org.teasoft.bee.osql.ObjSQLException;
-import org.teasoft.bee.osql.OrderType;
-import org.teasoft.bee.osql.SuidType;
+import org.teasoft.bee.osql.*;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.honey.database.DatabaseClientConnection;
-import org.teasoft.honey.osql.core.AbstractBase;
-import org.teasoft.honey.osql.core.BeeFactory;
-import org.teasoft.honey.osql.core.ConditionImpl;
+import org.teasoft.honey.osql.core.*;
 import org.teasoft.honey.osql.core.ConditionImpl.FunExpress;
-import org.teasoft.honey.osql.core.ExceptionHelper;
-import org.teasoft.honey.osql.core.HoneyConfig;
-import org.teasoft.honey.osql.core.HoneyContext;
-import org.teasoft.honey.osql.core.HoneyUtil;
-import org.teasoft.honey.osql.core.JsonResultWrap;
-import org.teasoft.honey.osql.core.Logger;
-import org.teasoft.honey.osql.core.NameTranslateHandle;
-import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
 import org.teasoft.honey.osql.name.NameUtil;
 import org.teasoft.honey.osql.shortcut.BF;
 import org.teasoft.honey.sharding.ShardingReg;
 import org.teasoft.honey.sharding.ShardingUtil;
-import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectEngine;
-import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectFunEngine;
-import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectJsonEngine;
-import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListStringArrayEngine;
+import org.teasoft.honey.sharding.engine.mongodb.*;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
@@ -1041,7 +1022,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 	
-	
 	/**
 	 * SQL function: max,min,avg,sum,count. 如果统计的结果集为空,除了count返回0,其它都返回空字符.
 	 */
@@ -1360,9 +1340,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 	private Cache cache;
+
 	public Cache getCache() {
-		if(cache==null) {
-			cache=BeeFactory.getHoneyFactory().getCache();
+		if (cache == null) {
+			cache = BeeFactory.getHoneyFactory().getCache();
 		}
 		return cache;
 	}
@@ -1370,23 +1351,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public void setCache(Cache cache) {
 		this.cache = cache;
 	}
-	
-//	private String genSqlForCache(String returnType,String tableName,String filter) {
-//		return  genSqlForCache("List<T>",tableName, filter, "", "", -2, -2, "");
-//	}
-	
-	
-//	@SuppressWarnings("rawtypes")
-//	protected void initRoute(SuidType suidType, Class clazz, String sql) {
-//		boolean enableMultiDs=HoneyConfig.getHoneyConfig().multiDS_enable;
-////		if (!enableMultiDs) return;  //close in 1.17
-//		if (!enableMultiDs && !HoneyContext.useStructForLevel2()) return; //1.17 fixed
-//		if(HoneyContext.isNeedRealTimeDb() && HoneyContext.isAlreadySetRoute()) return; // already set in parse entity to sql.
-//		//enableMultiDs=true,且还没设置的,都要设置   因此,清除时,也是这样清除.
-//		HoneyContext.initRoute(suidType, clazz, sql);
-//	}
-	
-	
+
 	private void close(DatabaseClientConnection conn) {
 		try {
 			if (conn != null) conn.close();
@@ -1404,11 +1369,13 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		Document doc = null;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity, getIncludeType(condition));
-			if (condition == null) { 
-				if(ObjectUtils.isNotEmpty(map)) return new Document(map);
-				else return null;
+			if (condition == null) {
+				if (ObjectUtils.isNotEmpty(map))
+					return new Document(map);
+				else
+					return null;
 			}
-			
+
 			Map<String, Object> map2 = MongoConditionHelper.processCondition(condition);
 			if (ObjectUtils.isNotEmpty(map) && ObjectUtils.isNotEmpty(map2))
 				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.

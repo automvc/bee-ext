@@ -174,10 +174,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		} catch (android.database.SQLException e) {
 			Logger.error(e.getMessage(), e);
 		} catch (IllegalAccessException e) {
-//			hasException = true;
 			throw ExceptionHelper.convert(e);
 		} catch (InstantiationException e) {
-//		hasException = true;
 			throw ExceptionHelper.convert(e);
 		} finally {
 			close(db);
