@@ -272,6 +272,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 //	单表查,一次只涉及一张表
+	@SuppressWarnings("unchecked")
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
@@ -403,6 +404,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private <T> List<String[]> _selectString(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
@@ -506,6 +508,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> int delete(T entity, Condition condition) {
 		String tableName = _toTableName(entity);
 		Document filter = toDocument(entity, condition);
@@ -632,6 +635,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 //	没指定为whereFields的字段,作为set部分(默认只处理非空,非null的字段)
 //	condition中op,between,notBetween方法设置的字段,不受includeType的值影响
+	@SuppressWarnings("unchecked")
 	private <T> Map<String, Object>[] toMapForUpdate(T entity, Condition condition,
 			String specialFields, boolean isFilterField) {
 		Map<String, Object> reMap[] = new Map[2];
