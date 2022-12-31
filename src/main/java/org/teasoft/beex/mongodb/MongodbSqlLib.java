@@ -745,7 +745,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
 		} catch (Exception e) {
-			// e.printStackTrace();
 			Logger.warn(e.getMessage());
 		}
 		return doc;
@@ -757,7 +756,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Map<String, Object> map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
 			doc = new Document(map);
 		} catch (Exception e) {
-			// e.printStackTrace();
 			Logger.warn(e.getMessage());
 		}
 		return doc;
@@ -1027,14 +1025,14 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 		DatabaseClientConnection conn = getConn();
 		try {
-			BsonValue bv = getMongoDatabase(conn).getCollection(tableName).insertOne(doc).getInsertedId();
+			BsonValue bv = getMongoDatabase(conn).getCollection(tableName).insertOne(doc)
+					.getInsertedId();
 			if (bv != null) {
 				long a = bv.asInt64().longValue();
 				if (a > 0) num = 1;
 				return a;
-			} else {
-				return 0;
 			}
+			return 0;
 		} catch (Exception e) {
 			return -1;
 		} finally {
@@ -1047,7 +1045,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	/**
 	 * SQL function: max,min,avg,sum,count. 如果统计的结果集为空,除了count返回0,其它都返回空字符.
 	 */
-//	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> String selectWithFun(T entity, FunctionType functionType, String fieldForFun,
 			Condition condition) {
@@ -1158,9 +1155,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Document rs = collection.aggregate(listBson).first();
 			String fun = "";
 
-			if (rs == null) {
-				fun = "";
-			}else {
+			if (rs != null) {
 				Logger.debug(rs.toJson());
 //				Logger.debug(rs.get("_fun")+"");
 //				
