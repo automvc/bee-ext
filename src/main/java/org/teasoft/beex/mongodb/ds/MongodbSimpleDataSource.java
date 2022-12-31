@@ -54,14 +54,14 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 	
 	private MongoDatabase getMongoDb() {
 		MongoClient client=mongodbManager.getMongoClient();
-		//从资源池中拿, 或放到上下文or当前线程中管理.   TODO
+		//从资源池中拿, 或放到上下文or当前线程中管理.   todo
 		MongoContext.setCurrentMongoClient(client);
 		return client.getDatabase(mongodbManager.getDatabaseName());
 	}
 
 	@Override
 	public void close() throws IOException {
-		//TODO 
+		
 		MongoContext.removeMongoClient();
 	}
 	

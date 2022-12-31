@@ -7,9 +7,8 @@
 package org.teasoft.beex.mongodb;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +22,7 @@ import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 import org.teasoft.honey.osql.util.AnnoUtil;
+import org.teasoft.honey.util.ObjectCreatorFactory;
 
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
@@ -51,9 +51,9 @@ public class TransformResult {
 		return obj;
 	}
 	
-	public static <T> JsonResultWrap toJson(MongoCursor<Document> cursor, T entity){
+	public static <T> JsonResultWrap toJson(MongoCursor<Document> cursor, Class<T> entityClass){
 		
-		if(cursor==null || entity==null) return null;
+		if(cursor==null || entityClass==null) return null;
 		
 		StringBuffer json = new StringBuffer("");
 		boolean ignoreNull = HoneyConfig.getHoneyConfig().selectJson_ignoreNull;
@@ -75,7 +75,7 @@ public class TransformResult {
 					continue;
 				}
 //				System.err.println(entry.getValue().getClass().getName() + entry.getValue());
-				fieldName = _toFieldName(entry.getKey(), entity.getClass());
+				fieldName = _toFieldName(entry.getKey(), entityClass);
 				if ("_id".equalsIgnoreCase(fieldName)) {// 替换id为_id
 					fieldName = "id";
 				}		
@@ -174,9 +174,9 @@ public class TransformResult {
 	}
 	
 	//要跟声明的字段顺序一样时,要将查的字段也传入.
-	public static <T> List<String[]> toListString(MongoCursor<Document> cursor, T entity,String selectFields[]) {
+	public static <T> List<String[]> toListString(MongoCursor<Document> cursor,String selectFields[]) {
 		List<String[]> list = new ArrayList<>();
-		if (cursor == null || entity == null) return list;
+		if (cursor == null) return list;
 
 		boolean nullToEmptyString = HoneyConfig.getHoneyConfig().returnStringList_nullToEmptyString;
 		String str[] = null;
@@ -241,10 +241,20 @@ public class TransformResult {
 		return list;
 	}*/
 	
-//	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
-	private static boolean openFieldTypeHandler = false;  //TODO 会有启动问题
+	public static Map<String,Object> doc2Map(Document document) {
+		Map<String,Object> map=new LinkedHashMap<>();
+		for (Map.Entry<String, Object> entry : document.entrySet()) {
+			map.put(entry.getKey(), entry.getValue());
+		}
+		return map;
+	}
+	
+	
+	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
+//	private static boolean openFieldTypeHandler = false;  //TODO 会有启动问题
 
-	public static <T> T toEntity(Document document, Class<T> entityClass) throws Exception {
+//	public static <T> T toEntity(Document document, Class<T> entityClass) throws Exception {
+	public static <T> T toEntity(Map<String, Object> document, Class<T> entityClass) throws Exception {
 
 //		Set<Map.Entry<String, Object>> set=document.entrySet();
 //		int columnCount=set.size();
@@ -321,11 +331,12 @@ public class TransformResult {
 //					obj=(Integer)obj;
 					
 					if(field.getType()==Integer.class && obj!=null && obj instanceof Double) obj=((Double)obj).intValue();
-					else if(field.getType()==BigDecimal.class && obj!=null) obj=new BigDecimal(obj.toString());
-					else if(field.getType()==BigInteger.class && obj!=null) obj=new BigDecimal(obj.toString());
-					else if(field.getType()==String.class && obj!=null && obj.getClass()==org.bson.types.ObjectId.class) obj=obj.toString();
-					else if(field.getType()==Long.class && obj!=null && obj instanceof Integer) obj=Long.parseLong(obj.toString());
-					//TODO 类型转换
+//					else if(field.getType()==String.class && obj!=null && obj.getClass()==org.bson.types.ObjectId.class) obj=obj.toString();
+//					else if(field.getType()==BigDecimal.class && obj!=null) obj=new BigDecimal(obj.toString());
+//					else if(field.getType()==BigInteger.class && obj!=null) obj=new BigInteger(obj.toString());
+//					else if(field.getType()==Long.class && obj!=null && obj instanceof Integer) obj=Long.parseLong(obj.toString());
+//					//TODO 类型转换
+					else if(obj!=null) obj=ObjectCreatorFactory.create(obj.toString(), field.getType());
 					
 					field.set(targetObj, obj); // 对相应Field设置
 				}
@@ -346,7 +357,7 @@ public class TransformResult {
 				list.add(toEntity(document, entityClass));
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.debug(e.getMessage(), e);
 		}
 
 		return list;
