@@ -31,7 +31,10 @@ public class CommSort implements BeanSort{
 		if (entityList == null || sortBeanList == null) return;
 		if (entityList.size() == 0 || sortBeanList.size() == 0) return;
 
-		if (sortBeanList.size() == 1) sort(entityList, sortBeanList.get(0));
+		if (sortBeanList.size() == 1)  {
+			sort(entityList, sortBeanList.get(0));
+			return ;
+		}
 
 		// 组装排序链
 		String field = null;
