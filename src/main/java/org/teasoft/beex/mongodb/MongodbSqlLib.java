@@ -559,16 +559,16 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 
 	@Override
-	public <T> int update(T entity, String setFields, Condition condition) {
+	public <T> int update(T entity, Condition condition, String... setFields) {
 		String tableName = _toTableName(entity);
-		Map<String, Object> reMap[] = toMapForUpdateSet(entity, setFields, condition);
+		Map<String, Object> reMap[] = toMapForUpdateSet(entity, condition, setFields);
 		return update(reMap[0], reMap[1], tableName, condition);
 	}
 
 	@Override
-	public <T> int updateBy(T entity, String whereFields, Condition condition) {
+	public <T> int updateBy(T entity, Condition condition, String... whereFields) {
 		String tableName = _toTableName(entity);
-		Map<String, Object> reMap[] = toMapForUpdateBy(entity, whereFields, condition);
+		Map<String, Object> reMap[] = toMapForUpdateBy(entity, condition, whereFields);
 		return update(reMap[0], reMap[1], tableName, condition);
 	}
 	
@@ -623,21 +623,35 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 
-	private <T> Map<String, Object>[] toMapForUpdateBy(T entity, String specialFields,
-			Condition condition) {
-		return toMapForUpdate(entity, condition, specialFields, true);
+	private <T> Map<String, Object>[] toMapForUpdateBy(T entity, Condition condition,
+			String... specialFields) {
+		return toMapForUpdate(entity, condition, true, specialFields);
 	}
 
-	private <T> Map<String, Object>[] toMapForUpdateSet(T entity, String specialFields,
-			Condition condition) {
-		return toMapForUpdate(entity, condition, specialFields, false);
+	private <T> Map<String, Object>[] toMapForUpdateSet(T entity, Condition condition,
+			String... specialFields) {
+		return toMapForUpdate(entity, condition, false, specialFields);
+	}
+	
+	private String[] adjustVariableString(String... fieldList) {
+
+		if (fieldList == null) return new String[] { "" };
+
+		String fields[];
+
+		if (fieldList.length == 1) { // 变长参数,只有一个时,才允许用逗号隔开
+			fields = fieldList[0].split(",");
+		} else {
+			fields = fieldList;
+		}
+		return fields;
 	}
 
 //	没指定为whereFields的字段,作为set部分(默认只处理非空,非null的字段)
 //	condition中op,between,notBetween方法设置的字段,不受includeType的值影响
 	@SuppressWarnings("unchecked")
 	private <T> Map<String, Object>[] toMapForUpdate(T entity, Condition condition,
-			String specialFields, boolean isFilterField) {
+			boolean isFilterField, String... specialFields) {
 		Map<String, Object> reMap[] = new Map[2];
 		try {
 			if (condition != null) condition.setSuidType(SuidType.UPDATE);
@@ -645,18 +659,17 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 			Map<String, Object> filterMapFromC = MongoConditionHelper.processCondition(condition);
 			Map<String, Object> setMapFromC = MongoConditionHelper.processCondition(condition); // 获取set的部分
-			
+
 //			Map<String, Object> setMapFromUpdateSet =MongoConditionHelper.processConditionForUpdateSet(condition);
 
-			String fields[] = specialFields.split(",");
-			// 转换字段???? TODO
+//			String fields[] = specialFields.split(",");
+			String fields[] = adjustVariableString(specialFields);
 			Map<String, Object> specialMap = new LinkedHashMap<String, Object>();
 			for (int i = 0; i < fields.length; i++) {
+				fields[i] = _toColumnName(fields[i], entity.getClass());
 				if (emap.containsKey(fields[i])) {
 //					一个字段既在指定的updateFields,也用在了Condition.set(arg1,arg2)等方法设置,entity里相应的字段会按规则转化到where部分.(V1.9.8)
-					if (!isFilterField && setMapFromC != null
-							&& setMapFromC.containsKey(fields[i]))
-						continue;
+					if (!isFilterField && setMapFromC != null && setMapFromC.containsKey(fields[i])) continue;
 
 					specialMap.put(fields[i], emap.get(fields[i]));
 					emap.remove(fields[i]);
@@ -673,7 +686,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				setMap = specialMap;
 			}
 
-			// 再根据specialFields, update, updateBy 排除不需要的字段 
+			// 再根据specialFields, update, updateBy 排除不需要的字段
 			if (ObjectUtils.isNotEmpty(filterMapFromC)) filterMap.putAll(filterMapFromC);
 			if (ObjectUtils.isNotEmpty(setMapFromC)) setMap.putAll(setMapFromC);
 //			if (ObjectUtils.isNotEmpty(setMapFromUpdateSet)) setMap.putAll(setMapFromUpdateSet);
@@ -749,7 +762,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	@SuppressWarnings("rawtypes")
 	private <T> Object[] processId(Class clazz, Object id) {
 
-		Object[] obj = new Object[2];
+		Object obj[] = new Object[2];
 		Document one = new Document();
 		Bson moreFilter = null;
 
