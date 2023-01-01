@@ -64,10 +64,16 @@ public class MongoConditionUpdateSetHelper {
 
 				String columnName = _toColumnName(expression.getFieldName(), entityClass);
 
-				if (opType == null && expression.getValue() == null) { // set("fieldName",null)
-					bs = Updates.set(columnName, null);
+//				if (opType == null && expression.getValue() == null) { // set("fieldName",null)
+//					bs = Updates.set(columnName, null);
+//					updateSetBsonList.add(bs);
+//
+//					continue;
+//				}
+				
+				if (opType == null) { // set("fieldName",value)
+					bs = Updates.set(columnName, expression.getValue());
 					updateSetBsonList.add(bs);
-
 					continue;
 				}
 
