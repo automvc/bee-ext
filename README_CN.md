@@ -23,7 +23,12 @@ Bee-Ext
 
 * 8.支持Android和HarmonyOS访问数据库	
 
-* 9.@Tran注解	
+* 9.@Tran注解		
+
+* 10.JDBC Sharding分片  
+
+* 11.**mongodb ORM 功能**  
+* 12.**mongodb Sharding分片**  
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
