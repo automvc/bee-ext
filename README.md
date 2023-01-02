@@ -26,6 +26,11 @@ Bee-Ext
 
 * 9.support @Tran transaction annotation	
 
+* 10.JDBC Sharding  
+
+* 11.**mongodb ORM function**  
+* 12.**mongodb Sharding function**  
+
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 
