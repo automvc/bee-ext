@@ -146,7 +146,7 @@ public class ParaConvertUtil {
 		if(condition==null) return null;
 		
 		ConditionImpl conditionImpl = (ConditionImpl) condition;
-		ShardingSortStruct struct=ShardingUtil.parseOrderByMap(conditionImpl.getOrderByMap());
+		ShardingSortStruct struct=ShardingUtil.parseOrderByMap(conditionImpl.getOrderBy());
 		
 		return toSortBson(struct.getOrderFields(), struct.getOrderTypes());
 	}

@@ -54,9 +54,9 @@ public class CommSort implements BeanSort{
 		if (StringUtils.isNotBlank(field)) {
 			Comparator<?> cmp = ComparableComparator.getInstance();
 			if (sortStruct.isReverse()) {
-				cmp = ComparatorUtils.nullLowComparator(cmp);
+				cmp = ComparatorUtils.reversedComparator(cmp); //倒序时,有字段的值为null,则报错.
 			} else {
-				cmp = ComparatorUtils.reversedComparator(cmp);
+				cmp = ComparatorUtils.nullLowComparator(cmp);
 			}
 			Collections.sort(entityList, new BeanComparator(field, cmp));
 		}
