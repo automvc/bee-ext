@@ -254,6 +254,7 @@ public class TransformResult {
 //	private static boolean openFieldTypeHandler = false;  //TODO 会有启动问题
 
 //	public static <T> T toEntity(Document document, Class<T> entityClass) throws Exception {
+	@SuppressWarnings("rawtypes")
 	public static <T> T toEntity(Map<String, Object> document, Class<T> entityClass) throws Exception {
 
 //		Set<Map.Entry<String, Object>> set=document.entrySet();
