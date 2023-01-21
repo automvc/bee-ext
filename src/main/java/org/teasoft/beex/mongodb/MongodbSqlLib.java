@@ -1340,9 +1340,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			} else if (FunctionType.MIN.getName().equals(functionType)) {
 				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.AVG.getName().equals(functionType)) {
-				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
+				bsonFieldArray[i] ="'XfieldX1' : { '$avg' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.SUM.getName().equals(functionType)) {
-				bsonFieldArray[i] ="'XfieldX1' : { '$min' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
+				bsonFieldArray[i] ="'XfieldX1' : { '$sum' : '$XfieldX2' }".replace("XfieldX1", alias).replace("XfieldX2", fieldForFun);
 			} else if (FunctionType.COUNT.getName().equals(functionType)) {
 				bsonFieldArray[i] ="'_countX1' : { '$sum' : 1 }".replace("_countX1", alias);
 			}
