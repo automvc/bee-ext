@@ -66,7 +66,6 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 	}
 	
 	
-	
 	// get,set
 	public void setUrl(String url) {
 		this.url = url;

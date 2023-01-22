@@ -167,6 +167,20 @@
 		<scope>provided</scope>
 	</dependency>
 
+	<dependency>
+		<groupId>net.sf.ucanaccess</groupId>
+		<artifactId>ucanaccess</artifactId>
+		<version>5.0.1</version>
+		<scope>provided</scope>
+	</dependency>
+
+	<dependency>
+		<groupId>com.healthmarketscience.jackcess</groupId>
+		<artifactId>jackcess-encrypt</artifactId>
+		<version>3.0.0</version>
+		<scope>provided</scope>
+	</dependency>
+
 	</dependencies>
 
 	<build>
