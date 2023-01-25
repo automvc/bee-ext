@@ -28,7 +28,6 @@ public class SingleMongodbFactory {
 //		mongoClient.getDatabase(manager.getDatabaseName());
 		return mongoClient.getDatabase(manager.getDatabaseName());
 //		getMongoClient(); //可以一下生成多个 
-//		System.err.println("--------getMongoDb----------");
 //		return getMongoClient().getDatabase(manager.getDatabaseName());
 	}
 
