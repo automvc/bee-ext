@@ -144,7 +144,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					null, null, false, entity.getClass(), updateDocument);
 			sql = struct.getSql();
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			Logger.debug(sql);
+			Logger.debug(" Mongodb::update: "+sql);
 
 			conn = getConn();
 
@@ -276,7 +276,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
-		Logger.debug(sql);
+		Logger.debug(" Mongodb::select: "+sql);
 		
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
@@ -315,7 +315,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> String selectJson(MongoSqlStruct struct, Class<T> entityClass) {
 
 		String sql = struct.getSql();
-		Logger.debug(sql);
+		Logger.debug(" Mongodb::selectJson: "+sql);
 		
 		if (!ShardingUtil.hadSharding()) { // 无分片
 			return _selectJson(struct, entityClass);
@@ -381,7 +381,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> List<String[]> selectString(MongoSqlStruct struct, Class<T> entityClass) {
 	
 		String sql = struct.getSql();
-		Logger.debug(sql);
+		Logger.debug(" Mongodb::selectString: "+sql);
 		
 		if (!ShardingUtil.hadSharding()) {
 			return _selectString(struct, entityClass); // 不用分片走的分支
@@ -605,7 +605,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					null, null, false, null, updateSet); // this method no entityClass
 			sql = struct.getSql();
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			Logger.debug(sql);
+			Logger.debug(" Mongodb::update: "+sql);
 
 			conn = getConn();
 
@@ -712,7 +712,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				null, null, false,entity.getClass()," (Artificial sql) Just define for cache: insert batch "); //insert 放在updateSet
 		String sql=struct.getSql();
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		Logger.debug(sql);
+		Logger.debug(" Mongodb::insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
 		try {
@@ -910,7 +910,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
 				null, null, false,c);
 		String sql=struct.getSql();
-		Logger.debug(sql);
+		Logger.debug(" Mongodb::deleteById: "+sql);
 		
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
@@ -1132,7 +1132,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			List<Bson> listBson = new ArrayList<>();
 			Bson funBson = (Bson) struct.getUpdateSet();
 			
-			Logger.debug(sql);
+			Logger.debug(" Mongodb::selectWithFun: "+sql);
 
 			if (filter != null) listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
 
