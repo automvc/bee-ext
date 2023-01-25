@@ -51,7 +51,6 @@ public class FieldNameUtil {
 
 		fieldName = fieldName.replaceFirst(fieldName.charAt(0) + "",
 				(fieldName.charAt(0) + "").toLowerCase());
-		System.out.println(fieldName);
 		return fieldName;
 	}
 
@@ -68,7 +67,6 @@ public class FieldNameUtil {
 		method.setAccessible(true);
 		SerializedLambda serializedLambda;
 		try {
-			System.out.println(method.invoke(fn).getClass().getName());
 			serializedLambda = (SerializedLambda) method.invoke(fn);
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
@@ -76,15 +74,4 @@ public class FieldNameUtil {
 		method.setAccessible(isAccessible);
 		return serializedLambda;
 	}
-//	原文链接：https://blog.csdn.net/m0_50932526/article/details/124455701
-
-//	    public static void getFieldNames(Object t){
-//	    	  Class clazz = t.getClass();
-//	    	  // 获取实体类的所有属性信息，返回Field数组
-//	    	  Field[] fields = clazz.getDeclaredFields();
-//	    	  int length= fields.length;
-//	    	  while((length--)>0) { //符号       -->
-//	    	   System.out.println(fields[length].getName());
-//	    	  }
-//	    	 }
 }
