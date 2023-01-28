@@ -1407,4 +1407,42 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		return doc;
 	}
 	
+	@Override
+	public <T> boolean createTable(Class<T> entityClass, boolean isDropExistTable) {
+		if (!ShardingUtil.hadSharding()) {
+			return _createTable(entityClass, isDropExistTable); // 不用分片走的分支
+		} else {
+			if (HoneyContext.getSqlIndexLocal() == null) { // 分片,主线程
+				boolean f = new MongodbShardingDdlEngine().asynProcess(entityClass, this,
+						isDropExistTable);
+				return f;
+			} else { // 子线程执行
+				return _createTable(entityClass, isDropExistTable);
+			}
+		}
+	}
+
+	private <T> boolean _createTable(Class<T> entityClass, boolean isDropExistTable) {
+		String tableName = _toTableNameByClass(entityClass);
+		String baseTableName = tableName.replace(StringConst.ShardingTableIndexStr, "");
+		DatabaseClientConnection conn = null;
+		boolean f = false;
+		try {
+			conn = getConn();
+			MongoDatabase mdb = getMongoDatabase(conn);
+			if (isDropExistTable) {
+				Logger.debug(" Mongodb::drop collection(table): " + baseTableName);
+				mdb.getCollection(baseTableName).drop();
+			}
+			Logger.debug(" Mongodb::create collection(table): " + baseTableName);
+			mdb.createCollection(baseTableName);
+			f = true;
+		} catch (Exception e) {
+			Logger.warn(e.getMessage());
+		} finally {
+			close(conn);
+		}
+		return f;
+	}
+	
 }
