@@ -39,6 +39,8 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	private JedisPool jedisPool;
 	private Jedis jedis;
 	private Serializer serializer;
+	
+	private static final long serialVersionUID = 1596710362359L;
 
 	private static final String FIELD = "Bee";
 	private static final byte[] FIELD_BYTES = FIELD.getBytes();

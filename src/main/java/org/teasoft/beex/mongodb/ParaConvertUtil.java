@@ -17,6 +17,7 @@ import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.sharding.ShardingSortStruct;
+import org.teasoft.honey.osql.constant.NullEmpty;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
@@ -81,7 +82,8 @@ public class ParaConvertUtil {
 		Object value = null;
 		for (int i = 0; i < len; i++) {
 			fields[i].setAccessible(true);
-			if (HoneyUtil.isContinue(-1, fields[i].get(entity), fields[i])) {
+//			if (HoneyUtil.isContinue(-1, fields[i].get(entity), fields[i])) {
+			if (HoneyUtil.isContinue(NullEmpty.EMPTY_STRING, fields[i].get(entity), fields[i])) {// mongodb,批量插入,不处理null,但会插入是空字符的
 				continue;
 			} else {
 				if (!"".equals(excludeFieldList) && isExcludeField(excludeFieldList, fields[i].getName())) continue;
