@@ -42,8 +42,6 @@ public class BeePro {
 	
 	private Boolean notShowModifyDuplicateException;
 	
-	private Boolean notSupportUnionQuery; //2.0
-
 	private Integer insertBatchSize;
 
 	private Boolean showSQL;
@@ -123,14 +121,6 @@ public class BeePro {
 		this.notShowModifyDuplicateException = notShowModifyDuplicateException;
 	}
 	
-	public Boolean getNotSupportUnionQuery() {
-		return notSupportUnionQuery;
-	}
-
-	public void setNotSupportUnionQuery(Boolean notSupportUnionQuery) {
-		this.notSupportUnionQuery = notSupportUnionQuery;
-	}
-
 	public Integer getInsertBatchSize() {
 		return insertBatchSize;
 	}
