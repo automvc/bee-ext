@@ -47,6 +47,7 @@ import org.teasoft.honey.sharding.engine.mongodb.*;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
+import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -66,6 +67,8 @@ import com.mongodb.client.result.UpdateResult;
  */
 public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serializable {
 	
+	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
+
 	private static final long serialVersionUID = 1596710362261L;
 	
 	private static final String IDKEY = "_id";
@@ -152,8 +155,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					updateDocument);
 			return num = (int) rs.getModifiedCount();
 		} catch (Exception e) {
-			Logger.warn(e.getMessage());
-			return -1;
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
 			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
@@ -180,10 +183,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			getMongoDatabase(conn).getCollection(tableName).insertOne(doc);
 			num=1;
 		} catch (Exception e) {
-			Logger.warn(e.getMessage(), e);
-			return -1;
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
-			clearInCache(sql, "int",SuidType.MODIFY,num);
+			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
 		return num;
@@ -274,10 +277,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 //	单表查,一次只涉及一张表
 	@SuppressWarnings("unchecked")
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
-		
+
 		String sql = struct.getSql();
-		Logger.debug(" Mongodb::select: "+sql);
-		
+		Logger.debug(" Mongodb::select: " + sql);
+
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
 //		initRoute(SuidType.SELECT, entityClass, sql);
@@ -292,11 +295,16 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 		List<T> rsList = null;
 
-		FindIterable<Document> docIterable = findIterableDocument(struct);
-		rsList = TransformResult.toListEntity(docIterable, entityClass);
-		
-		addInCache(sql, rsList, rsList.size());
-		logSelectRows(rsList.size());
+		try {
+			FindIterable<Document> docIterable = findIterableDocument(struct);
+			rsList = TransformResult.toListEntity(docIterable, entityClass);
+
+			addInCache(sql, rsList, rsList.size());
+			logSelectRows(rsList.size());
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
 
 		return rsList;
 	}
@@ -354,13 +362,18 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 		String json = "";
 
-		FindIterable<Document> docIterable = findIterableDocument(struct);
+		try {
+			FindIterable<Document> docIterable = findIterableDocument(struct);
 
-		JsonResultWrap wrap = TransformResult.toJson(docIterable.iterator(), entityClass);
-		json = wrap.getResultJson();
+			JsonResultWrap wrap = TransformResult.toJson(docIterable.iterator(), entityClass);
+			json = wrap.getResultJson();
 
-		logSelectRows(wrap.getRowCount());
-		addInCache(sql, json, -1); // 没有作最大结果集判断
+			logSelectRows(wrap.getRowCount());
+			addInCache(sql, json, -1); // 没有作最大结果集判断
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
 
 		return json;
 	}
@@ -420,14 +433,18 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
 
-		List<String[]> list = new ArrayList<>();
+		List<String[]> list = null;
 
-		FindIterable<Document> docIterable = findIterableDocument(struct);
+		try {
+			FindIterable<Document> docIterable = findIterableDocument(struct);
+			list = TransformResult.toListString(docIterable.iterator(), struct.getSelectFields());
 
-		list = TransformResult.toListString(docIterable.iterator(), struct.getSelectFields());
-
-		logSelectRows(list.size());
-		addInCache(sql, list, "List<String[]>", SuidType.SELECT, list.size());
+			logSelectRows(list.size());
+			addInCache(sql, list, "List<String[]>", SuidType.SELECT, list.size());
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
 
 		return list;
 	}
@@ -536,11 +553,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				return num=(int) rs.getDeletedCount();
 			else
 				return 0;
-		}catch(Exception e) {
-			Logger.warn(e.getMessage());
-			return -1;
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
-			clearInCache(sql, "int",SuidType.MODIFY,num); //has clearContext(sql)
+			clearInCache(sql, "int", SuidType.MODIFY, num); // has clearContext(sql)
 			close(conn);
 		}
 	}
@@ -551,10 +568,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		try {
 			Map<String, Object> oldMap = ParaConvertUtil.toMap(oldEntity);
 			Map<String, Object> newMap = ParaConvertUtil.toMap(newEntity);
-			return update(oldMap, newMap, tableName,null);
+			return update(oldMap, newMap, tableName, null);
 		} catch (Exception e) {
-			Logger.warn(e.getMessage(), e);
-			return -1;
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		}
 	}
 
@@ -615,10 +632,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Logger.debug(rs.toString());
 			return num=(int) rs.getModifiedCount();
 		} catch (Exception e) {
-			Logger.warn(e.getMessage(), e);
-			return -1;
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
-			clearInCache(sql, "int",SuidType.MODIFY,num);
+			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
 	}
@@ -695,6 +712,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			reMap[1] = setMap;
 
 		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
 		}
 
@@ -743,7 +761,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
 		} catch (Exception e) {
-			Logger.warn(e.getMessage());
+			throw ExceptionHelper.convert(e);
 		}
 		return doc;
 	}
@@ -754,7 +772,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Map<String, Object> map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
 			doc = new Document(map);
 		} catch (Exception e) {
-			Logger.warn(e.getMessage());
+			throw ExceptionHelper.convert(e);
 		}
 		return doc;
 	}
@@ -925,8 +943,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(one);
 
 			return num=(int) rs.getDeletedCount();
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
-			clearInCache(sql, "int",SuidType.MODIFY,num);
+			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
 	}
@@ -1032,7 +1053,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			}
 			return 0;
 		} catch (Exception e) {
-			return -1;
+//			return -1;
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
 			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
@@ -1180,7 +1203,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			addInCache(sql, fun, 1);
 
 			return fun;
-
+			
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
 			close(conn);
 		}
@@ -1280,7 +1306,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				try {
 					list.add(TransformResult.toEntity(rsMap, entityClass));
 				} catch (Exception e) {
-					Logger.warn(e.getMessage(), e);
+					if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+					throw ExceptionHelper.convert(e);
 				}
 				
 				
@@ -1309,7 +1336,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			
 			return list;   
 			
-
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
 			close(conn);
 		}
@@ -1438,7 +1467,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			mdb.createCollection(baseTableName);
 			f = true;
 		} catch (Exception e) {
-			Logger.warn(e.getMessage());
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
 		} finally {
 			close(conn);
 		}

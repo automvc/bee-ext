@@ -6,6 +6,7 @@
 
 package org.teasoft.beex.mongodb.ds;
 
+import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
 
 import com.mongodb.client.MongoClient;
@@ -26,7 +27,14 @@ public class SingleMongodbFactory {
 
 	public static MongoDatabase getMongoDb() {
 //		mongoClient.getDatabase(manager.getDatabaseName());
-		return mongoClient.getDatabase(manager.getDatabaseName());
+		MongoDatabase db = null;
+		try {
+			db = mongoClient.getDatabase(manager.getDatabaseName());
+		} catch (Exception e) {
+			throw ExceptionHelper.convert(e);
+		}
+		
+		return db;
 //		getMongoClient(); //可以一下生成多个 
 //		return getMongoClient().getDatabase(manager.getDatabaseName());
 	}

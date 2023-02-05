@@ -15,6 +15,7 @@ import java.util.Map;
 import org.bson.Document;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.TypeHandler;
+import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
@@ -24,6 +25,7 @@ import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 import org.teasoft.honey.osql.util.AnnoUtil;
 import org.teasoft.honey.util.ObjectCreatorFactory;
 
+import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 
@@ -358,7 +360,9 @@ public class TransformResult {
 				list.add(toEntity(document, entityClass));
 			}
 		} catch (Exception e) {
-			Logger.debug(e.getMessage(), e);
+			if(e instanceof MongoTimeoutException)
+			    Logger.warn("Can not connect the Mongodb server. Maybe you did not start the Mongodb server!");
+			throw ExceptionHelper.convert(e);
 		}
 
 		return list;
