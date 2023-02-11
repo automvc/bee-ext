@@ -466,8 +466,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			default:
 				st.bindString(i + 1, (String) value);
 				
-				
-				//要支持自定义的  TODO
+				//要支持自定义的  todo
 		}
 	}
 

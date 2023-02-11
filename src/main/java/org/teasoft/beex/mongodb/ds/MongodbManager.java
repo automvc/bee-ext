@@ -61,8 +61,7 @@ public class MongodbManager {
 
 //		    uri = url.substring(0, index1);
 			StringBuffer s = new StringBuffer(url);
-			s.delete(index1 + 1, end);
-//		    s.delete(index1,end);
+//			s.delete(index1 + 1, end); //databaseName?  不能少,连接还是要带数据库名
 			if (StringUtils.isNotBlank(username)) {
 				s.insert(10, username + ":" + password + "@");
 			}

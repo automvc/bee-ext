@@ -18,7 +18,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  * @since 1.17
  */
 public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
-	private static int num = 1;
+//	private static int num = 1;
 
 	private static int VERSION;
 	private static String DBNAME;
@@ -76,9 +76,9 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {// 创建数据库,在安装app时执行; 升级版本也不执行
-		// TODO 添加创建数据库业务逻辑
-		Logger.info("测试.....in onCreate method, num: " + num);
-		num++;
+		// 添加创建数据库业务逻辑
+//		Logger.info("测试.....in onCreate method, num: " + num);
+//		num++;
 
 		try {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
@@ -97,9 +97,9 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)// 数据库版本升级时运行. (降版本会报异常)
 	{
-		// TODO 添加更新数据库业务逻辑
-		Logger.info("测试.....in onUpgrade method, num: " + num);
-		num++;
+		// 添加更新数据库业务逻辑
+//		Logger.info("测试.....in onUpgrade method, num: " + num);
+//		num++;
 
 		try {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
