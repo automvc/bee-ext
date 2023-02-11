@@ -8,6 +8,7 @@ package org.teasoft.beex.mongodb;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,6 @@ public class TransformResult {
 		boolean longToString = HoneyConfig.getHoneyConfig().selectJson_longToString;
         int rowCount=0;
         String fieldName="";
-//		while (rs.next()) {
         while(cursor.hasNext()) {
         	Document document = cursor.next();
 			rowCount++;
@@ -76,7 +76,6 @@ public class TransformResult {
 				if (entry.getValue() == null && ignoreNull) {
 					continue;
 				}
-//				System.err.println(entry.getValue().getClass().getName() + entry.getValue());
 				fieldName = _toFieldName(entry.getKey(), entityClass);
 				if ("_id".equalsIgnoreCase(fieldName)) {// 替换id为_id
 					fieldName = "id";
@@ -87,12 +86,19 @@ public class TransformResult {
 				json.append("\":");
 
 				if (entry.getValue() != null) {
+					
+					boolean processAsDocument=false;
+					temp=entry.getValue().toString();
+					if (entry.getValue() instanceof Document) { //Document转成Json String;然后再转目标json的转换
+						temp=((Document) entry.getValue()).toJson();
+						processAsDocument=true;
+					}
 
-//					if ("String".equals(HoneyUtil.getFieldType(rmeta.getColumnTypeName(i)))) { 
-					if(entry.getValue() instanceof String) {
+					if(processAsDocument  || (entry.getValue() instanceof String) ) {
+						
 						json.append("\"");
-						//json.append(rs.getString(i));
-						temp=entry.getValue().toString();
+//						System.err.println("String : "+temp);
+						
 						temp=temp.replace("\\", "\\\\"); //1
 						temp=temp.replace("\"", "\\\""); //2
 						
@@ -112,10 +118,8 @@ public class TransformResult {
 								json.append("\"");
 							}
 						}
-//					} else if ("Time".equals(HoneyUtil.getFieldType(rmeta.getColumnTypeName(i)))) {
 					} else if (entry.getValue() instanceof java.sql.Time) {
 						if (timeWithMillisecond) {
-//							json.append(rs.getTime(i).getTime());
 							json.append(((java.sql.Time)entry.getValue()).getTime());
 						} else {
 							try {
@@ -128,10 +132,8 @@ public class TransformResult {
 								json.append("\"");
 							}
 						}
-//					} else if ("Timestamp".equals(HoneyUtil.getFieldType(rmeta.getColumnTypeName(i)))) {
 					} else if (entry.getValue() instanceof java.sql.Timestamp) {
 						if (timestampWithMillisecond) {
-//							json.append(rs.getTimestamp(i).getTime());
 							json.append(((java.sql.Time)entry.getValue()).getTime());
 						} else {
 							try {
@@ -144,7 +146,6 @@ public class TransformResult {
 								json.append("\"");
 							}
 						}
-//					} else if (longToString && "Long".equals(HoneyUtil.getFieldType(rmeta.getColumnTypeName(i)))) {
 					} else if (longToString && entry.getValue() instanceof Long) {
 						json.append("\"");
 						json.append(entry.getValue().toString());
@@ -176,7 +177,7 @@ public class TransformResult {
 	}
 	
 	//要跟声明的字段顺序一样时,要将查的字段也传入.
-	public static <T> List<String[]> toListString(MongoCursor<Document> cursor,String selectFields[]) {
+	public static List<String[]> toListString(MongoCursor<Document> cursor,String selectFields[]) {
 		List<String[]> list = new ArrayList<>();
 		if (cursor == null) return list;
 
@@ -192,56 +193,30 @@ public class TransformResult {
 				if (nullToEmptyString && document.get(key) == null) {
 					str[i] = "";
 				} else {
-					if (document.get(key) == null)
+					Object obj=document.get(key);
+					if (obj == null)
 						str[i] = null;
-					else
-						str[i] = document.get(key).toString();
+					else {
+						if (Document.class == obj.getClass()) { // Document要转成Json String
+							try {
+								str[i] = ((Document) obj).toJson();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else {
+							str[i] = obj.toString();
+						}
+					}
 				}
 				if (firstRow) { // 2.0
 					firstRow = false;
-//					regSort(rmeta);  //TODO
+//					regSort(rmeta);
 				}
 			}
 			list.add(str);
 		}
 		return list;
 	}
-	
-	/*//要跟声明的字段顺序一样时,要将查的字段也传入.
-	public static <T> List<String[]> toListString(MongoCursor<Document> cursor, T entity) {
-		List<String[]> list = new ArrayList<>();
-		if (cursor == null || entity == null) return list;
-	
-		int columnCount ;
-		boolean nullToEmptyString = HoneyConfig
-				.getHoneyConfig().returnStringList_nullToEmptyString;
-		String str[] = null;
-		boolean firstRow = true;
-	
-		while (cursor.hasNext()) {
-			Document document = cursor.next();
-			columnCount=document.size();
-			str = new String[columnCount];
-			int i = -1;
-			for (Map.Entry<String, Object> entry : document.entrySet()) {
-				i++;
-				if (nullToEmptyString && entry.getValue() == null) {
-					str[i] = "";
-				} else {
-					if (entry.getValue() == null)
-						str[i] = null;
-					else
-						str[i] = entry.getValue().toString();
-				}
-				if (firstRow) { // 2.0
-					firstRow = false;
-	//					regSort(rmeta);
-				}
-			}
-			list.add(str);
-		}
-		return list;
-	}*/
 	
 	public static Map<String,Object> doc2Map(Document document) {
 		Map<String,Object> map=new LinkedHashMap<>();
@@ -253,96 +228,94 @@ public class TransformResult {
 	
 	
 	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
-//	private static boolean openFieldTypeHandler = false;  //TODO 会有启动问题
 
-//	public static <T> T toEntity(Document document, Class<T> entityClass) throws Exception {
 	@SuppressWarnings("rawtypes")
-	public static <T> T toEntity(Map<String, Object> document, Class<T> entityClass) throws Exception {
+	public static <T> T toEntity(Map<String, Object> document, Class<T> entityClass)
+			throws Exception {
 
-//		Set<Map.Entry<String, Object>> set=document.entrySet();
-//		int columnCount=set.size();
-
-//      public static <T> T rowToEntity(ResultSet rs, T entity) throws SQLException,IllegalAccessException,InstantiationException {
+		if (document == null) return null;
 
 		T targetObj = (T) entityClass.newInstance();
-//  		ResultSetMetaData rmeta = rs.getMetaData();
-
-//  		if(rs.isBeforeFirst()) rs.next();
-
-//  		int columnCount = rmeta.getColumnCount();
 		Field field = null;
 		String name = null;
 		boolean first = true;
-//  		for (int i = 0; i < columnCount; i++) {
+		boolean isId = false;
 		Field idField = null;
 		for (Map.Entry<String, Object> entry : document.entrySet()) {
-//  			System.out.println("key: "+entry.getKey());
-//  			System.out.println("value: "+entry.getValue());
+			isId = false;
 			try {
 				name = _toFieldName(entry.getKey(), entityClass);
 				if ("_id".equalsIgnoreCase(name)) {// 替换id为_id
 					name = "id";
+					isId = true;
 				}
 				field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 			} catch (NoSuchFieldException e) {
-//				System.err.println(e.getMessage());
-				if ("id".equalsIgnoreCase(name)) {
-					if (first && idField == null) {
-						idField = HoneyUtil.getPkField(entityClass);
-						first=false;
+				if ("id".equalsIgnoreCase(name)) { //可能主键不叫id,
+					isId = true;
+					try {
+						if (first && idField == null) {
+							first = false;
+							idField = HoneyUtil.getPkField(entityClass); //继承寻找主键
+						}
+					} catch (Exception e2) {
+                         //no id, skip     
 					}
 					field = idField;
-					if(field==null) continue;
+					if (field == null) continue;
 				} else {
 					continue;
 				}
 			}
 //  			if(firstRow) { //2.0
 //  				firstRow=false;
-//  				regSort(rmeta);
+//  				regSort(rmeta);  片合并后，如何重新排序？？
 //  			}
+
 			field.setAccessible(true);
-			Object obj = null;
+			Object obj = entry.getValue();
 			boolean isRegHandlerPriority = false;
 			try {
 				boolean processAsJson = false;
+				// isJoson> isRegHandlerPriority(if open)
 				if (isJoson(field)) {
-//  				obj = rs.getString(i + 1);
-					obj = entry.getValue();
-//					System.err.println(obj.getClass().getTypeName());
-					TypeHandler jsonHandler = TypeHandlerRegistry.getHandler(Json.class);
-					if (jsonHandler != null) {
-						obj = jsonHandlerProcess(field, obj, jsonHandler);
+					if (Document.class == obj.getClass()) {
 						processAsJson = true;
+						obj = toEntity((Document) obj, field.getType());
+					} else if (obj.getClass() == String.class) {
+						TypeHandler jsonHandler = TypeHandlerRegistry.getHandler(Json.class);
+						if (jsonHandler != null) {
+							obj = jsonHandlerProcess(field, obj, jsonHandler);
+							processAsJson = true;
+						}
 					}
 				} else {
 					if (openFieldTypeHandler) {
-						isRegHandlerPriority = TypeHandlerRegistry
-								.isPriorityType(field.getType());
+						isRegHandlerPriority = TypeHandlerRegistry.isPriorityType(field.getType());
 					}
 				}
 
-//  			if (!processAsJson) obj = rs.getObject(i + 1);
-				if (!processAsJson) obj = entry.getValue();
-//				System.err.println(obj.getClass().getTypeName());
-//				System.err.println(obj.toString());
-				if (isRegHandlerPriority) {
+				if (processAsJson) {
+                        
+				} else if (isRegHandlerPriority) {
 					obj = TypeHandlerRegistry.handlerProcess(field.getType(), obj);
-					field.set(targetObj, obj); // 对相应Field设置
-				} else {
-//					System.out.println("--------------------"+obj);
-//					obj=(Integer)obj;
-					
-					if(field.getType()==Integer.class && obj!=null && obj instanceof Double) obj=((Double)obj).intValue();
-//					else if(field.getType()==String.class && obj!=null && obj.getClass()==org.bson.types.ObjectId.class) obj=obj.toString();
-//					else if(field.getType()==BigDecimal.class && obj!=null) obj=new BigDecimal(obj.toString());
-//					else if(field.getType()==BigInteger.class && obj!=null) obj=new BigInteger(obj.toString());
-//					else if(field.getType()==Long.class && obj!=null && obj instanceof Integer) obj=Long.parseLong(obj.toString());
-//					//TODO 类型转换
-					else if(obj!=null) obj=ObjectCreatorFactory.create(obj.toString(), field.getType());
-					
-					field.set(targetObj, obj); // 对相应Field设置
+				} else if (isId && Number.class.isAssignableFrom(field.getType())
+						&& MongodbUtil.isMongodbId(obj.toString())) {
+					Logger.debug("The id value(" + obj.toString()
+							+ ") can not convert to Number, the id value in entity will be null !");
+					obj = null;
+				} else if (field.getType() == Integer.class && obj != null
+						&& obj instanceof Double) {
+					obj = ((Double) obj).intValue();
+				} else if (obj != null && (!Collection.class.isAssignableFrom(field.getType())
+						&& field.getType() != Map.class
+						&& field.getType() != java.util.Date.class
+						&& field.getType() != java.sql.Date.class)) {
+
+					Object t_obj = ObjectCreatorFactory.create(obj.toString(), field.getType());
+					if (t_obj != null) obj = t_obj; // 转换成功才要.
 				}
+				field.set(targetObj, obj); // 对相应Field设置
 			} catch (IllegalArgumentException e) {
 				Logger.warn(e.getMessage(), e);
 			}

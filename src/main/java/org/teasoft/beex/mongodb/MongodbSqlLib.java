@@ -32,18 +32,38 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
-import org.teasoft.bee.osql.*;
+import org.teasoft.bee.osql.Cache;
+import org.teasoft.bee.osql.Condition;
+import org.teasoft.bee.osql.FunctionType;
+import org.teasoft.bee.osql.IncludeType;
+import org.teasoft.bee.osql.ObjSQLException;
+import org.teasoft.bee.osql.OrderType;
+import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.honey.database.DatabaseClientConnection;
-import org.teasoft.honey.osql.core.*;
+import org.teasoft.honey.osql.core.AbstractBase;
+import org.teasoft.honey.osql.core.BeeFactory;
+import org.teasoft.honey.osql.core.BeeFactoryHelper;
+import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.ConditionImpl.FunExpress;
+import org.teasoft.honey.osql.core.ExceptionHelper;
+import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.HoneyContext;
+import org.teasoft.honey.osql.core.HoneyUtil;
+import org.teasoft.honey.osql.core.JsonResultWrap;
+import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
 import org.teasoft.honey.osql.name.NameUtil;
-import org.teasoft.honey.osql.shortcut.BF;
 import org.teasoft.honey.sharding.ShardingReg;
 import org.teasoft.honey.sharding.ShardingUtil;
-import org.teasoft.honey.sharding.engine.mongodb.*;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingDdlEngine;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectEngine;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectFunEngine;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectJsonEngine;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListStringArrayEngine;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
@@ -147,7 +167,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					null, null, false, entity.getClass(), updateDocument);
 			sql = struct.getSql();
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			Logger.debug(" Mongodb::update: "+sql);
+			logSQLForMain(" Mongodb::update: "+sql);
 
 			conn = getConn();
 
@@ -158,6 +178,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
 		} finally {
+			logAffectRow(num);
 			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
@@ -177,15 +198,23 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
 					null, null, false,entity.getClass(),doc); //insert 放在updateSet
 			sql=struct.getSql();
+			logSQLForMain(" Mongodb::insert: "+sql);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 			
 			conn = getConn();
 			getMongoDatabase(conn).getCollection(tableName).insertOne(doc);
-			num=1;
+			num=1; //有异常不会执行到这
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			boolean notCatch=HoneyConfig.getHoneyConfig().notCatchModifyDuplicateException;
+			if (!notCatch && isConstraint(e)) { //内部捕获并且是重复异常,则由Bee框架处理 
+				boolean notShow=HoneyConfig.getHoneyConfig().notShowModifyDuplicateException;
+				if(! notShow) Logger.warn(e.getMessage());
+				return num;
+			}
 			throw ExceptionHelper.convert(e);
 		} finally {
+			logAffectRow(num);
 			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
@@ -264,7 +293,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				}
 				ShardingReg.regShadingPage("", "", struct.getStart(), struct.getSize());
 				List<T> rsList = new MongodbShardingSelectEngine().asynProcess(entityClass, this, struct);
-				addInCache(struct.getSql(), rsList, "List<T>", SuidType.SELECT, rsList.size());
+				addInCache(struct.getSql(), rsList, rsList.size());
 				logSelectRows(rsList.size());
 				return rsList;
 				
@@ -279,7 +308,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 
 		String sql = struct.getSql();
-		Logger.debug(" Mongodb::select: " + sql);
+		logSQLForMain(" Mongodb::select: " + sql);
 
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
@@ -323,7 +352,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> String selectJson(MongoSqlStruct struct, Class<T> entityClass) {
 
 		String sql = struct.getSql();
-		Logger.debug(" Mongodb::selectJson: "+sql);
 		
 		if (!ShardingUtil.hadSharding()) { // 无分片
 			return _selectJson(struct, entityClass);
@@ -339,7 +367,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				JsonResultWrap wrap = new MongodbShardingSelectJsonEngine().asynProcess(entityClass, this, struct); // 应该还要传suid类型
 				logSelectRows(wrap.getRowCount());
 				String json = wrap.getResultJson();
-				addInCache(sql, json, "StringJson", SuidType.SELECT, -1); // 没有作最大结果集判断
+				addInCache(sql, json, -1); // 没有作最大结果集判断
 
 				return json;
 			} else { // 子线程执行
@@ -350,6 +378,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 	public <T> String _selectJson(MongoSqlStruct struct, Class<T> entityClass) {
 		String sql = struct.getSql();
+		logSQLForMain(" Mongodb::selectJson: "+sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 
 		initRoute(SuidType.SELECT, entityClass, sql);
@@ -394,7 +423,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> List<String[]> selectString(MongoSqlStruct struct, Class<T> entityClass) {
 	
 		String sql = struct.getSql();
-		Logger.debug(" Mongodb::selectString: "+sql);
 		
 		if (!ShardingUtil.hadSharding()) {
 			return _selectString(struct, entityClass); // 不用分片走的分支
@@ -407,7 +435,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				}
 				ShardingReg.regShadingPage("", "", struct.getStart(), struct.getSize());
 				List<String[]> rsList = new MongodbShardingSelectListStringArrayEngine().asynProcess(entityClass, this, struct);
-				addInCache(sql, rsList, "List<String[]>", SuidType.SELECT, rsList.size());
+				addInCache(sql, rsList, rsList.size());
 
 				return rsList;
 
@@ -421,6 +449,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	private <T> List<String[]> _selectString(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
+		logSQLForMain(" Mongodb::selectString: "+sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		initRoute(SuidType.SELECT, entityClass, sql);
@@ -440,7 +469,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			list = TransformResult.toListString(docIterable.iterator(), struct.getSelectFields());
 
 			logSelectRows(list.size());
-			addInCache(sql, list, "List<String[]>", SuidType.SELECT, list.size());
+			addInCache(sql, list, list.size());
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -448,7 +477,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 
 		return list;
 	}
-	
 	
 	private <T> MongoSqlStruct parseMongoSqlStruct(T entity, Condition condition, String returnType) {
 
@@ -482,7 +510,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	
 		return new MongoSqlStruct(returnType, tableName, filter, sortBson, start, size, selectFields, hasId,entity.getClass());
 	}
-	
 
 	private <T> FindIterable<Document> findIterableDocument(MongoSqlStruct struct) {
 
@@ -534,6 +561,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
 				null, null, false,entity.getClass());
 		String sql=struct.getSql();
+		logSQLForMain(" Mongodb::delete: "+sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		DatabaseClientConnection conn = getConn();
@@ -550,9 +578,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap())); 
 			}
 			if (rs != null)
-				return num=(int) rs.getDeletedCount();
-			else
-				return 0;
+				 num=(int) rs.getDeletedCount();
+
+			logAffectRow(num);
+			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -561,7 +590,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			close(conn);
 		}
 	}
-
+	
 	@Override
 	public <T> int update(T oldEntity, T newEntity) {
 		String tableName = _toTableName(oldEntity);
@@ -622,15 +651,17 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					null, null, false, null, updateSet); // this method no entityClass
 			sql = struct.getSql();
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			Logger.debug(" Mongodb::update: "+sql);
+			logSQLForMain(" Mongodb::update: "+sql);
 
 			conn = getConn();
 
 //			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateBsonList.get(0)); //ok
 			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateSet); 
 			
-			Logger.debug(rs.toString());
-			return num=(int) rs.getModifiedCount();
+			Logger.debug("Update raw json: "+rs.toString());
+			num=(int) rs.getModifiedCount();
+			logAffectRow(num);
+			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -640,13 +671,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 
-	private <T> Map<String, Object>[] toMapForUpdateBy(T entity, Condition condition,
-			String... specialFields) {
+	private <T> Map<String, Object>[] toMapForUpdateBy(T entity, Condition condition, String... specialFields) {
 		return toMapForUpdate(entity, condition, true, specialFields);
 	}
 
-	private <T> Map<String, Object>[] toMapForUpdateSet(T entity, Condition condition,
-			String... specialFields) {
+	private <T> Map<String, Object>[] toMapForUpdateSet(T entity, Condition condition, String... specialFields) {
 		return toMapForUpdate(entity, condition, false, specialFields);
 	}
 	
@@ -730,7 +759,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				null, null, false,entity.getClass()," (Artificial sql) Just define for cache: insert batch "); //insert 放在updateSet
 		String sql=struct.getSql();
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		Logger.debug(" Mongodb::insert: "+sql);
+		logSQLForMain(" Mongodb::insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
 		try {
@@ -747,10 +776,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 					if (i != len) list = new ArrayList<>();
 				}
 			}
-
+			logAffectRow(count);
 			return count;
 		} finally {
-			clearInCache(sql, "int",SuidType.MODIFY,count);
+			clearInCache(sql, "int", SuidType.MODIFY, count);
 			close(conn);
 		}
 	}
@@ -791,7 +820,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				Document idFilters[] = new Document[ids.length];
 				int k = 0;
 				for (String idValue : ids) {
-					if ("String".equals(idType) && isMongodbId(idValue))
+					if ("String".equals(idType) && MongodbUtil.isMongodbId(idValue))
 						idFilters[k++] = new Document(IDKEY, new ObjectId(idValue)); // 改为in 也可以
 					else
 						idFilters[k++] = new Document(IDKEY, tranIdObject(idType, idValue)); // 改为in 也可以
@@ -799,7 +828,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				}
 				moreFilter = Filters.or(idFilters);
 			} else {
-				if ("String".equals(idType) && isMongodbId(ids[0]))
+				if ("String".equals(idType) && MongodbUtil.isMongodbId(ids[0]))
 					one.put(IDKEY, new ObjectId(ids[0]));
 				else
 					one.put(IDKEY, tranIdObject(idType, ids[0]));
@@ -813,32 +842,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		obj[1] = moreFilter;
 
 		return obj;
-	}
-
-	private static boolean isMongodbId(final String hexString) {
-		if (hexString == null) {
-			return false;
-		}
-
-		int len = hexString.length();
-		if (len != 24) {
-			return false;
-		}
-
-		for (int i = 0; i < len; i++) {
-			char c = hexString.charAt(i);
-			if (c >= '0' && c <= '9') {
-				continue;
-			}
-			if (c >= 'a' && c <= 'f') {
-				continue;
-			}
-			if (c >= 'A' && c <= 'F') {
-				continue;
-			}
-			return false;
-		}
-		return true;
 	}
 
 //	@Override
@@ -928,7 +931,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
 				null, null, false,c);
 		String sql=struct.getSql();
-		Logger.debug(" Mongodb::deleteById: "+sql);
+		logSQLForMain(" Mongodb::deleteById: "+sql);
 		
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
@@ -942,7 +945,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			else
 				rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(one);
 
-			return num=(int) rs.getDeletedCount();
+			num=(int) rs.getDeletedCount();
+			logAffectRow(num);
+			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -996,6 +1001,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> String _count(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql=struct.getSql();
+		logSQLForMain(" Mongodb::count: "+sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		Object cacheObj = getCache().get(sql);
@@ -1019,7 +1025,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments();
 			
 			addInCache(sql, c + "", 1);
-			
+			logAffectRow(c);
 			return c+"";
 		} finally {
 			close(conn);
@@ -1033,30 +1039,33 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		String tableName = _toTableName(entity);
 
 		Condition condition = null;
-		if (includeType != null) condition = BF.getCondition().setIncludeType(includeType);
+		if (includeType != null) condition = BeeFactoryHelper.getCondition().setIncludeType(includeType);
 		Document doc = toDocument(entity, condition);
 
 		int num = 0;
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null, null,
 				null, false, entity.getClass(), doc);
 		String sql = struct.getSql();
+		logSQLForMain(" Mongodb::insertAndReturnId: "+sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 
 		DatabaseClientConnection conn = getConn();
 		try {
 			BsonValue bv = getMongoDatabase(conn).getCollection(tableName).insertOne(doc)
 					.getInsertedId();
+			long r=0;
 			if (bv != null) {
-				long a = bv.asInt64().longValue();
-				if (a > 0) num = 1;
-				return a;
+				r = bv.asInt64().longValue();
+				if (r > 0) num = 1;
 			}
-			return 0;
+			return r;
 		} catch (Exception e) {
 //			return -1;
+			Logger.warn("Confirm that the returned value is numeric type!");
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
 		} finally {
+			logAffectRow(num);
 			clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
@@ -1138,6 +1147,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		Document filter = (Document) struct.getFilter();
 		String tableName = struct.getTableName();
 		String sql = struct.getSql();
+		logSQLForMain(" Mongodb::selectWithFun: "+sql);
 		HoneyContext.addInContextForCache(sql, tableName);
 		
 		Object cacheObj = getCache().get(sql);
@@ -1155,8 +1165,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			List<Bson> listBson = new ArrayList<>();
 			Bson funBson = (Bson) struct.getUpdateSet();
 			
-			Logger.debug(" Mongodb::selectWithFun: "+sql);
-
 			if (filter != null) listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
 
 //			if (FunctionType.MAX == functionType) {
@@ -1176,7 +1184,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			String fun = "";
 
 			if (rs != null) {
-				Logger.debug(rs.toJson());
+				Logger.debug("selectWithFun raw json: "+rs.toJson());
 //				Logger.debug(rs.get("_fun")+"");
 //				
 //				Map<String, Object> jsonMap = null;
@@ -1301,7 +1309,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				
 				if(size>0) rsMap.putAll(groupNameMap); //要是排序字段有_id,会在groupNameMap保留
 				
-				Logger.debug(rsMap.toString());
+				Logger.debug("selectWithGroupBy doc2Map raw json: "+rsMap.toString());
 				
 				try {
 					list.add(TransformResult.toEntity(rsMap, entityClass));
@@ -1460,10 +1468,10 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			if (isDropExistTable) {
-				Logger.debug(" Mongodb::drop collection(table): " + baseTableName);
+				logSQLForMain(" Mongodb::drop collection(table): " + baseTableName);
 				mdb.getCollection(baseTableName).drop();
 			}
-			Logger.debug(" Mongodb::create collection(table): " + baseTableName);
+			logSQLForMain(" Mongodb::create collection(table): " + baseTableName);
 			mdb.createCollection(baseTableName);
 			f = true;
 		} catch (Exception e) {

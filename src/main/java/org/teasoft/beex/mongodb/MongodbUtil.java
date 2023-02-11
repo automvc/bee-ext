@@ -56,4 +56,30 @@ public class MongodbUtil {
 
 		return StringUtils.listToArray(list);
 	}
+	
+	public static boolean isMongodbId(final String hexString) {
+		if (hexString == null) {
+			return false;
+		}
+
+		int len = hexString.length();
+		if (len != 24) {
+			return false;
+		}
+
+		for (int i = 0; i < len; i++) {
+			char c = hexString.charAt(i);
+			if (c >= '0' && c <= '9') {
+				continue;
+			}
+			if (c >= 'a' && c <= 'f') {
+				continue;
+			}
+			if (c >= 'A' && c <= 'F') {
+				continue;
+			}
+			return false;
+		}
+		return true;
+	}
 }

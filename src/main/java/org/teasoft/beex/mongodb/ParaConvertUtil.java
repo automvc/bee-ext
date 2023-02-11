@@ -16,11 +16,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
+import org.teasoft.bee.osql.annotation.customizable.Json;
+import org.teasoft.bee.osql.type.SetParaTypeConvert;
 import org.teasoft.bee.sharding.ShardingSortStruct;
 import org.teasoft.honey.osql.constant.NullEmpty;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.sharding.ShardingUtil;
 
 import com.mongodb.client.model.Filters;
@@ -36,6 +39,7 @@ public class ParaConvertUtil {
 		
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Map<String, Object> toMap(Object entity,int includeType) throws Exception {
 		Map<String, Object> documentAsMap = null;
 		Field fields[] = entity.getClass().getDeclaredFields();
@@ -57,13 +61,19 @@ public class ParaConvertUtil {
 					column = "_id";
 				}
 				value = fields[i].get(entity); // value
+				// 是实体的，要转成Json; null不转
+				if(value!=null &&  fields[i].isAnnotationPresent(Json.class)) {
+					SetParaTypeConvert converter = SetParaTypeConverterRegistry.getConverter(Json.class);
+					if (converter != null) {
+						value=(String)converter.convert(value);
+					}
+				}
 				documentAsMap.put(column, value);
 			}
 		}
 
 		return documentAsMap;
 	}
-	
 	
 	private static boolean isExcludeField(String excludeFieldList, String checkField) {
 		String excludeFields[] = excludeFieldList.split(",");
@@ -158,10 +168,5 @@ public class ParaConvertUtil {
 	private static String _toColumnName(String fieldName, Class entityClass) {
 		return NameTranslateHandle.toColumnName(fieldName, entityClass);
 	}
-
-//	private static void checkLikeEmptyException(String value) {
-//		if ("".equals(value)) throw new BeeIllegalSQLException(
-//				"Like has SQL injection risk! the value can not be empty string!");
-//	}
 
 }
