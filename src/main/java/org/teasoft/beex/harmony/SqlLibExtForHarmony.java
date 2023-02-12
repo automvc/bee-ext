@@ -17,6 +17,7 @@
 
 package org.teasoft.beex.harmony;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -45,7 +46,9 @@ import ohos.data.resultset.ResultSet;
  * @author Kingstar
  * @since  1.17
  */
-public class SqlLibExtForHarmony implements BeeSqlForApp {
+public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
+	
+	private static final long serialVersionUID = 1596710362264L;
 
 	private static boolean openFieldTypeHandler = HoneyConfig
 			.getHoneyConfig().openFieldTypeHandler;
@@ -96,7 +99,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 			map = new Hashtable<>();
 
 			while (rs.goToNextRow()) {
-				targetObj = (T) entityClass.newInstance();
+				targetObj = entityClass.newInstance();
 
 				for (int i = 0; i < columnCount; i++) {
 					try {

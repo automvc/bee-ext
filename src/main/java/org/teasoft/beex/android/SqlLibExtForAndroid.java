@@ -17,6 +17,7 @@
 
 package org.teasoft.beex.android;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -47,7 +48,9 @@ import android.database.sqlite.SQLiteStatement;
  * @author Kingstar
  * @since 1.17
  */
-public class SqlLibExtForAndroid implements BeeSqlForApp {
+public class SqlLibExtForAndroid implements BeeSqlForApp, Serializable {
+	
+	private static final long serialVersionUID = 1596710362263L;
 
 	private SQLiteDatabase database; // 有事务管理.
 
@@ -98,7 +101,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			map = new Hashtable<>();
 
 			while (cursor.moveToNext()) {
-				targetObj = (T) entityClass.newInstance();
+				targetObj = entityClass.newInstance();
 
 				for (int i = 0; i < columnCount; i++) {
 					try {

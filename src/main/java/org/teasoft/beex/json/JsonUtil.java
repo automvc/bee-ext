@@ -51,6 +51,7 @@ public class JsonUtil {
 		return null;
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T toEntity(String json, Class<T> clazz, Class elementClass) {
 		try {
 			if(json==null) return null;

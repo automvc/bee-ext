@@ -31,10 +31,6 @@ public class MongodbManager {
 	}
 
 	private void initConfig() {
-//		HoneyConfig config = HoneyConfig.getHoneyConfig();
-//		url = config.getUrl();
-//		username = config.getUsername();
-//		password = config.getPassword();
 
 		if (StringUtils.isBlank(url)) {
 			return;

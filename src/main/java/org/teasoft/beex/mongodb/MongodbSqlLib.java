@@ -87,8 +87,6 @@ import com.mongodb.client.result.UpdateResult;
  */
 public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serializable {
 	
-	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
-
 	private static final long serialVersionUID = 1596710362261L;
 	
 	private static final String IDKEY = "_id";
@@ -531,7 +529,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			else
 				docIterable = getMongoDatabase(conn).getCollection(tableName).find();
 
-			if (sortBson != null) docIterable = docIterable.sort(sortBson);
+			if (sortBson != null) docIterable = docIterable.sort(sortBson); //And Filter{filters=[Document{{_id=1}}, Document{{userid=1}}]}
 
 			if (size != null && size > 0) {
 				if (start == null || start < 0) start = 0;
@@ -701,41 +699,44 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		Map<String, Object> reMap[] = new Map[2];
 		try {
 			if (condition != null) condition.setSuidType(SuidType.UPDATE);
-			Map<String, Object> emap = ParaConvertUtil.toMap(entity, getIncludeType(condition));
+			Map<String, Object> entityMap = ParaConvertUtil.toMap(entity, getIncludeType(condition));
 
 			Map<String, Object> filterMapFromC = MongoConditionHelper.processCondition(condition);
-			Map<String, Object> setMapFromC = MongoConditionHelper.processCondition(condition); // 获取set的部分
-
-//			Map<String, Object> setMapFromUpdateSet =MongoConditionHelper.processConditionForUpdateSet(condition);
+//			Map<String, Object> setMapFromC = MongoConditionHelper.processCondition(condition); // 只获取set的部分     condition set的部分,在下一方法才获取
 
 //			String fields[] = specialFields.split(",");
 			String fields[] = adjustVariableString(specialFields);
 			Map<String, Object> specialMap = new LinkedHashMap<String, Object>();
 			for (int i = 0; i < fields.length; i++) {
 				fields[i] = _toColumnName(fields[i], entity.getClass());
-				if (emap.containsKey(fields[i])) {
-//					一个字段既在指定的updateFields,也用在了Condition.set(arg1,arg2)等方法设置,entity里相应的字段会按规则转化到where部分.(V1.9.8)
-					if (!isFilterField && setMapFromC != null && setMapFromC.containsKey(fields[i])) continue;
-
-					specialMap.put(fields[i], emap.get(fields[i]));
-					emap.remove(fields[i]);
+				
+				if ("id".equalsIgnoreCase(fields[i])) {// 替换id为_id   fixed bug v2.0.2.14
+					fields[i] = "_id";
 				}
+				
+//				entityMap分为两部分, 先找出特殊的部分
+				if (entityMap.containsKey(fields[i])) { //将entity的字段转到filter,作为过滤
+						specialMap.put(fields[i], entityMap.get(fields[i]));
+						entityMap.remove(fields[i]);
+				}
+				
+//				Condition.set(arg1,arg2) 另外设置的字段,不受updateFields的约束;因此updateFields只指定在entity里的字段即可.
+				//mongodb没必要像下一句说的那么麻烦.
+////			一个字段既在指定的updateFields,也用在了Condition.set(arg1,arg2)等方法设置,entity里相应的字段会按规则转化到where部分.(V1.9.8)
 			}
 
 			Map<String, Object> filterMap;
 			Map<String, Object> setMap;
 			if (isFilterField) {
 				filterMap = specialMap;
-				setMap = emap;
+				setMap = entityMap;
 			} else {
-				filterMap = emap;
+				filterMap = entityMap;
 				setMap = specialMap;
 			}
-
-			// 再根据specialFields, update, updateBy 排除不需要的字段
+			
+			//这个方法,filterMapFromC 只从Condition提取过滤条件
 			if (ObjectUtils.isNotEmpty(filterMapFromC)) filterMap.putAll(filterMapFromC);
-			if (ObjectUtils.isNotEmpty(setMapFromC)) setMap.putAll(setMapFromC);
-//			if (ObjectUtils.isNotEmpty(setMapFromUpdateSet)) setMap.putAll(setMapFromUpdateSet);
 
 			reMap[0] = filterMap;
 			reMap[1] = setMap;
@@ -778,6 +779,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			}
 			logAffectRow(count);
 			return count;
+			
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			logAffectRow(count);
+			if (isConstraint(e)) {
+				Logger.warn(e.getMessage());
+				return count;
+			}
+			throw ExceptionHelper.convert(e);
 		} finally {
 			clearInCache(sql, "int", SuidType.MODIFY, count);
 			close(conn);
@@ -1060,7 +1070,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			}
 			return r;
 		} catch (Exception e) {
-//			return -1;
+			
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			boolean notCatch=HoneyConfig.getHoneyConfig().notCatchModifyDuplicateException;
+			if (!notCatch && isConstraint(e)) { //内部捕获并且是重复异常,则由Bee框架处理 
+				boolean notShow=HoneyConfig.getHoneyConfig().notShowModifyDuplicateException;
+				if(! notShow) Logger.warn(e.getMessage());
+				return num;
+			}
+			
 			Logger.warn("Confirm that the returned value is numeric type!");
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -1482,5 +1500,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 		return f;
 	}
+	
+	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
 	
 }

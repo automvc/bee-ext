@@ -26,7 +26,7 @@ import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.sharding.ShardingUtil;
 
-import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
 
 /**
  * @author Jade
@@ -68,7 +68,12 @@ public class ParaConvertUtil {
 						value=(String)converter.convert(value);
 					}
 				}
-				documentAsMap.put(column, value);
+				
+				if ("_id".equalsIgnoreCase(column) && value == null) {
+					// ignore
+				} else {
+					documentAsMap.put(column, value);
+				}
 			}
 		}
 
@@ -124,26 +129,28 @@ public class ParaConvertUtil {
 	}
 
 	public static Bson toSortBson(String orderFields[], OrderType[] orderTypes) {
-		if (orderTypes.length < 1) return null;
+		if (orderFields.length < 1) return null;
 		
+		int len=orderFields.length;
 		
-		if (orderTypes.length == 1) {
+		if (len == 1) {
 			int order = -1;
-			if (orderTypes[0] == OrderType.ASC) order = 1;
+			if (orderTypes!=null && orderTypes.length==1 && orderTypes[0] == OrderType.ASC) order = 1;
 			return new Document(tranferId(orderFields[0]), order);
 		}
 
-		Bson b[] = new Bson[orderTypes.length];
+		Bson b[] = new Bson[len];
 		int order;
-		for (int i = 0; i < orderTypes.length; i++) {
-			if (orderTypes[i] == OrderType.ASC)
+		for (int i = 0; i < len; i++) {
+			if (orderTypes==null || orderTypes[i] == OrderType.ASC)
 				order = 1;
 			else
 				order = -1;
 			b[i] = new Document(tranferId(orderFields[i]), order);
 		}
 
-		return Filters.and(b);
+//		return Filters.and(b);
+		return Sorts.orderBy(b);
 	}
 	
 	private static String tranferId(String fieldName) {

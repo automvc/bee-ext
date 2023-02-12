@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.TypeHandler;
 import org.teasoft.honey.osql.core.ExceptionHelper;
@@ -56,7 +57,7 @@ public class TransformResult {
 	
 	public static <T> JsonResultWrap toJson(MongoCursor<Document> cursor, Class<T> entityClass){
 		
-		if(cursor==null || entityClass==null) return null;
+		if(cursor==null) return null;
 		
 		StringBuffer json = new StringBuffer("");
 		boolean ignoreNull = HoneyConfig.getHoneyConfig().selectJson_ignoreNull;
@@ -68,6 +69,8 @@ public class TransformResult {
 		boolean longToString = HoneyConfig.getHoneyConfig().selectJson_longToString;
         int rowCount=0;
         String fieldName="";
+        boolean isJsonString=false;
+        Field currField=null;
         while(cursor.hasNext()) {
         	Document document = cursor.next();
 			rowCount++;
@@ -79,7 +82,14 @@ public class TransformResult {
 				fieldName = _toFieldName(entry.getKey(), entityClass);
 				if ("_id".equalsIgnoreCase(fieldName)) {// 替换id为_id
 					fieldName = "id";
-				}		
+				}else if(entityClass!=null){//判断存的是否是Json String; 使用了Json即认为是
+					try {
+						currField = entityClass.getDeclaredField(fieldName);
+						isJsonString=isJoson(currField);
+					} catch (NoSuchFieldException e) {
+						//ignore
+					}
+				}
 						
 				json.append("\"");
 				json.append(fieldName);
@@ -93,17 +103,22 @@ public class TransformResult {
 						temp=((Document) entry.getValue()).toJson();
 						processAsDocument=true;
 					}
-
-					if(processAsDocument  || (entry.getValue() instanceof String) ) {
+					
+					if (processAsDocument || isJsonString) {
+						json.append(temp);
+					} else if (entry.getValue() instanceof ObjectId) {
+						json.append("\"");
+						json.append(temp);
+						json.append("\"");
+					} else if (entry.getValue() instanceof String) {
 						
 						json.append("\"");
-//						System.err.println("String : "+temp);
-						
 						temp=temp.replace("\\", "\\\\"); //1
 						temp=temp.replace("\"", "\\\""); //2
 						
 						json.append(temp);
 						json.append("\"");
+						
 					} else if (entry.getValue() instanceof java.sql.Date) {
 						if (dateWithMillisecond) {
 							json.append(((java.sql.Date)entry.getValue()).getTime());
@@ -201,7 +216,7 @@ public class TransformResult {
 							try {
 								str[i] = ((Document) obj).toJson();
 							} catch (Exception e) {
-								e.printStackTrace();
+								Logger.warn(e.getMessage(), e);
 							}
 						} else {
 							str[i] = obj.toString();
@@ -235,7 +250,7 @@ public class TransformResult {
 
 		if (document == null) return null;
 
-		T targetObj = (T) entityClass.newInstance();
+		T targetObj = entityClass.newInstance();
 		Field field = null;
 		String name = null;
 		boolean first = true;
