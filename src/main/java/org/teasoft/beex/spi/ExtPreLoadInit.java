@@ -7,12 +7,8 @@
 package org.teasoft.beex.spi;
 
 import org.teasoft.bee.spi.PreLoad;
-import org.teasoft.beex.mongodb.MongodbCommImpl;
-import org.teasoft.beex.mongodb.MongodbSqlLib;
 import org.teasoft.beex.type.JsonDefaultHandler;
 import org.teasoft.honey.osql.core.Logger;
-import org.teasoft.honey.osql.mongodb.MongodbBeeSqlRegister;
-import org.teasoft.honey.osql.mongodb.MongodbCommRegister;
 
 /**
  * Bee-Ext提前预加载初始化
@@ -28,7 +24,7 @@ public class ExtPreLoadInit implements PreLoad{
 	
 	private static void init() {
 		JsonDefaultHandler.init();
-		MongodbBeeSqlRegister.register(new MongodbSqlLib()); 
-		MongodbCommRegister.register(new MongodbCommImpl());
+//		MongodbBeeSqlRegister.register(new MongodbSqlLib()); 
+//		MongodbCommRegister.register(new MongodbCommImpl());
 	}
 }

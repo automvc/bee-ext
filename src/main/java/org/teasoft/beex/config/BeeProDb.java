@@ -17,6 +17,9 @@
 
 package org.teasoft.beex.config;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * BeeProDb
  * @author Kingstar
@@ -35,6 +38,9 @@ public class BeeProDb {
 	private String jndiName;
 	
 	private Boolean pagingWithLimitOffset;
+	
+    private List<Map<String,String>> dbs; //V2.1 配置多个数据源, 属性值已具体工具对应
+    private Boolean extendFirst;//V2.1
 
 	public String getDbName() {
 		return dbName;
@@ -91,6 +97,14 @@ public class BeeProDb {
 	public void setJndiType(Boolean jndiType) {
 		this.jndiType = jndiType;
 	}
+	
+	public Boolean getExtendFirst() {
+		return extendFirst;
+	}
+
+	public void setExtendFirst(Boolean extendFirst) {
+		this.extendFirst = extendFirst;
+	}
 
 	public String getJndiName() {
 		return jndiName;
@@ -106,6 +120,14 @@ public class BeeProDb {
 
 	public void setPagingWithLimitOffset(Boolean pagingWithLimitOffset) {
 		this.pagingWithLimitOffset = pagingWithLimitOffset;
+	}
+
+	public List<Map<String, String>> getDbs() {
+		return dbs;
+	}
+
+	public void setDbs(List<Map<String, String>> dbs) {
+		this.dbs = dbs;
 	}
 	
 }

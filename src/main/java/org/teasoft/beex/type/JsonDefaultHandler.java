@@ -19,10 +19,6 @@ import org.teasoft.honey.osql.type.TypeHandlerRegistry;
  */
 public class JsonDefaultHandler implements JsonHandler {
 
-//	static {
-//		init();
-//	}
-
 	@SuppressWarnings("unchecked")
 	public static void init() {
 		TypeHandlerRegistry.register(Json.class, new JsonTypeHandler());
