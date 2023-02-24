@@ -27,16 +27,6 @@ public class DruidDataSourceBuilder implements DataSourceBuilder {
 		DataSource ds = null;
 		try {
 			ds = DruidDataSourceFactory.createDataSource(properties);
-			
-//	        map.put(DruidDataSourceFactory.PROP_INITIALSIZE, "10"); //initialSize
-//	        // 最小连接池数量
-//	        map.put(DruidDataSourceFactory.PROP_MINIDLE, "10"); //minIdle
-//	        // 最大连接池数量
-//	        map.put(DruidDataSourceFactory.PROP_MAXACTIVE, "50");//maxActive
-//	        // 获取连接时最大等待时间，单位毫秒
-//	        map.put(DruidDataSourceFactory.PROP_MAXWAIT, "60000");//maxWait
-//	        // 检测连接的间隔时间，单位毫秒
-//	        map.put(DruidDataSourceFactory.PROP_TIMEBETWEENEVICTIONRUNSMILLIS, "60000");//timeBetweenEvictionRunsMillis
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}

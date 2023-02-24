@@ -7,7 +7,6 @@
 package org.teasoft.beex.ds;
 
 import java.util.Map;
-import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -25,7 +24,7 @@ public class HikariDataSourceBuilder implements DataSourceBuilder {
 
 	@Override
 	public DataSource build(Map<String, String> map) {
-		
+
 		if(!map.containsKey("jdbcUrl") && map.containsKey("url")) {
 			map.put("jdbcUrl", map.get("url"));
 			map.remove("url");
@@ -35,7 +34,6 @@ public class HikariDataSourceBuilder implements DataSourceBuilder {
 			map.put("driverClassName", map.get("driverName"));
 			map.remove("driverName");
 		}
-//		System.err.println(map);
 		return new HikariDataSource(new HikariConfig(Converter.map2Prop(map)));
 	}
 

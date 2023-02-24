@@ -17,7 +17,8 @@ import org.teasoft.honey.osql.core.ObjSQLRich;
  * @author Kingstar
  * @since  2.0
  */
-@SuppressWarnings("unchecked")
+//@SafeVarargs
+@SuppressWarnings({ "unchecked", "varargs" })
 public class ObjSQLRichExt extends ObjSQLRich implements SuidRichExt {
 
 	private static final long serialVersionUID = 1596710362268L;

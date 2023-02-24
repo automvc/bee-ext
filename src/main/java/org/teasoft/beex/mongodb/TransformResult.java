@@ -25,6 +25,7 @@ import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 import org.teasoft.honey.osql.util.AnnoUtil;
+import org.teasoft.honey.osql.util.DateUtil;
 import org.teasoft.honey.util.ObjectCreatorFactory;
 
 import com.mongodb.MongoTimeoutException;
@@ -289,6 +290,7 @@ public class TransformResult {
 
 			field.setAccessible(true);
 			Object obj = entry.getValue();
+//			System.err.println("obj type :"+obj.getClass().getName());
 			boolean isRegHandlerPriority = false;
 			try {
 				boolean processAsJson = false;
@@ -325,10 +327,13 @@ public class TransformResult {
 				} else if (obj != null && (!Collection.class.isAssignableFrom(field.getType())
 						&& field.getType() != Map.class
 						&& field.getType() != java.util.Date.class
-						&& field.getType() != java.sql.Date.class)) {
+						&& field.getType() != java.sql.Date.class
+						&& field.getType() != java.sql.Timestamp.class)) { 
 
 					Object t_obj = ObjectCreatorFactory.create(obj.toString(), field.getType());
 					if (t_obj != null) obj = t_obj; // 转换成功才要.
+				}else if(field.getType() == java.sql.Timestamp.class && obj.getClass()== java.util.Date.class)  {
+					obj=DateUtil.toTimestamp((java.util.Date)obj);
 				}
 				field.set(targetObj, obj); // 对相应Field设置
 			} catch (IllegalArgumentException e) {
