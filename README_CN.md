@@ -40,4 +40,4 @@ Bee-Ext
 https://github.com/automvc/bee  
 
 **Bee在gitee** 的网址:  
-https://gitee.com/automvc/bee
+https://gitee.com/automvc/bee  
