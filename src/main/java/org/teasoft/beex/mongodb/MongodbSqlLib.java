@@ -16,6 +16,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -73,6 +74,8 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.*;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -1502,5 +1505,113 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	}
 	
 	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
+	
+	private GridFSBucket getGridFSBucket() {
+//		MongoDatabase database = SingleMongodbFactory.getMongoDb(); // 单个数据源时,
+		DatabaseClientConnection conn = null;
+		conn = getConn();
+		MongoDatabase database = getMongoDatabase(conn);
+		return GridFSBuckets.create(database);
+	}
+	
+	public String uploadFromStream(String filename, InputStream source) {
+		return uploadFile(filename, source, null);
+	}
+	
+	public String uploadFile(String filename, InputStream fileStream,Map<String, Object> metadataMap) {
+
+		GridFSBucket gridFSBucket = getGridFSBucket();
+
+		GridFSUploadOptions options = null;
+		if (metadataMap != null && metadataMap.size() > 0) {
+			options = new GridFSUploadOptions();
+			Map<String, Object> map = new HashMap<>();
+			map.put("fileType", "sql-script");
+			options.metadata(new Document(map));
+		}
+		ObjectId fileId;
+
+		if (options != null) {
+			// 同一个名字，可以重复保存，但ObjectId fileId不一样。
+			fileId = gridFSBucket.uploadFromStream("myProject.zip3", fileStream, options);// options 不能为null
+		} else {
+			fileId = gridFSBucket.uploadFromStream("myProject.zip3", fileStream);
+		}
+		return fileId.toString();
+	}
+	
+//	public void queryFiles() {
+//		GridFSBucket gridFSBucket = getGridFSBucket();
+//		
+//	Bson query = Filters.eq("metadata.type", "zip archive");  //自定义的元数据metadata，都会放到metadata这个字段（JSON)
+//	Bson sort = Sorts.ascending("filename");
+//	gridFSBucket.find(query)
+//	        .sort(sort)
+//	        .limit(5)
+//	        .forEach(new Consumer<GridFSFile>() {
+//	            @Override
+//	            public void accept(final GridFSFile gridFSFile) {
+//	                System.out.println(gridFSFile);
+//	            }
+//	        });
+//	
+//	}
+	
+//	gridFSFindIterable // 这个再返回list
+	
+	private GridFSFindIterable gridFSFindIterable(MongoSqlStruct struct) {
+//		String tableName = struct.getTableName();
+		Bson filter = (Bson)struct.getFilter();
+		Bson sortBson = (Bson)struct.getSortBson();
+		Integer size = struct.getSize();
+		Integer start = struct.getStart();
+
+		GridFSBucket gridFSBucket = getGridFSBucket();
+		
+		GridFSFindIterable iterable;
+
+		try {
+			if (filter != null)
+				iterable = gridFSBucket.find(filter);
+			else
+				iterable = gridFSBucket.find();
+
+			if (sortBson != null) iterable = iterable.sort(sortBson);
+
+			if (size != null && size > 0) {
+				if (start == null || start < 0) start = 0;
+				iterable = iterable.skip(start).limit(size);
+			}
+			
+		} finally {
+//			close(conn);  //TODO
+		}
+
+		return iterable;
+	}
+	
+	public byte[] downLoadFile(String fileId) {
+		GridFSBucket gridFSBucket = getGridFSBucket();
+		ObjectId fileId0 = new ObjectId(fileId);
+		byte[] bytesToWriteTo = null;
+		try (GridFSDownloadStream downloadStream = gridFSBucket.openDownloadStream(fileId0)) { // 返回的是files里面的id,查询时也是里面的id
+			int fileLength = (int) downloadStream.getGridFSFile().getLength();
+			bytesToWriteTo = new byte[fileLength];
+			downloadStream.read(bytesToWriteTo);
+//	    System.out.println(new String(bytesToWriteTo, StandardCharsets.UTF_8));
+		}
+		return bytesToWriteTo;
+	}
+	
+	public void renameFile(String fileId,String newName) {
+		GridFSBucket gridFSBucket = getGridFSBucket();
+		ObjectId fileId0 = new ObjectId(fileId);
+		gridFSBucket.rename(fileId0, newName);
+	}
+	
+	public void deleteFile(String fileId) {
+		GridFSBucket gridFSBucket = getGridFSBucket();
+		gridFSBucket.delete(new ObjectId(fileId));
+	}
 	
 }
