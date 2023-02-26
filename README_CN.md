@@ -27,10 +27,11 @@ Bee-Ext
 
 * 10.JDBC Sharding分片  
 
-* 11.**mongodb ORM 功能**  
-* 12.**mongodb Sharding分片**  
+* 11.**Mongodb ORM 功能**  
+* 12.**Mongodb Sharding分片**  
 
 * 13.多数据源简易配置  
+* 14.支持Mongodb GridFS文件存储  
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
