@@ -31,6 +31,9 @@ Bee-Ext
 * 11.**mongodb ORM function**  
 * 12.**mongodb Sharding function**  
 
+* 13.properties file support config multi-dataSource(this type no need xml,java code config)  
+* 14.Mongodb GridFS file store  
+
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 
