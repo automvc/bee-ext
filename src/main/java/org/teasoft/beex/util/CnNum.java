@@ -159,5 +159,10 @@ public class CnNum {
 		}
 		return sbu.toString();
 	}
+	
+//	public static void main(String[] args) {
+//		System.out.println(CnNum.tran(1234567.89));
+//		System.out.println(CnNum.tranToUpper(12.89));
+//	}
 
 }
