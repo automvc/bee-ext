@@ -29,9 +29,13 @@ public class DataSourceToolRegHandler {
 		init();
 	}
 
+//	#bee.db.dbs[i].type   value :Hikari,Druid,c3p0,dbcp2,Tomcat,BeeMongo, default is : Hikari
 	public static void init() {
-		DataSourceBuilderFactory.register("druid", new DruidDataSourceBuilder());
 		DataSourceBuilderFactory.register("Hikari", new HikariDataSourceBuilder());
+		DataSourceBuilderFactory.register("Druid", new DruidDataSourceBuilder());
+		DataSourceBuilderFactory.register("Dbcp2", new Dbcp2DataSourceBuilder());
+		DataSourceBuilderFactory.register("C3p0", new C3p0DataSourceBuilder());
+		DataSourceBuilderFactory.register("Tomcat", new TomcatDataSourceBuilder());
 //		DataSourceBuilderFactory.register("BeeMongo", new BeeMongodbSimpleDataSourceBuilder());
 	}
 

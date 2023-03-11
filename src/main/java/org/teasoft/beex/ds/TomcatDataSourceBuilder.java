@@ -21,31 +21,27 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.tomcat.jdbc.pool.DataSourceFactory;
 import org.teasoft.bee.ds.DataSourceBuilder;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.Converter;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * @author Kingstar
  * @since  2.1
  */
-public class HikariDataSourceBuilder implements DataSourceBuilder {
+public class TomcatDataSourceBuilder implements DataSourceBuilder {
 
 	@Override
-	public DataSource build(Map<String, String> map) {
+	public DataSource build(Map<String, String> propertiesMap) {
 
-		if (!map.containsKey("jdbcUrl") && map.containsKey("url")) {
-			map.put("jdbcUrl", map.get("url"));
-			map.remove("url");
+		DataSource ds = null;
+		try {
+			ds = new DataSourceFactory().createDataSource(Converter.map2Prop(propertiesMap));
+		} catch (Exception e) {
+			Logger.debug(e.getMessage(), e);
 		}
-
-		if (!map.containsKey("driverClassName") && map.containsKey("driverName")) {
-			map.put("driverClassName", map.get("driverName"));
-			map.remove("driverName");
-		}
-		return new HikariDataSource(new HikariConfig(Converter.map2Prop(map)));
+		return ds;
 	}
 
 }

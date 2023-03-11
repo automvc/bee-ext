@@ -27,6 +27,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
+import org.teasoft.bee.osql.annotation.GridFs;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.SetParaTypeConvert;
 import org.teasoft.bee.sharding.ShardingSortStruct;
@@ -34,6 +35,7 @@ import org.teasoft.honey.osql.constant.NullEmpty;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.sharding.ShardingUtil;
 
@@ -78,6 +80,13 @@ public class ParaConvertUtil {
 					if (converter != null) {
 						value=(String)converter.convert(value);
 					}
+				}else if(value!=null &&  fields[i].isAnnotationPresent(GridFs.class)) { //V2.1 一个实体只支持一个文件
+					GridFs sysValue = fields[i].getAnnotation(GridFs.class);
+					String fileid = sysValue.fileIdName();
+					String filename = sysValue.fileName();
+					documentAsMap.put(StringConst.GridFs_FileId, fileid);
+					documentAsMap.put(StringConst.GridFs_FileName, filename);
+					documentAsMap.put(StringConst.GridFs_FileColumnName, column);
 				}
 				
 				if ("_id".equalsIgnoreCase(column) && value == null) {

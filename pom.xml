@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teasoft</groupId>
 	<artifactId>bee-ext</artifactId>
-	<version>2.1</version>
+	<version>2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -31,7 +31,7 @@
 			<scope>provided</scope>
 		</dependency>
 
-        <!-- log4j -->
+		<!-- log4j -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -79,7 +79,6 @@
 			<version>1.2.3</version>
 			<scope>provided</scope>
 		</dependency>
-		
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -93,22 +92,102 @@
 			<version>4.1.1</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.13.3</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.google.android</groupId>
 			<artifactId>android</artifactId>
 			<version>4.1.1.4</version>
 			<scope>provided</scope>
 		</dependency>
-		
-<!-- if necessary, can import the ohos.jar to java build path -->
+
+		<!-- 导致用jdk1.7编译不了 ; bee-ext也会引起bee-spring-boot用jdk1.7编译不了 -->
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<!-- <version>3.5.2</version> -->
+			<!-- <version>2.7.3</version> -->
+			<version>3.3.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>1.9.7</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
+			<version>2.2.3</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-sync</artifactId>
+			<version>4.6.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.ucanaccess</groupId>
+			<artifactId>ucanaccess</artifactId>
+			<version>5.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.healthmarketscience.jackcess</groupId>
+			<artifactId>jackcess-encrypt</artifactId>
+			<version>3.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid</artifactId>
+			<version>1.1.23</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>4.0.3</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.9.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jdbc</artifactId>
+			<version>7.0.75</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mchange</groupId>
+			<artifactId>c3p0</artifactId>
+			<version>0.9.5.4</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- if necessary, can import the ohos.jar to java build path -->
 <!-- 		<dependency>
 			<groupId>ohos</groupId>
 			<artifactId>harmony</artifactId>
@@ -116,131 +195,24 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}\src\main\resources\lib\ohos.jar</systemPath>
 		</dependency> -->
-		
-		
-<!-- 		导致用jdk1.7编译不了 ; bee-ext也会引起bee-spring-boot用jdk1.7编译不了-->
-	   <dependency>
-		  <groupId>redis.clients</groupId>
-		  <artifactId>jedis</artifactId>
-<!-- 		  <version>3.5.2</version> -->
-<!-- 		  <version>2.7.3</version> -->
-          <version>3.3.0</version>
-		  <scope>provided</scope>
-	   </dependency>
 
-
-<!-- 	<dependency>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-aop</artifactId>
-		<version>2.5.13</version>
-		<scope>provided</scope>
-	</dependency> -->
-	
-      <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjweaver</artifactId>
-        <version>1.9.7</version>
-        <scope>provided</scope>
-      </dependency>
-      
-      <dependency>
-        <groupId>jakarta.persistence</groupId>
-        <artifactId>jakarta.persistence-api</artifactId>
-        <version>2.2.3</version>
-         <scope>provided</scope>
-      </dependency>
-
-	<dependency>
-		<groupId>commons-beanutils</groupId>
-		<artifactId>commons-beanutils</artifactId>
-		<version>1.9.4</version>
-	</dependency>
-	<dependency>
-		<groupId>commons-collections</groupId>
-		<artifactId>commons-collections</artifactId>
-		<version>3.2.2</version>
-	</dependency>
-
-	<dependency>
-		<groupId>org.mongodb</groupId>
-		<artifactId>mongodb-driver-sync</artifactId>
-		<version>4.6.1</version>
-		<scope>provided</scope>
-	</dependency>
-	
-<!-- 	<dependency>
-    <groupId>org.mongodb</groupId>
-    <artifactId>mongo-java-driver</artifactId>
-    <version>3.12.11</version>
-</dependency> -->
-
-	<dependency>
-		<groupId>net.sf.ucanaccess</groupId>
-		<artifactId>ucanaccess</artifactId>
-		<version>5.0.1</version>
-		<scope>provided</scope>
-	</dependency>
-
-	<dependency>
-		<groupId>com.healthmarketscience.jackcess</groupId>
-		<artifactId>jackcess-encrypt</artifactId>
-		<version>3.0.0</version>
-		<scope>provided</scope>
-	</dependency>
-	
-	<!-- druid -->
-	<dependency>
-		<groupId>com.alibaba</groupId>
-		<artifactId>druid</artifactId>
-		<version>1.1.23</version>
-	</dependency>
-		
-    <dependency>
-       <groupId>com.zaxxer</groupId>
-       <artifactId>HikariCP</artifactId>
-       <version>4.0.3</version>
-    </dependency>
 
 	</dependencies>
 
 	<build>
 
-	<resources>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<!-- <include>/META-INF/**/*</include> -->
+					<include>META-INF/**/*</include>
+				</includes>
+			</resource>
+		</resources>
 
-		<resource>
-			<directory>src/main/resources</directory>
-			<includes>
-<!-- 				<include>/META-INF/**/*</include> -->
-				<include>META-INF/**/*</include>
-			</includes>
-		</resource>
-
-	</resources>
-	
 		<plugins>
-		
-					<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-compiler-plugin</artifactId>
-    <version>3.1</version>
-    <!-- 编译时使用 lib 目录下的 jar 包 -->
-    <configuration>
-        <encoding>UTF-8</encoding>
-        <compilerArguments>
-<!--             <extdirs>${project.basedir}/lib</extdirs> -->
-            <extdirs>${project.basedir}/src/main/resources/lib</extdirs>
-        </compilerArguments>
-    </configuration>
-    <executions>
-        <execution>
-            <phase>compile</phase>
-            <goals>
-                <goal>compile</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-		
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -265,35 +237,58 @@
 						</goals>
 					</execution>
 				</executions>
-				
+
 				<configuration>
 					<excludes>
 						<exclude>/**/*-info.java</exclude>
 					</excludes>
 				</configuration>
-				
+
 			</plugin>
-			
+
 			<!-- Javadoc -->
-  <!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <charset>UTF-8</charset>
-                    <encoding>UTF-8</encoding>
-                    <docencoding>UTF-8</docencoding>
-                    <additionalparam>-Xdoclint:none</additionalparam>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>  -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<charset>UTF-8</charset>
+					<encoding>UTF-8</encoding>
+					<docencoding>UTF-8</docencoding>
+					<locale>en_US</locale>
+					<additionalparam>-Xdoclint:none</additionalparam>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<!-- 编译时使用 lib 目录下的 jar 包 -->
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<compilerArguments>
+						<!-- <extdirs>${project.basedir}/lib</extdirs> -->
+						<extdirs>${project.basedir}/src/main/resources/lib</extdirs>
+					</compilerArguments>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 		</plugins>
 	</build>

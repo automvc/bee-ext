@@ -21,23 +21,25 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.teasoft.bee.ds.DataSourceBuilder;
 import org.teasoft.honey.osql.core.Logger;
-
-import com.alibaba.druid.pool.DruidDataSourceFactory;
+import org.teasoft.honey.util.Converter;
 
 /**
  * @author Kingstar
  * @since  2.1
  */
-public class DruidDataSourceBuilder implements DataSourceBuilder {
+public class Dbcp2DataSourceBuilder implements DataSourceBuilder {
 
 	@Override
 	public DataSource build(Map<String, String> propertiesMap) {
 
 		DataSource ds = null;
 		try {
-			ds = DruidDataSourceFactory.createDataSource(propertiesMap);
+//			https://www.jianshu.com/p/ea4cfe7c9c81
+			ds = BasicDataSourceFactory.createDataSource(Converter.map2Prop(propertiesMap));
+
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}
@@ -45,3 +47,22 @@ public class DruidDataSourceBuilder implements DataSourceBuilder {
 	}
 
 }
+
+//public class getDataSource {
+//    @Bean(name="dataSource")
+//    public static DataSource getDataSource(){
+//        Properties props = new Properties();
+//         属性名不对
+//        props.setProperty("driver","org.postgresql.Driver");
+//        props.setProperty("url","jdbc:postgresql://127.0.0.1:5432/postgres");
+//        props.setProperty("user","postgres");
+//        props.setProperty("password ","1");
+//        DataSource dataSource = null;
+//        try {
+//            dataSource = BasicDataSourceFactory.createDataSource(props);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return dataSource;
+//    }
+//}

@@ -211,6 +211,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 			doc = new Document(map);
+			conn = getConn();
+			MongoDatabase db=getMongoDatabase(conn);
+			
+			//TODO 处理保存文件
+			_storeFile(map,db);
 			
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
 					null, null, false,entity.getClass(),doc); //insert 放在updateSet
@@ -218,8 +223,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			logSQLForMain(" Mongodb::insert: "+sql);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 			
-			conn = getConn();
-			getMongoDatabase(conn).getCollection(tableName).insertOne(doc);
+	
+			
+			db.getCollection(tableName).insertOne(doc);
 			num=1; //有异常不会执行到这
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
@@ -236,6 +242,24 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			close(conn);
 		}
 		return num;
+	}
+	
+	private void _storeFile(Map<String, Object> map, MongoDatabase database) {
+		if (map.containsKey(StringConst.GridFs_FileId)) {
+			String fileColumnName = (String) map.get(StringConst.GridFs_FileColumnName);
+			String filename = (String) map.get(StringConst.GridFs_FileName);
+			InputStream source = (InputStream) map.get(fileColumnName);
+			
+			//TODO 如何区分哪些是metadataMap???    使用注解?? 标明哪些字段作为Metadata??
+			Map<String, Object> metadataMap =(Map<String, Object>)map.get(StringConst.GridFs_MetadataMap);
+
+			String fileid = _uploadFile(filename, source, metadataMap, database);
+			map.put((String) map.get(StringConst.GridFs_FileId), fileid); // 将返回的fileid,存到保存它的字段
+			
+			//文件已另外存,这两个字段,不需要了
+			map.remove(StringConst.GridFs_FileId); 
+			map.remove(fileColumnName);
+		}
 	}
 	
 	@Override
@@ -1540,6 +1564,19 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		conn = getConn();
 		MongoDatabase database = getMongoDatabase(conn);
 		String stringId = "";
+
+		try {
+			stringId = _uploadFile(filename, fileStream, metadataMap, database);
+		} finally {
+			close(conn);
+		}
+		return stringId;
+	}
+	
+	public String _uploadFile(String filename, InputStream fileStream,
+			Map<String, Object> metadataMap, MongoDatabase database) {
+
+		String stringId = "";
 		try {
 
 			GridFSBucket gridFSBucket = getGridFSBucket(database);
@@ -1547,25 +1584,23 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			GridFSUploadOptions options = null;
 			if (metadataMap != null && metadataMap.size() > 0) {
 				options = new GridFSUploadOptions();
-				Map<String, Object> map = new HashMap<>();
-				map.put("fileType", "sql-script");
-				options.metadata(new Document(map));
+//				Map<String, Object> map = new HashMap<>();
+//				map.put("fileType", "sql-script");
+				options.metadata(new Document(metadataMap));
 			}
 			ObjectId fileId;
 
 			if (options != null) {
 				// 同一个名字，可以重复保存，但ObjectId fileId不一样。
-				fileId = gridFSBucket.uploadFromStream("myProject.zip3", fileStream, options);// options 不能为null
+				fileId = gridFSBucket.uploadFromStream(filename, fileStream, options);// options 不能为null
 			} else {
-				fileId = gridFSBucket.uploadFromStream("myProject.zip3", fileStream);
+				fileId = gridFSBucket.uploadFromStream(filename, fileStream);
 			}
 			stringId = fileId.toString();
 
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
-		} finally {
-			close(conn);
 		}
 		return stringId;
 	}
