@@ -45,6 +45,7 @@ import org.bson.types.ObjectId;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
+import org.teasoft.bee.mongodb.SudFile;
 import org.teasoft.bee.osql.Cache;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.FunctionType;
@@ -104,7 +105,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Kingstar
  * @since  2.0
  */
-public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serializable {
+public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SudFile, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
 	
@@ -214,8 +215,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			conn = getConn();
 			MongoDatabase db=getMongoDatabase(conn);
 			
-			//TODO 处理保存文件
-			_storeFile(map,db);
+			_storeFile(map,db); //处理保存文件
 			
 			doc = newDoc(map);
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
@@ -1720,6 +1720,49 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 		return bytesToWriteTo;
 	}
+	
+	
+//	@Override
+//	public OutputStream getOutputStreamByName(String fileName) {
+//		DatabaseClientConnection conn = null;
+//		conn = getConn();
+//		MongoDatabase database = getMongoDatabase(conn);
+//		GridFSBucket gridFSBucket = getGridFSBucket(database);
+//
+//		byte[] bytesToWriteTo = null;
+//		try (GridFSDownloadStream downloadStream = gridFSBucket.openDownloadStream(fileName)) { // 返回的是files里面的id,查询时也是里面的id
+//			int fileLength = (int) downloadStream.getGridFSFile().getLength();
+//			bytesToWriteTo = new byte[fileLength];
+//			downloadStream.read(bytesToWriteTo);
+//		} catch (Exception e) {
+//			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+//			throw ExceptionHelper.convert(e);
+//		} finally {
+//			close(conn);
+//		}
+//		return bytesToWriteTo;
+//	}
+//
+//	@Override
+//	public OutputStream getOutputStreamById(String fileId) {
+//		DatabaseClientConnection conn = null;
+//		conn = getConn();
+//		MongoDatabase database = getMongoDatabase(conn);
+//		GridFSBucket gridFSBucket = getGridFSBucket(database);
+//		byte[] bytesToWriteTo = null;
+//		try (GridFSDownloadStream downloadStream = gridFSBucket
+//				.openDownloadStream(new ObjectId(fileId))) { // 返回的是files里面的id,查询时也是里面的id
+//			int fileLength = (int) downloadStream.getGridFSFile().getLength();
+//			bytesToWriteTo = new byte[fileLength];
+//			downloadStream.read(bytesToWriteTo);
+//		} catch (Exception e) {
+//			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+//			throw ExceptionHelper.convert(e);
+//		} finally {
+//			close(conn);
+//		}
+//		return bytesToWriteTo;
+//	}
 
 	@Override
 	public void renameFile(String fileId, String newName) {
