@@ -6,13 +6,13 @@
 
 package org.teasoft.beex.osql.mongodb;
 
-import org.teasoft.bee.mongodb.SudFile;
+import org.teasoft.bee.mongodb.SuidFile;
 import org.teasoft.beex.osql.SuidRichExt;
 
 /**
  * @author Kingstar
  * @since  2.1
  */
-public interface MongodbSuidRichExt extends SuidRichExt,SudFile{
+public interface MongodbSuidRichExt extends SuidRichExt,SuidFile{
 
 }

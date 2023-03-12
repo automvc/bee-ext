@@ -45,7 +45,7 @@ import org.bson.types.ObjectId;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
-import org.teasoft.bee.mongodb.SudFile;
+import org.teasoft.bee.mongodb.SuidFile;
 import org.teasoft.bee.osql.Cache;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.FunctionType;
@@ -105,7 +105,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Kingstar
  * @since  2.0
  */
-public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SudFile, Serializable {
+public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFile, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
 	
