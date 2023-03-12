@@ -52,12 +52,12 @@ import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.ObjSQLException;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
+import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.honey.database.DatabaseClientConnection;
 import org.teasoft.honey.osql.core.AbstractBase;
 import org.teasoft.honey.osql.core.BeeFactory;
-import org.teasoft.honey.osql.core.BeeFactoryHelper;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.ConditionImpl.FunExpress;
 import org.teasoft.honey.osql.core.ExceptionHelper;
@@ -177,7 +177,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				map.remove(column);
 			}
 
-			doc = new Document(map);
+			doc = newDoc(map);
 			Document updateDocument = new Document("$set", doc);
 
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
@@ -210,13 +210,14 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		int num = 0;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
-			doc = new Document(map);
+			
 			conn = getConn();
 			MongoDatabase db=getMongoDatabase(conn);
 			
 			//TODO 处理保存文件
 			_storeFile(map,db);
 			
+			doc = newDoc(map);
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
 					null, null, false,entity.getClass(),doc); //insert 放在updateSet
 			sql=struct.getSql();
@@ -244,21 +245,26 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		return num;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void _storeFile(Map<String, Object> map, MongoDatabase database) {
 		if (map.containsKey(StringConst.GridFs_FileId)) {
 			String fileColumnName = (String) map.get(StringConst.GridFs_FileColumnName);
-			String filename = (String) map.get(StringConst.GridFs_FileName);
+			String filename_key = (String) map.get(StringConst.GridFs_FileName);
+			String filename_value = (String) map.get(filename_key);
 			InputStream source = (InputStream) map.get(fileColumnName);
-			
-			//TODO 如何区分哪些是metadataMap???    使用注解?? 标明哪些字段作为Metadata??
-			Map<String, Object> metadataMap =(Map<String, Object>)map.get(StringConst.GridFs_MetadataMap);
 
-			String fileid = _uploadFile(filename, source, metadataMap, database);
+			// 如何区分哪些是metadataMap??? 使用注解?? 标明哪些字段作为Metadata??    使用GridFsMetadata注解标注的Map<String,Object>
+			Map<String, Object> metadataMap = (Map<String, Object>) map.get(GridFsMetadata.class.getName());
+
+			String fileid = _uploadFile(filename_value, source, metadataMap, database);
 			map.put((String) map.get(StringConst.GridFs_FileId), fileid); // 将返回的fileid,存到保存它的字段
-			
-			//文件已另外存,这两个字段,不需要了
-			map.remove(StringConst.GridFs_FileId); 
+
+			// 文件已另外存,这些不需要了
+			map.remove(StringConst.GridFs_FileId);
+			map.remove(StringConst.GridFs_FileName);
+			map.remove(StringConst.GridFs_FileColumnName);
 			map.remove(fileColumnName);
+			map.remove(GridFsMetadata.class.getName());
 		}
 	}
 	
@@ -806,13 +812,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		logSQLForMain(" Mongodb::insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
+		MongoDatabase db=getMongoDatabase(conn);
+		
 		try {
 			for (int i = 1; i <= len; i++) { // i 1..len
-				Document doc = toDocumentExcludeSome(entity[i - 1], excludeFields);
+				Document doc = toDocumentExcludeSomeAndStoreFile(entity[i - 1], excludeFields,db);
 				if (i == 1) list = new ArrayList<>();
 				list.add(doc);
 				if (i % batchSize == 0 || i == len) {
-					InsertManyResult irs = getMongoDatabase(conn).getCollection(tableName)
+					InsertManyResult irs = db.getCollection(tableName)
 							.insertMany(list);
 //					System.out.println(irs.getInsertedIds());
 					count += irs.getInsertedIds().size();
@@ -841,18 +849,19 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		Document doc = null;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
-			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
+			if (ObjectUtils.isNotEmpty(map)) doc = newDoc(map);
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
 		}
 		return doc;
 	}
 
-	private <T> Document toDocumentExcludeSome(T entity, String excludeFields) {
+	private <T> Document toDocumentExcludeSomeAndStoreFile(T entity, String excludeFields,MongoDatabase db) {
 		Document doc = null;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
-			doc = new Document(map);
+			_storeFile(map,db); //处理保存文件,如果有
+			doc = newDoc(map);
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
 		}
@@ -1090,38 +1099,47 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 	public <T> long insertAndReturnId(T entity, IncludeType includeType) {
 
 		String tableName = _toTableName(entity);
-
-		Condition condition = null;
-		if (includeType != null) condition = BeeFactoryHelper.getCondition().setIncludeType(includeType);
-		Document doc = toDocument(entity, condition);
-
+		String sql = "";
 		int num = 0;
-		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null, null,
-				null, false, entity.getClass(), doc);
-		String sql = struct.getSql();
-		logSQLForMain(" Mongodb::insertAndReturnId: "+sql);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
 
-		DatabaseClientConnection conn = getConn();
+//		Condition condition = null;
+//		if (includeType != null) condition = BeeFactoryHelper.getCondition().setIncludeType(includeType);
+//		Document doc = toDocument(entity, condition);
+
+		Document doc = null;
+		DatabaseClientConnection conn = null;
 		try {
-			BsonValue bv = getMongoDatabase(conn).getCollection(tableName).insertOne(doc)
-					.getInsertedId();
-			long r=0;
+			Map<String, Object> map = ParaConvertUtil.toMap(entity,includeType.getValue(),SuidType.INSERT);
+
+			conn = getConn();
+			MongoDatabase db = getMongoDatabase(conn);
+			
+			_storeFile(map, db); //处理保存文件
+			doc = newDoc(map);
+
+			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null, null,
+					null, false, entity.getClass(), doc);
+			sql = struct.getSql();
+			logSQLForMain(" Mongodb::insertAndReturnId: " + sql);
+			HoneyContext.addInContextForCache(sql, struct.getTableName());
+
+			BsonValue bv = db.getCollection(tableName).insertOne(doc).getInsertedId();
+			long r = 0;
 			if (bv != null) {
 				r = bv.asInt64().longValue();
 				if (r > 0) num = 1;
 			}
 			return r;
 		} catch (Exception e) {
-			
+
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-			boolean notCatch=HoneyConfig.getHoneyConfig().notCatchModifyDuplicateException;
-			if (!notCatch && isConstraint(e)) { //内部捕获并且是重复异常,则由Bee框架处理 
-				boolean notShow=HoneyConfig.getHoneyConfig().notShowModifyDuplicateException;
-				if(! notShow) Logger.warn(e.getMessage());
+			boolean notCatch = HoneyConfig.getHoneyConfig().notCatchModifyDuplicateException;
+			if (!notCatch && isConstraint(e)) { // 内部捕获并且是重复异常,则由Bee框架处理
+				boolean notShow = HoneyConfig.getHoneyConfig().notShowModifyDuplicateException;
+				if (!notShow) Logger.warn(e.getMessage());
 				return num;
 			}
-			
+
 			Logger.warn("Confirm that the returned value is numeric type!");
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -1486,7 +1504,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 			Map<String, Object> map = ParaConvertUtil.toMap(entity, getIncludeType(condition));
 			if (condition == null) {
 				if (ObjectUtils.isNotEmpty(map))
-					return new Document(map);
+					return newDoc(map);
 				else
 					return null;
 			}
@@ -1496,7 +1514,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.
 			else if (ObjectUtils.isEmpty(map)) map = map2;
 
-			if (ObjectUtils.isNotEmpty(map)) doc = new Document(map);
+			if (ObjectUtils.isNotEmpty(map)) doc = newDoc(map);
 
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
@@ -1736,4 +1754,17 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql, Serial
 		}
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Document newDoc(Map map) {
+		
+//		if (map != null && map.size() > 0) {
+//			map.remove(StringConst.GridFs_FileId);
+//			map.remove(StringConst.GridFs_FileName);
+//			map.remove(StringConst.GridFs_FileColumnName);
+////		    map.remove(fileColumnName);
+////		    map.remove(GridFsMetadata.class.getName());
+//		}
+		
+		return new Document(map);
+	}
 }

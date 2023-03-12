@@ -27,7 +27,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
+import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.GridFs;
+import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.SetParaTypeConvert;
 import org.teasoft.bee.sharding.ShardingSortStruct;
@@ -51,9 +53,14 @@ public class ParaConvertUtil {
 		return  toMap(entity, -1);
 		
 	}
+	
+	public static Map<String, Object> toMap(Object entity,int includeType) throws Exception {
+		return toMap(entity, includeType, null);
+	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String, Object> toMap(Object entity,int includeType) throws Exception {
+	public static Map<String, Object> toMap(Object entity, int includeType, SuidType suidType)
+			throws Exception {
 		Map<String, Object> documentAsMap = null;
 		Field fields[] = entity.getClass().getDeclaredFields();
 		boolean isFirst = true;
@@ -80,7 +87,7 @@ public class ParaConvertUtil {
 					if (converter != null) {
 						value=(String)converter.convert(value);
 					}
-				}else if(value!=null &&  fields[i].isAnnotationPresent(GridFs.class)) { //V2.1 一个实体只支持一个文件
+				}else if(value!=null && suidType==SuidType.INSERT && fields[i].isAnnotationPresent(GridFs.class)) { //V2.1 一个实体只支持一个文件
 					GridFs sysValue = fields[i].getAnnotation(GridFs.class);
 					String fileid = sysValue.fileIdName();
 					String filename = sysValue.fileName();
@@ -92,7 +99,11 @@ public class ParaConvertUtil {
 				if ("_id".equalsIgnoreCase(column) && value == null) {
 					// ignore
 				} else {
-					documentAsMap.put(column, value);
+					if (value != null && fields[i].isAnnotationPresent(GridFsMetadata.class)) {
+						documentAsMap.put(GridFsMetadata.class.getName(), value);
+					} else {
+						documentAsMap.put(column, value);
+					}
 				}
 			}
 		}
@@ -100,43 +111,53 @@ public class ParaConvertUtil {
 		return documentAsMap;
 	}
 	
-	private static boolean isExcludeField(String excludeFieldList, String checkField) {
-		String excludeFields[] = excludeFieldList.split(",");
-		for (String f : excludeFields) {
-			if (f.equals(checkField)) return true;
-		}
-		return false;
-	}
+//	private static boolean isExcludeField(String excludeFieldList, String checkField) {
+//		String excludeFields[] = excludeFieldList.split(",");
+//		for (String f : excludeFields) {
+//			if (f.equals(checkField)) return true;
+//		}
+//		return false;
+//	}
 	
 	public static Map<String, Object> toMapExcludeSome(Object entity,String excludeFieldList) throws Exception {
-		Map<String, Object> documentAsMap = null;
-		Field fields[] = entity.getClass().getDeclaredFields();
-		boolean isFirst = true;
-		int len = fields.length;
-		String column = "";
-		Object value = null;
-		for (int i = 0; i < len; i++) {
-			fields[i].setAccessible(true);
-//			if (HoneyUtil.isContinue(-1, fields[i].get(entity), fields[i])) {
-			if (HoneyUtil.isContinue(NullEmpty.EMPTY_STRING, fields[i].get(entity), fields[i])) {// mongodb,批量插入,不处理null,但会插入是空字符的
-				continue;
-			} else {
-				if (!"".equals(excludeFieldList) && isExcludeField(excludeFieldList, fields[i].getName())) continue;
-				
-				if (isFirst) {
-					isFirst = false;
-					documentAsMap = new LinkedHashMap<String, Object>();
-				}
-				column = _toColumnName(fields[i].getName(), entity.getClass());
-				if ("id".equalsIgnoreCase(column)) {// 替换id为_id
-					column = "_id";
-				}
-				value = fields[i].get(entity); // value
-				documentAsMap.put(column, value);
-			}
-		}
+		
+//		Map<String, Object> documentAsMap = null;
+//		Field fields[] = entity.getClass().getDeclaredFields();
+//		boolean isFirst = true;
+//		int len = fields.length;
+//		String column = "";
+//		Object value = null;
+//		for (int i = 0; i < len; i++) {
+//			fields[i].setAccessible(true);
+////			if (HoneyUtil.isContinue(-1, fields[i].get(entity), fields[i])) {
+//			if (HoneyUtil.isContinue(NullEmpty.EMPTY_STRING, fields[i].get(entity), fields[i])) {// mongodb,批量插入,不处理null,但会插入是空字符的
+//				continue;
+//			} else {
+//				if (!"".equals(excludeFieldList) && isExcludeField(excludeFieldList, fields[i].getName())) continue;
+//				
+//				if (isFirst) {
+//					isFirst = false;
+//					documentAsMap = new LinkedHashMap<String, Object>();
+//				}
+//				column = _toColumnName(fields[i].getName(), entity.getClass());
+//				if ("id".equalsIgnoreCase(column)) {// 替换id为_id
+//					column = "_id";
+//				}
+//				value = fields[i].get(entity); // value
+//				documentAsMap.put(column, value);
+//			}
+//		}
+//
+//		return documentAsMap;
+		
+		Map<String, Object> map = toMap(entity, NullEmpty.EMPTY_STRING, SuidType.INSERT);
 
-		return documentAsMap;
+		String excludeFields[] = excludeFieldList.split(",");
+		for (String f : excludeFields) {
+			map.remove(_toColumnName(f, entity.getClass()));
+		}
+		
+		return map;
 	}
 	
 
