@@ -37,12 +37,23 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 	public DataSource build(Map<String, String> p) {
 		ComboPooledDataSource ds = new ComboPooledDataSource();
 //		ds.setProperties(p);  //不能用这种
-
+		
+		if (!p.containsKey("user") && p.containsKey("username")) {
+			p.put("user", p.get("username"));
+		}
+		if (!p.containsKey("jdbcUrl") && p.containsKey("url")) {
+			p.put("jdbcUrl", p.get("url"));
+		}
+		
 //		c3p0  V0.9.5.4
 		String jdbcUrl=getString(p,"jdbcUrl");
 		String user=getString(p,"user");
 		if (StringUtils.isBlank(jdbcUrl) || StringUtils.isBlank(user)) {
 			throw new ConfigWrongException("The jdbcUrl and user for c3p0 can not be null!");
+		}
+		if (!p.containsKey("driverClass")) {
+			if(p.containsKey("driverName")) p.put("driverClass", p.get("driverName"));
+			if(p.containsKey("driverClassName")) p.put("driverClass", p.get("driverClassName"));
 		}
 		String tempString;
 		if(jdbcUrl!=null) ds.setJdbcUrl(jdbcUrl);
