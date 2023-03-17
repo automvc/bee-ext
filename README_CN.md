@@ -33,6 +33,8 @@ Bee-Ext
 * 13.多数据源简易配置  
 * 14.支持Mongodb GridFS文件存储  
 
+* 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt及快捷输入类BFX.
+
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
 

@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 
 import org.teasoft.bee.ds.DataSourceBuilder;
 import org.teasoft.bee.osql.exception.ConfigWrongException;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -52,8 +53,8 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 			throw new ConfigWrongException("The jdbcUrl and user for c3p0 can not be null!");
 		}
 		if (!p.containsKey("driverClass")) {
-			if(p.containsKey("driverName")) p.put("driverClass", p.get("driverName"));
 			if(p.containsKey("driverClassName")) p.put("driverClass", p.get("driverClassName"));
+			if(p.containsKey("driverName")) p.put("driverClass", p.get("driverName"));
 		}
 		String tempString;
 		if(jdbcUrl!=null) ds.setJdbcUrl(jdbcUrl);
@@ -67,10 +68,30 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 		if((tempString=getString(p,"connectionCustomizerClassName"))!=null) ds.setConnectionCustomizerClassName(tempString);
 		if((tempString=getString(p,"factoryClassLocation"))!=null) ds.setFactoryClassLocation(tempString);
 		
-		try { if((tempString=getString(p,"driverClass"))!=null) ds.setDriverClass(tempString); } catch (Exception e) {}
-		try { if((tempString=getString(p,"contextClassLoaderSource"))!=null) ds.setContextClassLoaderSource(tempString); } catch (Exception e) {}
-		try { if((tempString=getString(p,"connectionTesterClassName"))!=null) ds.setConnectionTesterClassName(tempString); } catch (Exception e) {}
-		try { if((tempString=getString(p,"userOverridesAsString"))!=null) ds.setUserOverridesAsString(tempString); } catch (Exception e) {}
+		try {
+			if ((tempString = getString(p, "driverClass")) != null)
+				ds.setDriverClass(tempString);
+		} catch (Exception e) {
+			// ignore
+		}
+		try {
+			if ((tempString = getString(p, "contextClassLoaderSource")) != null)
+				ds.setContextClassLoaderSource(tempString);
+		} catch (Exception e) {
+			// ignore
+		}
+		try {
+			if ((tempString = getString(p, "connectionTesterClassName")) != null)
+				ds.setConnectionTesterClassName(tempString);
+		} catch (Exception e) {
+			// ignore
+		}
+		try {
+			if ((tempString = getString(p, "userOverridesAsString")) != null)
+				ds.setUserOverridesAsString(tempString);
+		} catch (Exception e) {
+			// ignore
+		}
 
 		Integer tempInt;
 		if((tempInt=getInt(p,"checkoutTimeout"))!=null) ds.setCheckoutTimeout(tempInt);
@@ -113,7 +134,7 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 		try {
 			return Integer.parseInt(t.trim());
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.debug(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -128,14 +149,11 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 
 	private Boolean getBoolean(Map<String, String> p, String key) {
 		String t = (String) p.get(key);
-		if (StringUtils.isBlank(t))
-			return null;
-		else {
-			if ("true".equalsIgnoreCase(t)) return Boolean.TRUE;
-			if ("false".equalsIgnoreCase(t)) return Boolean.FALSE;
-		}
+		if ("true".equalsIgnoreCase(t)) return Boolean.TRUE;
+		if ("false".equalsIgnoreCase(t)) return Boolean.FALSE;
 
-		return null;
+		Boolean b = null;
+		return b;
 	}
 
 }

@@ -48,11 +48,9 @@ import android.database.sqlite.SQLiteStatement;
  * @author Kingstar
  * @since 1.17
  */
-public class SqlLibExtForAndroid implements BeeSqlForApp, Serializable {
+public class SqlLibExtForAndroid implements BeeSqlForApp {
 	
-	private static final long serialVersionUID = 1596710362263L;
-
-	private SQLiteDatabase database; // 有事务管理.
+	private SQLiteDatabase database=null; // 有事务管理.
 
 	public SQLiteDatabase getDatabase() {
 

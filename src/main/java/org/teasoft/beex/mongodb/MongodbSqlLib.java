@@ -1565,6 +1565,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
 	
 	
+	
 	private GridFSBucket getGridFSBucket(MongoDatabase database) {
 //		MongoDatabase database = SingleMongodbFactory.getMongoDb(); // 单个数据源时,
 		return GridFSBuckets.create(database);
@@ -1591,7 +1592,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		return stringId;
 	}
 	
-	public String _uploadFile(String filename, InputStream fileStream,
+	private String _uploadFile(String filename, InputStream fileStream,
 			Map<String, Object> metadataMap, MongoDatabase database) {
 
 		String stringId = "";
@@ -1602,8 +1603,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			GridFSUploadOptions options = null;
 			if (metadataMap != null && metadataMap.size() > 0) {
 				options = new GridFSUploadOptions();
-//				Map<String, Object> map = new HashMap<>();
-//				map.put("fileType", "sql-script");
 				options.metadata(new Document(metadataMap));
 			}
 			ObjectId fileId;
@@ -1623,10 +1622,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		return stringId;
 	}
 
+	@Override
 	public List<GridFsFile> selectFiles(GridFsFile gridFsFile, Condition condition) {
-//		metadata TODO 没有还前缀,则加上        // 3. 处理close  TODO
-//		解析查询条件
-		MongoSqlStruct struct = null;
+
+		if (gridFsFile.getMetadata() != null && gridFsFile.getMetadata().size() == 0)
+			gridFsFile.setMetadata(null);
+
+		MongoSqlStruct struct = parseMongoSqlStruct(gridFsFile, condition, "List<GridFsFile>");
+		struct.setTableName("fs.files");
+		logSQLForMain(" Mongodb::selectFiles: " + struct.getSql());
 
 		GridFSFindIterable iterable = gridFSFindIterable(struct);
 		MongoCursor<GridFSFile> cursor = iterable.iterator();
@@ -1635,8 +1639,9 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 		while (cursor.hasNext()) {
 			GridFSFile fs = cursor.next();
-			list.add(new GridFsFile(fs.getId().toString(), fs.getFilename(), fs.getLength(),
-					fs.getChunkSize(), fs.getUploadDate(), fs.getMetadata()));
+			list.add(new GridFsFile(fs.getId().asObjectId().getValue().toString(),
+					fs.getFilename(), fs.getLength(), fs.getChunkSize(), fs.getUploadDate(),
+					fs.getMetadata()));
 		}
 
 		return list;
@@ -1644,6 +1649,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 	private GridFSFindIterable gridFSFindIterable(MongoSqlStruct struct) {
 //		String tableName = struct.getTableName();
+		
 		Bson filter = (Bson) struct.getFilter();
 		Bson sortBson = (Bson) struct.getSortBson();
 		Integer size = struct.getSize();
