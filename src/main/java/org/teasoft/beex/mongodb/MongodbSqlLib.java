@@ -26,6 +26,7 @@ import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -1684,49 +1685,63 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 		return iterable;
 	}
-
+	
 	@Override
 	public byte[] getFileByName(String fileName) {
-		DatabaseClientConnection conn = null;
-		conn = getConn();
-		MongoDatabase database = getMongoDatabase(conn);
-		GridFSBucket gridFSBucket = getGridFSBucket(database);
-
-		byte[] bytesToWriteTo = null;
-		try (GridFSDownloadStream downloadStream = gridFSBucket.openDownloadStream(fileName)) { // 返回的是files里面的id,查询时也是里面的id
-			int fileLength = (int) downloadStream.getGridFSFile().getLength();
-			bytesToWriteTo = new byte[fileLength];
-			downloadStream.read(bytesToWriteTo);
-		} catch (Exception e) {
-			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-			throw ExceptionHelper.convert(e);
-		} finally {
-			close(conn);
-		}
-		return bytesToWriteTo;
-	}
-
-	@Override
-	public byte[] getFileById(String fileId) {
-		DatabaseClientConnection conn = null;
-		conn = getConn();
-		MongoDatabase database = getMongoDatabase(conn);
-		GridFSBucket gridFSBucket = getGridFSBucket(database);
-		byte[] bytesToWriteTo = null;
-		try (GridFSDownloadStream downloadStream = gridFSBucket
-				.openDownloadStream(new ObjectId(fileId))) { // 返回的是files里面的id,查询时也是里面的id
-			int fileLength = (int) downloadStream.getGridFSFile().getLength();
-			bytesToWriteTo = new byte[fileLength];
-			downloadStream.read(bytesToWriteTo);
-		} catch (Exception e) {
-			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-			throw ExceptionHelper.convert(e);
-		} finally {
-			close(conn);
-		}
-		return bytesToWriteTo;
+		return _getFileByKey(fileName);
 	}
 	
+	@Override
+	public byte[] getFileById(String fileId) {
+		return _getFileByKey(new ObjectId(fileId));
+	}
+
+	private byte[] _getFileByKey(Object key) {
+		DatabaseClientConnection conn = null;
+		conn = getConn();
+		MongoDatabase database = getMongoDatabase(conn);
+		GridFSBucket gridFSBucket = getGridFSBucket(database);
+
+		byte[] returnBytes = null;
+		GridFSDownloadStream downloadStream = null;
+		ByteArrayOutputStream bos = null;
+		try { // 返回的是files里面的id,查询时也是里面的id
+
+			if (key instanceof ObjectId)
+				downloadStream = gridFSBucket.openDownloadStream((ObjectId) key);
+			else
+				downloadStream = gridFSBucket.openDownloadStream((String) key);
+
+			int fileLength = (int) downloadStream.getGridFSFile().getLength();
+
+			bos = new ByteArrayOutputStream(fileLength);
+			int buf_size = 1024;
+			byte[] buffer = new byte[buf_size];
+			int len = 0;
+			while (-1 != (len = downloadStream.read(buffer, 0, buf_size))) {
+				bos.write(buffer, 0, len);
+			}
+			returnBytes = bos.toByteArray();
+
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		} finally {
+			try {
+				if (bos != null) bos.close();
+			} catch (Exception e2) {
+				// ignore
+			}
+			try {
+				if (downloadStream != null) downloadStream.close();
+			} catch (Exception e3) {
+				// ignore
+			}
+			close(conn);
+		}
+		return returnBytes;
+	}
+
 	
 //	@Override
 //	public OutputStream getOutputStreamByName(String fileName) {
@@ -1805,15 +1820,6 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Document newDoc(Map map) {
-		
-//		if (map != null && map.size() > 0) {
-//			map.remove(StringConst.GridFs_FileId);
-//			map.remove(StringConst.GridFs_FileName);
-//			map.remove(StringConst.GridFs_FileColumnName);
-////		    map.remove(fileColumnName);
-////		    map.remove(GridFsMetadata.class.getName());
-//		}
-		
 		return new Document(map);
 	}
 }
