@@ -43,9 +43,13 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.teasoft.bee.mongodb.BoxPara;
+import org.teasoft.bee.mongodb.CenterPara;
+import org.teasoft.bee.mongodb.Geo;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
+import org.teasoft.bee.mongodb.NearPara;
 import org.teasoft.bee.mongodb.SuidFile;
 import org.teasoft.bee.osql.Cache;
 import org.teasoft.bee.osql.Condition;
@@ -57,6 +61,9 @@ import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
+import org.teasoft.beex.osql.mongodb.CreateIndex;
+import org.teasoft.beex.osql.mongodb.IndexPair;
+import org.teasoft.beex.osql.mongodb.IndexType;
 import org.teasoft.honey.database.DatabaseClientConnection;
 import org.teasoft.honey.osql.core.AbstractBase;
 import org.teasoft.honey.osql.core.BeeFactory;
@@ -96,7 +103,12 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexModel;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Position;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.UpdateResult;
@@ -106,7 +118,8 @@ import com.mongodb.client.result.UpdateResult;
  * @author Kingstar
  * @since  2.0
  */
-public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFile, Serializable {
+//@SuppressWarnings("hiding")
+public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFile,CreateIndex,Geo, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
 	
@@ -211,7 +224,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		String sql="";
 		int num = 0;
 		try {
-			Map<String, Object> map = ParaConvertUtil.toMap(entity);
+			Map<String, Object> map = ParaConvertUtil.toMap(entity, -1, SuidType.INSERT);
 			
 			conn = getConn();
 			MongoDatabase db=getMongoDatabase(conn);
@@ -556,7 +569,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			}
 		}
 	
-		return new MongoSqlStruct(returnType, tableName, filter, sortBson, start, size, selectFields, hasId,entity.getClass());
+		return new MongoSqlStruct(returnType, tableName, filter, sortBson, start, size, selectFields, hasId, entity.getClass());
 	}
 
 	private <T> FindIterable<Document> findIterableDocument(MongoSqlStruct struct) {
@@ -1563,8 +1576,107 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		return f;
 	}
 	
-	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
 	
+	// create index
+	@Override
+	public String index(String collectionName, String fieldName, IndexType indexType) {
+		DatabaseClientConnection conn = null;
+		try {
+			conn = getConn();
+			MongoDatabase mdb = getMongoDatabase(conn);
+			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
+			return mdb.getCollection(collectionName).createIndex(bson);
+		} finally {
+			close(conn);
+		}
+	}
+
+	@Override
+	public String unique(String collectionName, String fieldName, IndexType indexType) {
+		DatabaseClientConnection conn = null;
+		try {
+			conn = getConn();
+			MongoDatabase mdb = getMongoDatabase(conn);
+			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
+			IndexOptions indexOptions = new IndexOptions().unique(true);
+			return mdb.getCollection(collectionName).createIndex(bson, indexOptions);
+		} finally {
+			close(conn);
+		}
+	}
+
+	@Override
+	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
+
+		if (indexes == null || indexes.size() <= 0) return null;
+		List<IndexModel> list = new ArrayList<>(indexes.size());
+		Bson bson = null;
+		IndexOptions indexOptions = null;
+		for (IndexPair indexPair : indexes) {
+			bson = _getKeyBson(tranfer(indexPair.getFieldName()), indexPair.getIndexType());
+			indexOptions = indexPair.getIndexOptions();
+			if (indexOptions == null) indexOptions = new IndexOptions();
+			list.add(new IndexModel(bson, indexOptions));
+		}
+
+		DatabaseClientConnection conn = null;
+		try {
+			conn = getConn();
+			MongoDatabase mdb = getMongoDatabase(conn);
+
+			return mdb.getCollection(collectionName).createIndexes(list);
+		} finally {
+			close(conn);
+		}
+	}
+
+	private Bson _getKeyBson(String fieldName, IndexType indexType) {
+		Bson bson = null;
+
+		switch (indexType) {
+			case asc:
+				bson = Indexes.ascending(fieldName);
+				break;
+			case desc:
+				bson = Indexes.descending(fieldName);
+				break;
+			case text:
+				bson = Indexes.text(fieldName);
+				break;
+			case geo2dsphere:
+				bson = Indexes.geo2dsphere(fieldName);
+				break;
+			case geo2d:
+				bson = Indexes.geo2d(fieldName);
+				break;
+			case hashed:
+				bson = Indexes.hashed(fieldName);
+				break;
+			default:
+				break;
+		}
+
+		return bson;
+	}
+
+	// TODO
+	private String tranfer(String fieldName) {
+		return fieldName;
+	}
+
+	@Override
+	public void dropIndexes(String collectionName) {
+		DatabaseClientConnection conn = null;
+		try {
+			conn = getConn();
+			MongoDatabase mdb = getMongoDatabase(conn);
+			mdb.getCollection(collectionName).dropIndexes();
+		} finally {
+			close(conn);
+		}
+	}
+
+	private static final String Timeout_MSG = "Can not connect the Mongodb server. Maybe you did not start the Mongodb server!";
 	
 	
 	private GridFSBucket getGridFSBucket(MongoDatabase database) {
@@ -1625,7 +1737,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 	@Override
 	public List<GridFsFile> selectFiles(GridFsFile gridFsFile, Condition condition) {
-
+		//属性不转换,保留原样.
+		
 		if (gridFsFile.getMetadata() != null && gridFsFile.getMetadata().size() == 0)
 			gridFsFile.setMetadata(null);
 
@@ -1822,4 +1935,117 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 	private Document newDoc(Map map) {
 		return new Document(map);
 	}
+	
+	
+	
+	//----------------------GEO-----------------------start-----------------------------
+	private static int type_near=1;
+	private static int type_nearSphere=2;
+	private static int type_geoWithinCenter=3;
+	private static int type_geoWithinCenterSphere=4;
+	
+	private Bson getGeoBson(NearPara nearPara, int type) {
+		Bson geoBson = null;
+		Point refPoint = new Point(new Position(nearPara.getX(), nearPara.getY()));
+		Double max = nearPara.getMaxDistance();
+		Double min = nearPara.getMinDistance();
+		if (max < min) throw new BeeIllegalBusinessException("The maximum value must not be less than the minimum value!");
+
+		if (type == type_near) {
+			geoBson = Filters.near(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
+		} else if (type == type_nearSphere) geoBson = Filters
+				.nearSphere(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
+
+		return geoBson;
+	}
+	
+	private Bson getGeoBson(CenterPara centerPara, int type) {
+		Bson geoBson = null;
+//		Point refPoint = new Point(new Position(centerPara.getX(), centerPara.getY()));
+		if (type == type_geoWithinCenter) {
+			geoBson = Filters.geoWithinCenter(tranfer(centerPara.getGeoFieldName()),
+					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
+		} else if (type == type_geoWithinCenterSphere)
+			geoBson = Filters.geoWithinCenterSphere(tranfer(centerPara.getGeoFieldName()),
+					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
+		return geoBson;
+	}
+	
+	private Bson getGeoBson2(BoxPara boxPara) {
+		Bson geoBson = null;
+		geoBson = Filters.geoWithinBox(boxPara.getGeoFieldName(), boxPara.getLowerLeftX(),
+				boxPara.getLowerLeftY(), boxPara.getUpperRightX(), boxPara.getUpperRightY());
+		return geoBson;
+	}
+	
+	private Bson getGeoBson3(String fieldName, List<List<Double>> points) {
+		Bson geoBson = null;
+		geoBson = Filters.geoWithinPolygon(fieldName, points);
+		return geoBson;
+	}
+	
+	private <T> List<T> _near(T entity, NearPara nearPara,Condition condition, int type) { // near,nearSphere
+		Bson geoBson=getGeoBson(nearPara, type);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	private  <T> List<T> _geoWithinCenter(T entity, CenterPara centerPara ,Condition condition, int type) {
+		// geoWithinCenterSphere, geoWithinCenter
+		Bson geoBson=getGeoBson(centerPara, type);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	private <T> List<T> _geoFind(T entity, Bson geoBson,Condition condition) { // near,nearSphere
+
+		if (entity == null) return Collections.emptyList();
+
+		MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "List<T>");
+
+		if (geoBson != null) {
+			Document filter = (Document) struct.getFilter();
+			if (filter == null) {
+				struct.setFilter(geoBson);
+			} else {
+				struct.setFilter(Filters.and(filter, geoBson));
+			}
+		}
+
+		Class<T> entityClass = toClassT(entity);
+		return select(struct, entityClass);
+	};
+
+	@Override
+	public <T> List<T> near(T entity, NearPara nearPara, Condition condition) {
+		return _near(entity, nearPara, condition, type_near);
+	}
+
+	@Override
+	public <T> List<T> nearSphere(T entity, NearPara nearPara, Condition condition) {
+		return _near(entity, nearPara, condition, type_nearSphere);
+	}
+
+	@Override
+	public <T> List<T> geoWithinCenter(T entity, CenterPara centerPara, Condition condition) {
+		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenter);
+	}
+
+	@Override
+	public <T> List<T> geoWithinCenterSphere(T entity, CenterPara centerPara,
+			Condition condition) {
+		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenterSphere);
+	}
+
+	@Override
+	public <T> List<T> geoWithinBox(T entity, BoxPara boxPara, Condition condition) {
+		Bson geoBson=getGeoBson2(boxPara);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	@Override
+	public <T> List<T> geoWithinPolygon(T entity, String fieldName, List<List<Double>> points,
+			Condition condition) {
+		Bson geoBson=getGeoBson3(fieldName, points);
+		return _geoFind(entity, geoBson, condition);
+	}
+	//----------------------GEO-----------------------end-----------------------------
 }

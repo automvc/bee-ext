@@ -332,6 +332,17 @@ public class TransformResult {
 					Logger.debug("The id value(" + obj.toString()
 							+ ") can not convert to Number, the id value in entity will be null !");
 					obj = null;
+					
+				}else if (Document.class == obj.getClass() && field.getType()==String.class) {
+//						obj=toMap((Document) obj).toString();
+////						obj=JsonUtil.toJson(obj);
+					
+//					Document{
+					if(obj!=null) {
+						String str=obj.toString().trim();
+						obj=str;
+//						obj=str.substring(9, str.length()-1);
+					}
 				} else if (field.getType() == Integer.class && obj != null
 						&& obj instanceof Double) {
 					obj = ((Double) obj).intValue();
@@ -353,6 +364,17 @@ public class TransformResult {
 		}
 		return targetObj;
 	}
+	
+//	private static Map<String, Object> toMap(Map<String, Object> document) {
+//		if (document == null || document.size() < 1) return new LinkedHashMap<>();
+//
+//		Map<String, Object> map = new LinkedHashMap<>();
+//		for (Map.Entry<String, Object> entry : document.entrySet()) {
+//			map.put(entry.getKey(), entry.getValue());
+//		}
+//
+//		return map;
+//	}
 
 	public static <T> List<T> toListEntity(MongoIterable<Document> docIterable, Class<T> entityClass) {
 		List<T> list = new ArrayList<>();
