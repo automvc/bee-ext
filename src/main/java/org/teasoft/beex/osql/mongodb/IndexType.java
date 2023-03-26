@@ -17,13 +17,21 @@
 
 package org.teasoft.beex.osql.mongodb;
 
-import org.teasoft.bee.mongodb.SuidFile;
-import org.teasoft.beex.osql.SuidRichExt;
-
 /**
  * @author Kingstar
  * @since  2.1
  */
-public interface MongodbSuidRichExt extends SuidRichExt, SuidFile, CreateIndex,GeoRich {
+public enum IndexType {
+	
+	asc("asc"), desc("desc"), text("text"), geo2dsphere("geo2dsphere"), geo2d("geo2d"), hashed("hashed");
 
+	String type;
+
+	IndexType(String type) {
+		this.type = type;
+	}
+
+	public String getIndexType() {
+		return type;
+	}
 }

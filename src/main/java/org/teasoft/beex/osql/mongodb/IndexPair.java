@@ -17,13 +17,40 @@
 
 package org.teasoft.beex.osql.mongodb;
 
-import org.teasoft.bee.mongodb.SuidFile;
-import org.teasoft.beex.osql.SuidRichExt;
-
 /**
  * @author Kingstar
  * @since  2.1
  */
-public interface MongodbSuidRichExt extends SuidRichExt, SuidFile, CreateIndex,GeoRich {
+import com.mongodb.client.model.IndexOptions;
+
+public class IndexPair {
+
+	private String fieldName;
+	private IndexType indexType;
+	private IndexOptions indexOptions;
+
+	public String getFieldName() {
+		return fieldName;
+	}
+
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
+	}
+
+	public IndexType getIndexType() {
+		return indexType;
+	}
+
+	public void setIndexType(IndexType indexType) {
+		this.indexType = indexType;
+	}
+
+	public IndexOptions getIndexOptions() {
+		return indexOptions;
+	}
+
+	public void setIndexOptions(IndexOptions indexOptions) {
+		this.indexOptions = indexOptions;
+	}
 
 }
