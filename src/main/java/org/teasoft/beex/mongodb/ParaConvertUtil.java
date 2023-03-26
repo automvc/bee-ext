@@ -19,6 +19,7 @@ package org.teasoft.beex.mongodb;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
+import org.teasoft.bee.osql.annotation.Geo2dsphere;
 import org.teasoft.bee.osql.annotation.GridFs;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.annotation.customizable.Json;
@@ -94,8 +96,18 @@ public class ParaConvertUtil {
 					documentAsMap.put(StringConst.GridFs_FileId, fileid);
 					documentAsMap.put(StringConst.GridFs_FileName, filename);
 					documentAsMap.put(StringConst.GridFs_FileColumnName, column);
+				} else if (value != null && suidType == SuidType.INSERT
+						&& (fields[i].isAnnotationPresent(Geo2dsphere.class) || fields[i]
+								.getType().isAnnotationPresent(Geo2dsphere.class))) {
+					Map m = toMap(value);
+					if (m.get("coordinates") instanceof Double[]) {
+						m.put("coordinates", Arrays.asList((Double[]) m.get("coordinates")));
+//						m.put("coordinates",toDoubleList((Double[])m.get("coordinates")));
+					}
+					value = m;
 				}
 				
+				//set value
 				if ("_id".equalsIgnoreCase(column) && value == null) {
 					// ignore
 				} else {
@@ -110,6 +122,15 @@ public class ParaConvertUtil {
 
 		return documentAsMap;
 	}
+	
+//	private static List<Double> toDoubleList(Double dArray[]) {
+//		if(dArray==null || dArray.length==0) return new ArrayList<>(); 
+//		List<Double> list=new ArrayList<>(dArray.length);
+//		for (Double d : dArray) {
+//			list.add(d);
+//		}
+//		return list;
+//	}
 	
 //	private static boolean isExcludeField(String excludeFieldList, String checkField) {
 //		String excludeFields[] = excludeFieldList.split(",");

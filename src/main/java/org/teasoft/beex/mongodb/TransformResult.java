@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.teasoft.bee.osql.annotation.Geo2dsphere;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.type.TypeHandler;
 import org.teasoft.honey.osql.core.ExceptionHelper;
@@ -333,16 +334,18 @@ public class TransformResult {
 							+ ") can not convert to Number, the id value in entity will be null !");
 					obj = null;
 					
-				}else if (Document.class == obj.getClass() && field.getType()==String.class) {
+				}else if (obj != null && Document.class == obj.getClass() && field.getType()==String.class) {
 //						obj=toMap((Document) obj).toString();
-////						obj=JsonUtil.toJson(obj);
-					
-//					Document{
+////					obj=JsonUtil.toJson(obj);
 					if(obj!=null) {
 						String str=obj.toString().trim();
-						obj=str;
-//						obj=str.substring(9, str.length()-1);
+						obj=str.substring(9, str.length()-1);  //del: Document{...}
 					}
+				} else if (obj != null && Document.class == obj.getClass()
+						&& (   field.isAnnotationPresent(Geo2dsphere.class)
+						    || field.getType().isAnnotationPresent(Geo2dsphere.class) )) {
+					obj = toEntity((Document) obj, field.getType());
+					
 				} else if (field.getType() == Integer.class && obj != null
 						&& obj instanceof Double) {
 					obj = ((Double) obj).intValue();
