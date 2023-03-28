@@ -32,6 +32,7 @@ Bee-Ext
 
 * 13.多数据源简易配置  
 * 14.支持Mongodb GridFS文件存储  
+* 15.支持Mongodb地理信息插入、查询,包括分片  
 
 * 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt及快捷输入类BFX.
 
