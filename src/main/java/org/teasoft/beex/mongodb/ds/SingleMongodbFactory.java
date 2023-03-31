@@ -23,31 +23,37 @@ import org.teasoft.honey.osql.core.HoneyConfig;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
+/**
+ * Single Mongodb Factory for connection.
+ * @author Kingstar
+ * @since  2.0
+ */
 public class SingleMongodbFactory {
-
+	
 	private static MongodbManager manager = null;
 	private static MongoClient mongoClient = null;
 
 	static {
 		HoneyConfig config = HoneyConfig.getHoneyConfig();
-		manager = new MongodbManager(config.getUrl(), config.getUsername(),
-				config.getPassword());
-
+		manager = new MongodbManager(config.getUrl(), config.getUsername(), config.getPassword());
 		mongoClient = manager.getMongoClient();
 	}
 
 	public static MongoDatabase getMongoDb() {
-//		mongoClient.getDatabase(manager.getDatabaseName());
 		MongoDatabase db = null;
 		try {
-			db = mongoClient.getDatabase(manager.getDatabaseName());
+			if (Boolean.TRUE == MongoContext.getCurrentBeginFirst()) {// tran 首次
+				MongoClient mongoClient0 = manager.getMongoClient();
+				MongoContext.setCurrentMongoClient(mongoClient0);
+				return mongoClient0.getDatabase(manager.getDatabaseName());
+			} else if (MongoContext.getCurrentClientSession() != null) { // 同一tran，非首次获取
+				return MongoContext.getCurrentMongoClient().getDatabase(manager.getDatabaseName());
+			} else {
+				db = mongoClient.getDatabase(manager.getDatabaseName());
+			}
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
 		}
-		
 		return db;
-//		getMongoClient(); //可以一下生成多个 
-//		return getMongoClient().getDatabase(manager.getDatabaseName());
 	}
-
 }

@@ -46,25 +46,33 @@ public class MongodbManager {
 		if (StringUtils.isBlank(url)) {
 			return;
 		} else {
-
 			url = url.trim();
-
 			if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
 
 			int index0 = -1;
 
-			index0 = url.lastIndexOf('?');
-
 			int index1 = -1;
 			int end;
+			int newIndex0=url.lastIndexOf("//");
+			
+//			System.out.println(url.substring(newIndex0+2,url.length()));
+			String url2=url.substring(newIndex0+2,url.length());
+			index0 = url2.lastIndexOf('?');
+			
 			if (index0 > 0) {
-				index1 = url.substring(0, index0).lastIndexOf('/');
+				index1 = url2.substring(0, index0).lastIndexOf('/');
 				end = index0;
 			} else {
-				index1 = url.lastIndexOf('/');
-				end = url.length();
+				index1 = url2.lastIndexOf('/');
+//				System.out.println(index1);
+				end = url2.length();
 			}
-			databaseName = url.substring(index1 + 1, end);
+			if (index1 == -1) {
+				
+				databaseName = "";
+			}else {
+				databaseName = url2.substring(index1 + 1, end);
+			}
 
 //		    uri = url.substring(0, index1);
 			StringBuffer s = new StringBuffer(url);
@@ -113,17 +121,27 @@ public class MongodbManager {
 	}
 
 	public String getDatabaseName() {
+//		System.out.println("databaseName: "+databaseName);
 		return databaseName;
 	}
 	
 /*	public static void main(String[] args) {
 //      uri = "mongodb://localhost:27017/bee";
 //		url = "mongodb://username:test123456@localhost:27017/bee?tls=false
-		MongodbManager m=new MongodbManager("mongodb://localhost:27017/bee","","");
+		MongodbManager m=new MongodbManager("mongodb://localhost:27017/","","");
 		System.out.println(m.getDatabaseName());
+		System.out.println(m.uri);
 		
+//		MongodbManager3 m3=new MongodbManager3("mongodb://127.0.0.1:28011/testa,127.0.0.1:28012/testa,127.0.0.1:28013/testa","","");
+//		System.out.println(m3.getDatabaseName());
+//		
 		MongodbManager m2=new MongodbManager("mongodb://localhost:27017/beeaa?tls=false","username","test123456");
 		System.out.println(m2.getDatabaseName());
+		System.out.println(m2.uri);
+		
+		m2=new MongodbManager("mongodb://localhost:27017/beeaa","username","test123456");
+		System.out.println(m2.getDatabaseName());
+		System.out.println(m2.uri);
 	}*/
-
+	
 }

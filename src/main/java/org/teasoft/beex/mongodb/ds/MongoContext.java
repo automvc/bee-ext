@@ -17,18 +17,26 @@
 
 package org.teasoft.beex.mongodb.ds;
 
+import org.teasoft.honey.osql.core.Logger;
+
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Context for Mongodb.
  * @author Kingstar
  * @since  2.0
  */
 public class MongoContext {
 
 	private static ThreadLocal<MongoClient> currentMongoClient;
+	private static ThreadLocal<ClientSession> currentClientSession; // 2.1
+	private static ThreadLocal<Boolean> currentBeginFirst;// 2.1
 
 	static {
 		currentMongoClient = new InheritableThreadLocal<>();
+		currentClientSession = new InheritableThreadLocal<>();
+		currentBeginFirst = new InheritableThreadLocal<>();
 	}
 
 	public static MongoClient getCurrentMongoClient() {
@@ -41,5 +49,46 @@ public class MongoContext {
 
 	public static void removeMongoClient() {
 		currentMongoClient.remove();
+	}
+
+	public static ClientSession getCurrentClientSession() {
+
+		initSession();
+
+		return currentClientSession.get();
+	}
+
+	private static void initSession() {
+		if (Boolean.TRUE == currentBeginFirst.get()) {
+			setCurrentBeginFirst(false);
+			MongoClient client = getCurrentMongoClient();
+			if (client == null) {
+				Logger.warn("Need set CurrentMongoClient first before getCurrentClientSession!");
+			} else {
+				ClientSession clientSession = getCurrentMongoClient().startSession();
+				clientSession.startTransaction();
+				setCurrentClientSession(clientSession);
+			}
+		}
+	}
+
+	public static void setCurrentClientSession(ClientSession clientSession) {
+		currentClientSession.set(clientSession);
+	}
+
+	public static void removeClientSession() {
+		currentClientSession.remove();
+	}
+
+	public static void setCurrentBeginFirst(Boolean flag) {
+		currentBeginFirst.set(flag);
+	}
+
+	public static Boolean getCurrentBeginFirst() {
+		return currentBeginFirst.get();
+	}
+	
+	public static boolean inTransaction() {
+		return (Boolean.TRUE == currentBeginFirst.get() || getCurrentClientSession()!=null);
 	}
 }

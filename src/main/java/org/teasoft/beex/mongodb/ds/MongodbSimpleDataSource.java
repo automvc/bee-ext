@@ -25,9 +25,11 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
+ * Simple DataSource for Mongodb.
  * @author Kingstar
  * @since  2.0
  */
+//DataSource
 public class MongodbSimpleDataSource extends ClientDataSource {
 
 	private MongodbManager mongodbManager = null;
@@ -63,17 +65,27 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 		return getMongoDb();
 	}
 	
+	
 	private MongoDatabase getMongoDb() {
-		MongoClient client=mongodbManager.getMongoClient();
-		//从资源池中拿, 或放到上下文or当前线程中管理.   todo
+		if (Boolean.TRUE == MongoContext.getCurrentBeginFirst()) {// tran 首次
+			return _getMongoDb();
+		} else if (MongoContext.getCurrentClientSession() != null) { // 同一tran，非首次获取
+			return MongoContext.getCurrentMongoClient().getDatabase(mongodbManager.getDatabaseName());
+		} else {
+			return _getMongoDb();
+		}
+	}
+
+	private MongoDatabase _getMongoDb() {
+		MongoClient client = mongodbManager.getMongoClient();
 		MongoContext.setCurrentMongoClient(client);
 		return client.getDatabase(mongodbManager.getDatabaseName());
 	}
 
 	@Override
 	public void close() throws IOException {
-		
-		MongoContext.removeMongoClient();
+//		System.err.println("------------MongodbSimpleDataSource---2----close()----------------");
+		if(! MongoContext.inTransaction()) MongoContext.removeMongoClient();
 	}
 	
 	
