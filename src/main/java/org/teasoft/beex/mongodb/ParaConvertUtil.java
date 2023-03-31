@@ -46,6 +46,7 @@ import org.teasoft.honey.sharding.ShardingUtil;
 import com.mongodb.client.model.Sorts;
 
 /**
+ * Parameter Convert Util for Mongodb.
  * @author Jade
  * @since  2.0
  */

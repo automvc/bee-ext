@@ -60,6 +60,7 @@ import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
+import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.beex.osql.mongodb.CreateIndex;
 import org.teasoft.beex.osql.mongodb.IndexPair;
@@ -91,6 +92,7 @@ import org.teasoft.honey.util.StringUtils;
 
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -114,11 +116,11 @@ import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.UpdateResult;
 
 /**
+ * Mongodb SqlLib.
  * @author Jade
  * @author Kingstar
  * @since  2.0
  */
-//@SuppressWarnings("hiding")
 public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFile,CreateIndex,Geo, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
@@ -203,8 +205,13 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 			conn = getConn();
 
-			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(filter,
-					updateDocument);
+			ClientSession session = getClientSession();
+			UpdateResult rs;
+			if (session == null)
+				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(filter, updateDocument);
+			else
+				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, filter, updateDocument);
+			 
 			return num = (int) rs.getModifiedCount();
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
@@ -239,8 +246,12 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 			
 	
+			ClientSession session = getClientSession();
+			if (session == null)
+				db.getCollection(tableName).insertOne(doc);
+			else
+				db.getCollection(tableName).insertOne(session, doc);
 			
-			db.getCollection(tableName).insertOne(doc);
 			num=1; //有异常不会执行到这
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
@@ -587,10 +598,19 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		FindIterable<Document> docIterable = null;
 
 		try {
-			if (filter != null)
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find(filter);
-			else
-				docIterable = getMongoDatabase(conn).getCollection(tableName).find();
+			MongoCollection<Document> collection=getMongoDatabase(conn).getCollection(tableName);
+			ClientSession session = getClientSession();
+			if (session == null) {
+				if (filter != null)
+					docIterable = collection.find(filter);
+				else
+					docIterable = collection.find();
+			} else {
+				if (filter != null)
+					docIterable = collection.find(session,filter);
+				else
+					docIterable = collection.find(session);
+			}
 
 			if (sortBson != null) docIterable = docIterable.sort(sortBson); //And Filter{filters=[Document{{_id=1}}, Document{{userid=1}}]}
 
@@ -629,14 +649,22 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		
 		try {
 			DeleteResult rs = null;
+			ClientSession session = getClientSession();
+			
 			if (filter != null) {
-				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
+				if (session == null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
+				else
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, filter);
 			}else {
 				boolean notDeleteWholeRecords = HoneyConfig.getHoneyConfig().notDeleteWholeRecords;
 				if (notDeleteWholeRecords) {
 					throw new BeeIllegalBusinessException("BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).If need, you can change the config in bee.osql.notDeleteWholeRecords !");
 				}
-				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap())); 
+				if (session == null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap()));
+				else
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, new Document(new HashMap()));
 			}
 			if (rs != null)
 				 num=(int) rs.getDeletedCount();
@@ -717,7 +745,12 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			conn = getConn();
 
 //			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateBsonList.get(0)); //ok
-			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateSet); 
+			ClientSession session = getClientSession();
+			UpdateResult rs =null;
+			if (session == null)
+				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateSet);
+			else
+				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, oldDoc,updateSet);
 			
 			Logger.debug("Update raw json: "+rs.toString());
 			num=(int) rs.getModifiedCount();
@@ -834,8 +867,14 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 				if (i == 1) list = new ArrayList<>();
 				list.add(doc);
 				if (i % batchSize == 0 || i == len) {
-					InsertManyResult irs = db.getCollection(tableName)
-							.insertMany(list);
+					InsertManyResult irs;
+					ClientSession session = MongoContext.getCurrentClientSession();
+					if (session == null) {
+						irs = db.getCollection(tableName).insertMany(list);
+					} else {
+						irs = db.getCollection(tableName).insertMany(session, list);
+					}
+					
 //					System.out.println(irs.getInsertedIds());
 					count += irs.getInsertedIds().size();
 //				MongoUtils.getCollection(tableName).bulkWrite(list);
@@ -1016,10 +1055,18 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		DatabaseClientConnection conn = getConn();
 		try {
 			DeleteResult rs = null;
-			if (moreFilter != null)
-				rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(moreFilter);
-			else
-				rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(one);
+			ClientSession session = getClientSession();
+			if (session == null) {
+				if (moreFilter != null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(moreFilter);
+				else
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(one);
+			} else {
+				if (moreFilter != null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, moreFilter);
+				else
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(session, one);
+			}
 
 			num=(int) rs.getDeletedCount();
 			logAffectRow(num);
@@ -1094,11 +1141,19 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		DatabaseClientConnection conn = getConn();
 		try {
 			int c;
-			if (filter != null)
-				c = (int) getMongoDatabase(conn).getCollection(tableName)
-						.countDocuments(filter);
-			else
-				c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments();
+			ClientSession session = getClientSession();
+			
+			if (session == null) {
+				if (filter != null)
+					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(filter);
+				else
+					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments();
+			} else {
+				if (filter != null)
+					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(session,filter);
+				else
+					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(session);
+			}
 			
 			addInCache(sql, c + "", 1);
 			logAffectRow(c);
@@ -1137,7 +1192,13 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			logSQLForMain(" Mongodb::insertAndReturnId: " + sql);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 
-			BsonValue bv = db.getCollection(tableName).insertOne(doc).getInsertedId();
+			ClientSession session = getClientSession();
+			BsonValue bv =null;
+			if (session == null)
+				bv = db.getCollection(tableName).insertOne(doc).getInsertedId();
+			else
+				bv = db.getCollection(tableName).insertOne(session,doc).getInsertedId();
+			
 			long r = 0;
 			if (bv != null) {
 				r = bv.asInt64().longValue();
@@ -1252,8 +1313,7 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		
 		DatabaseClientConnection conn = getConn();
 		try {
-			MongoCollection<Document> collection = getMongoDatabase(conn)
-					.getCollection(tableName);
+			MongoCollection<Document> collection = getMongoDatabase(conn).getCollection(tableName);
 
 			List<Bson> listBson = new ArrayList<>();
 			Bson funBson = (Bson) struct.getUpdateSet();
@@ -1270,10 +1330,16 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 //			} else if (FunctionType.SUM == functionType) {
 //				funBson = group(null, sum("_fun", "$" + fieldForFun)); // 统计的值为null时, sum: 0
 //			}
-
+			
+			ClientSession session = getClientSession();
+			
 			listBson.add(funBson);
-
-			Document rs = collection.aggregate(listBson).first();
+			Document rs = null;
+			if (session == null)
+				rs = collection.aggregate(listBson).first();
+			else
+				rs = collection.aggregate(session, listBson).first();
+			
 			String fun = "";
 
 			if (rs != null) {
@@ -1357,7 +1423,12 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 			listBson.add(BsonDocument.parse(groupSearch.toString()));
 			
-			AggregateIterable<Document> iterable= collection.aggregate(listBson);
+			ClientSession session = getClientSession();
+			AggregateIterable<Document> iterable=null;
+			if (session == null)
+				iterable = collection.aggregate(listBson);
+			else
+				iterable = collection.aggregate(session, listBson);
 			
 			//////// test start
 //			System.out.println("--------------------start--");
@@ -1562,7 +1633,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			MongoDatabase mdb = getMongoDatabase(conn);
 			if (isDropExistTable) {
 				logSQLForMain(" Mongodb::drop collection(table): " + baseTableName);
-				mdb.getCollection(baseTableName).drop();
+				ClientSession session = getClientSession();
+				if (session == null)
+					mdb.getCollection(baseTableName).drop();
+				else
+					mdb.getCollection(baseTableName).drop(session);
 			}
 			logSQLForMain(" Mongodb::create collection(table): " + baseTableName);
 			mdb.createCollection(baseTableName);
@@ -1585,7 +1660,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
-			return mdb.getCollection(collectionName).createIndex(bson);
+			
+			ClientSession session = getClientSession();
+			String re;
+			if (session == null)
+				re = mdb.getCollection(collectionName).createIndex(bson);
+			else
+				re = mdb.getCollection(collectionName).createIndex(session, bson);
+
+			return re;
 		} finally {
 			close(conn);
 		}
@@ -1599,7 +1682,15 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			MongoDatabase mdb = getMongoDatabase(conn);
 			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
 			IndexOptions indexOptions = new IndexOptions().unique(true);
-			return mdb.getCollection(collectionName).createIndex(bson, indexOptions);
+			
+			ClientSession session = getClientSession();
+			String re;
+			if (session == null)
+				re = mdb.getCollection(collectionName).createIndex(bson, indexOptions);
+			else
+				re = mdb.getCollection(collectionName).createIndex(session, bson, indexOptions);
+
+			return re;
 		} finally {
 			close(conn);
 		}
@@ -1624,7 +1715,14 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 
-			return mdb.getCollection(collectionName).createIndexes(list);
+			ClientSession session = getClientSession();
+			List<String> re;
+			if (session == null)
+				re = mdb.getCollection(collectionName).createIndexes(list);
+			else
+				re = mdb.getCollection(collectionName).createIndexes(session, list);
+
+			return re;
 		} finally {
 			close(conn);
 		}
@@ -1670,7 +1768,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
-			mdb.getCollection(collectionName).dropIndexes();
+			ClientSession session = getClientSession();
+			if (session == null)
+				mdb.getCollection(collectionName).dropIndexes();
+			else
+				mdb.getCollection(collectionName).dropIndexes(session);
 		} finally {
 			close(conn);
 		}
@@ -1719,13 +1821,23 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 				options.metadata(new Document(metadataMap));
 			}
 			ObjectId fileId;
-
-			if (options != null) {
-				// 同一个名字，可以重复保存，但ObjectId fileId不一样。
-				fileId = gridFSBucket.uploadFromStream(filename, fileStream, options);// options 不能为null
+			ClientSession session = getClientSession();
+			if(session==null) {
+				if (options != null) {
+					// 同一个名字，可以重复保存，但ObjectId fileId不一样。
+					fileId = gridFSBucket.uploadFromStream(filename, fileStream, options);// options 不能为null
+				} else {
+					fileId = gridFSBucket.uploadFromStream(filename, fileStream);
+				}
 			} else {
-				fileId = gridFSBucket.uploadFromStream(filename, fileStream);
+				if (options != null) {
+					// 同一个名字，可以重复保存，但ObjectId fileId不一样。
+					fileId = gridFSBucket.uploadFromStream(session, filename, fileStream, options);// options 不能为null
+				} else {
+					fileId = gridFSBucket.uploadFromStream(session, filename, fileStream);
+				}
 			}
+			
 			stringId = fileId.toString();
 
 		} catch (Exception e) {
@@ -1777,10 +1889,18 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		GridFSFindIterable iterable;
 
 		try {
-			if (filter != null)
-				iterable = gridFSBucket.find(filter);
-			else
-				iterable = gridFSBucket.find();
+			ClientSession session = getClientSession();
+			if (session == null) {
+				if (filter != null)
+					iterable = gridFSBucket.find(filter);
+				else
+					iterable = gridFSBucket.find();
+			} else {
+				if (filter != null)
+					iterable = gridFSBucket.find(session, filter);
+				else
+					iterable = gridFSBucket.find(session);
+			}
 
 			if (sortBson != null) iterable = iterable.sort(sortBson);
 
@@ -1819,11 +1939,19 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		GridFSDownloadStream downloadStream = null;
 		ByteArrayOutputStream bos = null;
 		try { // 返回的是files里面的id,查询时也是里面的id
-
-			if (key instanceof ObjectId)
-				downloadStream = gridFSBucket.openDownloadStream((ObjectId) key);
-			else
-				downloadStream = gridFSBucket.openDownloadStream((String) key);
+			
+			ClientSession session = getClientSession();
+			if (session == null) {
+				if (key instanceof ObjectId)
+					downloadStream = gridFSBucket.openDownloadStream((ObjectId) key);
+				else
+					downloadStream = gridFSBucket.openDownloadStream((String) key);
+			} else {
+				if (key instanceof ObjectId)
+					downloadStream = gridFSBucket.openDownloadStream(session, (ObjectId) key);
+				else
+					downloadStream = gridFSBucket.openDownloadStream(session, (String) key);
+			}
 
 			int fileLength = (int) downloadStream.getGridFSFile().getLength();
 
@@ -1906,7 +2034,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		GridFSBucket gridFSBucket = getGridFSBucket(database);
 
 		try {
-			gridFSBucket.rename(new ObjectId(fileId), newName);
+			ClientSession session = getClientSession();
+			if (session == null)
+				gridFSBucket.rename(new ObjectId(fileId), newName);
+			else
+				gridFSBucket.rename(new ObjectId(fileId), newName);
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -1922,7 +2054,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		MongoDatabase database = getMongoDatabase(conn);
 		GridFSBucket gridFSBucket = getGridFSBucket(database);
 		try {
-			gridFSBucket.delete(new ObjectId(fileId));
+			ClientSession session = getClientSession();
+			if (session == null)
+				gridFSBucket.delete(new ObjectId(fileId));
+			else
+				gridFSBucket.delete(new ObjectId(fileId));
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -1936,6 +2072,11 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 		return new Document(map);
 	}
 	
+	
+	private ClientSession getClientSession() {
+//		ClientSession session = MongoContext.getCurrentClientSession();
+		return MongoContext.getCurrentClientSession();
+	}
 	
 	
 	//----------------------GEO-----------------------start-----------------------------
@@ -1953,8 +2094,8 @@ public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFil
 
 		if (type == type_near) {
 			geoBson = Filters.near(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
-		} else if (type == type_nearSphere) geoBson = Filters
-				.nearSphere(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
+		} else if (type == type_nearSphere) 
+			geoBson = Filters.nearSphere(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
 
 		return geoBson;
 	}

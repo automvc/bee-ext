@@ -34,6 +34,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 
 /**
+ * Util for Mongodb
  * @author Kingstar
  * @since  2.0
  */

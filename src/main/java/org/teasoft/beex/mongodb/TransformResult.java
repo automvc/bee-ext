@@ -45,6 +45,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 
 /**
+ * Transform Result Util for Mongodb.
  * @author Jade
  * @since  2.0
  */
