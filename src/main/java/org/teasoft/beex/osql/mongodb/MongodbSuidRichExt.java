@@ -24,6 +24,6 @@ import org.teasoft.beex.osql.SuidRichExt;
  * @author Kingstar
  * @since  2.1
  */
-public interface MongodbSuidRichExt extends SuidRichExt, SuidFile, CreateIndex,GeoRich {
+public interface MongodbSuidRichExt extends SuidRichExt, SuidFile, CreateIndex, GeoRich {
 
 }

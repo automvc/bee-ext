@@ -26,6 +26,8 @@ import com.mongodb.client.MongoClient;
  * Context for Mongodb.
  * @author Kingstar
  * @since  2.0
+ * support session
+ * @since 2.1
  */
 public class MongoContext {
 

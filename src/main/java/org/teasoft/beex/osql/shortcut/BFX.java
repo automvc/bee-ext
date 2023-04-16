@@ -25,13 +25,11 @@ public class BFX extends BeeFactoryHelper {
 		if (suidRichExt == null) return new ObjSQLRichExt();
 		return suidRichExt;
 	}
-	
+
 	public static MongodbSuidRichExt getMongodbSuidRichExt() {
 		if (mongodbSuidRichExt == null) return new MongodbObjSQLRichExt();
 		return mongodbSuidRichExt;
 	}
-	
-	
 
 	public void setSuidRichExt(SuidRichExt suidRichExt) {
 		_setSuidRichExt(suidRichExt);
@@ -40,11 +38,11 @@ public class BFX extends BeeFactoryHelper {
 	public void setMongodbSuidRichExt(MongodbSuidRichExt mongodbSuidRichExt) {
 		_setMongodbSuidRichExt(mongodbSuidRichExt);
 	}
-	
-	
+
 	private void _setSuidRichExt(SuidRichExt suidRichExt) {
 		BFX.suidRichExt = suidRichExt;
 	}
+
 	private void _setMongodbSuidRichExt(MongodbSuidRichExt mongodbSuidRichExt) {
 		BFX.mongodbSuidRichExt = mongodbSuidRichExt;
 	}

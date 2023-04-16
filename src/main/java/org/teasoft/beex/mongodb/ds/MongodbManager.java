@@ -55,7 +55,7 @@ public class MongodbManager {
 			int end;
 			int newIndex0=url.lastIndexOf("//");
 			
-//			System.out.println(url.substring(newIndex0+2,url.length()));
+//			.println(url.substring(newIndex0+2,url.length()));
 			String url2=url.substring(newIndex0+2,url.length());
 			index0 = url2.lastIndexOf('?');
 			
@@ -83,7 +83,6 @@ public class MongodbManager {
 			if (s.charAt(s.length() - 1) == '/') s.delete(s.length() - 1, s.length());
 
 			uri = s.toString();
-//		System.out.println(uri);
 		}
 
 	}

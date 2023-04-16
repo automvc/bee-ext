@@ -84,7 +84,6 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 
 	@Override
 	public void close() throws IOException {
-//		System.err.println("------------MongodbSimpleDataSource---2----close()----------------");
 		if(! MongoContext.inTransaction()) MongoContext.removeMongoClient();
 	}
 	
