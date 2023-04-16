@@ -37,7 +37,6 @@ public class Dbcp2DataSourceBuilder implements DataSourceBuilder {
 
 		DataSource ds = null;
 		try {
-//			https://www.jianshu.com/p/ea4cfe7c9c81
 			ds = BasicDataSourceFactory.createDataSource(Converter.map2Prop(propertiesMap));
 
 		} catch (Exception e) {

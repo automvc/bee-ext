@@ -29,7 +29,6 @@ public class BeeMongodbRegHandler {
 	}
 
 	public static void init() {
-//		System.err.println("----------------BeeMongodbRegHandler------init---------");
 		DataSourceBuilderFactory.register("BeeMongo", new BeeMongodbSimpleDataSourceBuilder());
 	}
 }

@@ -121,7 +121,8 @@ import com.mongodb.client.result.UpdateResult;
  * @author Kingstar
  * @since  2.0
  */
-public class MongodbSqlLib extends AbstractBase implements MongodbBeeSql,SuidFile,CreateIndex,Geo, Serializable {
+public class MongodbSqlLib extends AbstractBase
+		implements MongodbBeeSql, SuidFile, CreateIndex, Geo, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
 	

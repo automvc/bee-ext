@@ -54,7 +54,6 @@ public class ParaConvertUtil {
 
 	public static Map<String, Object> toMap(Object entity) throws Exception {
 		return  toMap(entity, -1);
-		
 	}
 	
 	public static Map<String, Object> toMap(Object entity,int includeType) throws Exception {
