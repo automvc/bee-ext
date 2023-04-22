@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
@@ -43,6 +42,7 @@ import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.sharding.ShardingUtil;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.Sorts;
 
 /**
@@ -198,7 +198,8 @@ public class ParaConvertUtil {
 		if (len == 1) {
 			int order = -1;
 			if (orderTypes!=null && orderTypes.length==1 && orderTypes[0] == OrderType.ASC) order = 1;
-			return new Document(tranferId(orderFields[0]), order);
+//			return new Document(tranferId(orderFields[0]), order);
+			return new BasicDBObject(tranferId(orderFields[0]), order);
 		}
 
 		Bson b[] = new Bson[len];
@@ -208,7 +209,8 @@ public class ParaConvertUtil {
 				order = 1;
 			else
 				order = -1;
-			b[i] = new Document(tranferId(orderFields[i]), order);
+//			b[i] = new Document(tranferId(orderFields[i]), order);
+			b[i] = new BasicDBObject(tranferId(orderFields[i]), order);
 		}
 
 //		return Filters.and(b);
