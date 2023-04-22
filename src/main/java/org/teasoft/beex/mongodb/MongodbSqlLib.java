@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -59,7 +60,9 @@ import org.teasoft.bee.osql.ObjSQLException;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
+import org.teasoft.bee.osql.exception.BeeErrorGrammarException;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
+import org.teasoft.beex.json.JsonUtil;
 import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.beex.osql.mongodb.CreateIndex;
@@ -90,6 +93,9 @@ import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListString
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.MongoGridFSException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ClientSession;
@@ -108,7 +114,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.geojson.Point;
 import com.mongodb.client.model.geojson.Position;
 import com.mongodb.client.result.DeleteResult;
@@ -120,6 +125,8 @@ import com.mongodb.client.result.UpdateResult;
  * @author Jade
  * @author Kingstar
  * @since  2.0
+ * support output mongo shell command
+ * @since  2.1
  */
 public class MongodbSqlLib extends AbstractBase
 		implements MongodbBeeSql, SuidFile, CreateIndex, Geo, Serializable {
@@ -127,10 +134,6 @@ public class MongodbSqlLib extends AbstractBase
 	private static final long serialVersionUID = 1596710362261L;
 	
 	private static final String IDKEY = "_id";
-
-	private static String _toTableName(Object entity) {
-		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
-	}
 
 	private DatabaseClientConnection getConn() {
 		if (!HoneyConfig.getHoneyConfig().multiDS_enable) {
@@ -168,7 +171,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	public <T> int update(T entity) {
 		String tableName = _toTableName(entity);
-		Document doc = null;
+		BasicDBObject doc = null;
 		DatabaseClientConnection conn = null;
 		int num = 0;
 		String sql = "";
@@ -178,13 +181,14 @@ public class MongodbSqlLib extends AbstractBase
 			String pkName = HoneyUtil.getPkFieldName(entity);
 			if ("".equals(pkName)) pkName = "id";
 			String pks[] = pkName.split(",");
+			StringUtils.trim(pks);
 
 			if (pks.length < 1) throw new ObjSQLException(
 					"ObjSQLException: in the update(T entity) or update(T entity,IncludeType includeType), the id field is missing !");
 
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
 
-			Document filter = new Document();
+			BasicDBObject filter = new BasicDBObject();
 			String column = "";
 			for (int i = 0; i < pks.length; i++) {
 				column = pks[i];
@@ -195,15 +199,17 @@ public class MongodbSqlLib extends AbstractBase
 				map.remove(column);
 			}
 
-			doc = newDoc(map);
-			Document updateDocument = new Document("$set", doc);
+			doc = newDBObject(map);
+			BasicDBObject updateDocument = new BasicDBObject("$set", doc);
 
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
 					null, null, false, entity.getClass(), updateDocument);
 			sql = struct.getSql();
+			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			logSQLForMain(" Mongodb::update: "+sql);
-
+			logSQLForMain("Mongodb::update: "+sql);
+			logUpdate(struct);
+			
 			conn = getConn();
 
 			ClientSession session = getClientSession();
@@ -241,9 +247,11 @@ public class MongodbSqlLib extends AbstractBase
 			
 			doc = newDoc(map);
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
-					null, null, false,entity.getClass(),doc); //insert 放在updateSet
+					null, null, false,entity.getClass(),newDBObject(map)); //insert 放在updateSet
 			sql=struct.getSql();
-			logSQLForMain(" Mongodb::insert: "+sql);
+			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
+			logSQLForMain("Mongodb::insert: "+sql);
+			logInsertOne(struct);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 			
 	
@@ -320,7 +328,7 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = _toTableNameByClass(entityClass);
 
 		Object[] obj = processId(entityClass, id);
-		Document one = (Document) obj[0];
+		BasicDBObject one = (BasicDBObject) obj[0];
 		Bson moreFilter = (Bson) obj[1];
 		Bson filter = null;
 		if (moreFilter != null)
@@ -339,7 +347,9 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = _toTableName(entity);
 		
 		Bson filter = toDocument(entity);
-		Bson sortBson = ParaConvertUtil.toSortBson(orderFields.split(","), orderTypes);
+		String ofs[]=orderFields.split(",");
+		StringUtils.trim(ofs);
+		Bson sortBson = ParaConvertUtil.toSortBson(ofs, orderTypes);
 		
 		Class<T> entityClass = toClassT(entity);
 		MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, filter, sortBson, null,
@@ -381,7 +391,8 @@ public class MongodbSqlLib extends AbstractBase
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
 
 		String sql = struct.getSql();
-		logSQLForMain(" Mongodb::select: " + sql);
+		logSQLForMain("Mongodb::select: " + sql);
+		log(struct);
 
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
@@ -451,7 +462,8 @@ public class MongodbSqlLib extends AbstractBase
 
 	public <T> String _selectJson(MongoSqlStruct struct, Class<T> entityClass) {
 		String sql = struct.getSql();
-		logSQLForMain(" Mongodb::selectJson: "+sql);
+		logSQLForMain("Mongodb::selectJson: "+sql);
+		log(struct);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 
 		initRoute(SuidType.SELECT, entityClass, sql);
@@ -522,7 +534,8 @@ public class MongodbSqlLib extends AbstractBase
 	private <T> List<String[]> _selectString(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql = struct.getSql();
-		logSQLForMain(" Mongodb::selectString: "+sql);
+		logSQLForMain("Mongodb::selectString: "+sql);
+		log(struct);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		initRoute(SuidType.SELECT, entityClass, sql);
@@ -556,7 +569,7 @@ public class MongodbSqlLib extends AbstractBase
 		if (condition != null) condition.setSuidType(SuidType.SELECT);
 
 		String tableName = _toTableName(entity);
-		Document filter = toDocument(entity, condition);
+		BasicDBObject filter = toDBObject(entity, condition);
 		Bson sortBson = ParaConvertUtil.toSortBson(condition);
 		
 		Integer size = null;
@@ -571,6 +584,7 @@ public class MongodbSqlLib extends AbstractBase
 			selectFields = conditionImpl.getSelectField();
 			if (selectFields != null) {
 				if (selectFields.length == 1) selectFields = selectFields[0].split(",");
+				StringUtils.trim(selectFields);
 				for (int i = 0; i < selectFields.length; i++) {
 					if ("id".equalsIgnoreCase(selectFields[i])) {
 						selectFields[i] = IDKEY;
@@ -593,6 +607,7 @@ public class MongodbSqlLib extends AbstractBase
 		Integer size = struct.getSize();
 		Integer start = struct.getStart();
 		String[] selectFields = struct.getSelectFields();
+		StringUtils.trim(selectFields);
 		boolean hasId = struct.isHasId();
 
 		DatabaseClientConnection conn = getConn();
@@ -637,13 +652,15 @@ public class MongodbSqlLib extends AbstractBase
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> int delete(T entity, Condition condition) {
 		String tableName = _toTableName(entity);
-		Document filter = toDocument(entity, condition);
+		BasicDBObject filter = toDBObject(entity, condition);
 		
 		int num = 0;
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
 				null, null, false,entity.getClass());
 		String sql=struct.getSql();
-		logSQLForMain(" Mongodb::delete: "+sql);
+		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
+		logSQLForMain("Mongodb::delete: "+sql);
+		logDeleteMany(struct);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		DatabaseClientConnection conn = getConn();
@@ -709,11 +726,14 @@ public class MongodbSqlLib extends AbstractBase
 	}
 	
 	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName,Condition condition) {
-		Document oldDoc = null;
-		Document newDoc = null;
+		
+		BasicDBObject oldDoc = null;
+		BasicDBObject newDoc = null;
 		DatabaseClientConnection conn = null;
 		String sql="";
 		int num=0;
+		BasicDBObject updateSet = new BasicDBObject();
+		boolean hasNewValue=false;
 		try {
 			
 			boolean notUpdateWholeRecords = HoneyConfig.getHoneyConfig().notUpdateWholeRecords;
@@ -724,24 +744,59 @@ public class MongodbSqlLib extends AbstractBase
 			
 			if (filterMap == null) filterMap = new HashMap<>();
 			
-			oldDoc = new Document(filterMap); // filter
-			List<Bson> updateBsonList=new ArrayList<>();
+			oldDoc = new BasicDBObject(filterMap); // filter
+//			List<Bson> updateBsonList=new ArrayList<>();
 			
 			if(newMap!=null && newMap.size()>0) {
-				newDoc = new Document(newMap);
-				updateBsonList.add(new Document("$set", newDoc));
+				newDoc = new BasicDBObject(newMap);
+				hasNewValue=true;
+//				updateBsonList.add(new BasicDBObject("$set", newDoc));
 			}
 			
-			List<Bson> updateSetBsonList=MongoConditionUpdateSetHelper.processConditionForUpdateSet(condition);	
-			if(updateSetBsonList!=null)	 updateBsonList.addAll(updateSetBsonList);
+			List<DBObject> updateSetBsonList=MongoConditionUpdateSetHelper.processConditionForUpdateSet(condition);	
+			if(updateSetBsonList!=null)	 {
+//				updateBsonList.addAll(updateSetBsonList);
+				
+				DBObject setObject = updateSetBsonList.get(0);
+				DBObject incObject = updateSetBsonList.get(1);
+				DBObject mulObject = updateSetBsonList.get(2);
+				
+				if(setObject!=null) {
+					if(newDoc!=null) newDoc.putAll(setObject);
+					else newDoc=(BasicDBObject)setObject;
+				}
+				
+//				DBObject newObj = new BasicDBObject();
+				
+				if (newDoc!=null) {
+					updateSet.put("$set", newDoc);
+					hasNewValue=true;
+				}
+				if (incObject!=null) {
+					updateSet.put("$inc", incObject);
+					hasNewValue=true;
+				}
+				if (mulObject!=null) {
+					updateSet.put("$mul", mulObject);
+					hasNewValue=true;
+				}
+			}else if(newDoc!=null){
+				updateSet.put("$set", newDoc);
+			}
 			
-			Bson updateSet=Updates.combine(updateBsonList);
+			if(!hasNewValue) {
+				throw new BeeErrorGrammarException("The update set part is empty!");
+			}
+			
+//			Bson updateSet=Updates.combine(updateBsonList);
 			
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, oldDoc, null, null,
 					null, null, false, null, updateSet); // this method no entityClass
 			sql = struct.getSql();
+			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			logSQLForMain(" Mongodb::update: "+sql);
+			logSQLForMain("Mongodb::update: "+sql);
+			logUpdate(struct);
 
 			conn = getConn();
 
@@ -753,7 +808,7 @@ public class MongodbSqlLib extends AbstractBase
 			else
 				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, oldDoc,updateSet);
 			
-			Logger.debug("Update raw json: "+rs.toString());
+			Logger.debug("Update result raw json: "+rs.toString());
 			num=(int) rs.getModifiedCount();
 			logAffectRow(num);
 			return num;
@@ -785,6 +840,7 @@ public class MongodbSqlLib extends AbstractBase
 		} else {
 			fields = fieldList;
 		}
+		StringUtils.trim(fields);
 		return fields;
 	}
 
@@ -803,6 +859,7 @@ public class MongodbSqlLib extends AbstractBase
 
 //			String fields[] = specialFields.split(",");
 			String fields[] = adjustVariableString(specialFields);
+			
 			Map<String, Object> specialMap = new LinkedHashMap<String, Object>();
 			for (int i = 0; i < fields.length; i++) {
 				fields[i] = _toColumnName(fields[i], entity.getClass());
@@ -851,23 +908,44 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = _toTableName(entity[0]);
 		int len = entity.length;
 		List<Document> list = null;
+		StringBuffer logValueSql=null;
 		int count = 0;
 		
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
 				null, null, false,entity.getClass()," (Artificial sql) Just define for cache: insert batch "); //insert 放在updateSet
 		String sql=struct.getSql();
+		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		logSQLForMain(" Mongodb::insert: "+sql);
+		logSQLForMain("Mongodb::insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
 		MongoDatabase db=getMongoDatabase(conn);
 		
 		try {
 			for (int i = 1; i <= len; i++) { // i 1..len
-				Document doc = toDocumentExcludeSomeAndStoreFile(entity[i - 1], excludeFields,db);
-				if (i == 1) list = new ArrayList<>();
-				list.add(doc);
+				Map<String, Object> map = toDocumentExcludeSomeAndStoreFile(entity[i - 1], excludeFields,db);
+				Document doc = newDoc(map);
+				
+				if (i % batchSize ==1) {
+					list = new ArrayList<>();
+					logValueSql=new StringBuffer("[");
+				}
+				
+//				String res = JSON.toJSONString(map);
+//				System.out.println(res);
+				
+				if(list.size()!=0) logValueSql.append(",");
+//				logValueSql.append(newDBObject(map).toJson());
+//				logValueSql.append(JSON.toJSONString(map));
+				logValueSql.append(JsonUtil.toJson(map));
+				list.add(doc);			
+						
 				if (i % batchSize == 0 || i == len) {
+					logValueSql.append("]");
+					struct = new MongoSqlStruct("int", tableName, null, null, null,
+							null, null, false,entity.getClass(),logValueSql.toString());
+					logInsertMany(struct);
+					
 					InsertManyResult irs;
 					ClientSession session = MongoContext.getCurrentClientSession();
 					if (session == null) {
@@ -879,7 +957,11 @@ public class MongodbSqlLib extends AbstractBase
 //					System.out.println(irs.getInsertedIds());
 					count += irs.getInsertedIds().size();
 //				MongoUtils.getCollection(tableName).bulkWrite(list);
-					if (i != len) list = new ArrayList<>();
+//					if (i != len) {
+//						list = new ArrayList<>();
+////						listForLog = new ArrayList<>();
+//						logValueSql=new StringBuffer();
+//					}
 				}
 			}
 			logAffectRow(count);
@@ -899,50 +981,55 @@ public class MongodbSqlLib extends AbstractBase
 		}
 	}
 
-	private <T> Document toDocument(T entity) {
-		Document doc = null;
+	private <T> BasicDBObject toDocument(T entity) {
+		BasicDBObject doc = null;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity);
-			if (ObjectUtils.isNotEmpty(map)) doc = newDoc(map);
+			if (ObjectUtils.isNotEmpty(map)) doc = newDBObject(map);
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
 		}
 		return doc;
 	}
 
-	private <T> Document toDocumentExcludeSomeAndStoreFile(T entity, String excludeFields,MongoDatabase db) {
-		Document doc = null;
+	private <T> Map<String, Object> toDocumentExcludeSomeAndStoreFile(T entity, String excludeFields,MongoDatabase db) {
+//		Document doc = null;
+		Map<String, Object> map = null;
 		try {
-			Map<String, Object> map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
+			map = ParaConvertUtil.toMapExcludeSome(entity, excludeFields);
 			_storeFile(map,db); //处理保存文件,如果有
-			doc = newDoc(map);
+//			doc = newDoc(map);
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
 		}
-		return doc;
+//		return doc;
+		return map;
 	}
 
 	@SuppressWarnings("rawtypes")
 	private <T> Object[] processId(Class clazz, Object id) {
 
 		Object obj[] = new Object[2];
-		Document one = new Document();
-		Bson moreFilter = null;
+		BasicDBObject one = new BasicDBObject();
+		BasicDBObject moreFilter = null;
 
 		if (id instanceof String) {
 			String ids[] = ((String) id).split(",");
+			StringUtils.trim(ids);
 			String idType = getIdType(clazz, getPkName(clazz));
 			if (ids.length > 1) {
-				Document idFilters[] = new Document[ids.length];
+				BasicDBObject idFilters[] = new BasicDBObject[ids.length];
 				int k = 0;
 				for (String idValue : ids) {
 					if ("String".equals(idType) && MongodbUtil.isMongodbId(idValue))
-						idFilters[k++] = new Document(IDKEY, new ObjectId(idValue)); // 改为in 也可以
+						idFilters[k++] = new BasicDBObject(IDKEY, new ObjectId(idValue)); // 改为in 也可以
 					else
-						idFilters[k++] = new Document(IDKEY, tranIdObject(idType, idValue)); // 改为in 也可以
+						idFilters[k++] = new BasicDBObject(IDKEY, tranIdObject(idType, idValue)); // 改为in 也可以
 
 				}
-				moreFilter = Filters.or(idFilters);
+//				moreFilter = (BasicDBObject)Filters.or(idFilters);
+				moreFilter = new BasicDBObject();
+				moreFilter.put("$or", idFilters);
 			} else {
 				if ("String".equals(idType) && MongodbUtil.isMongodbId(ids[0]))
 					one.put(IDKEY, new ObjectId(ids[0]));
@@ -1036,7 +1123,7 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = _toTableNameByClass(c);
 
 		Object[] obj = processId(c, id);
-		Document one = (Document) obj[0];
+		BasicDBObject one = (BasicDBObject) obj[0];
 		Bson moreFilter = (Bson) obj[1];
 		
 		Object filter; 
@@ -1044,10 +1131,12 @@ public class MongodbSqlLib extends AbstractBase
 			filter=moreFilter;
 		else 
 			filter=one;
-		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
+		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, (Bson)filter, null, null,
 				null, null, false,c);
 		String sql=struct.getSql();
-		logSQLForMain(" Mongodb::deleteById: "+sql);
+		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
+		logSQLForMain("Mongodb::deleteById: "+sql);
+		logDelete(struct,moreFilter==null);
 		
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
@@ -1084,7 +1173,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	public <T> int count(T entity, Condition condition) {
 		String tableName = _toTableName(entity);
-		Document filter = toDocument(entity, condition);
+		BasicDBObject filter = toDBObject(entity, condition);
 
 		Class<T> entityClass = toClassT(entity);
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null, null,
@@ -1125,7 +1214,8 @@ public class MongodbSqlLib extends AbstractBase
 	public <T> String _count(MongoSqlStruct struct, Class<T> entityClass) {
 		
 		String sql=struct.getSql();
-		logSQLForMain(" Mongodb::count: "+sql);
+		logSQLForMain("Mongodb::count: "+sql);
+		logCount(struct);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
 		
 		Object cacheObj = getCache().get(sql);
@@ -1137,7 +1227,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		
 		String tableName=struct.getTableName();
-		Document filter=(Document)struct.getFilter();
+		BasicDBObject filter=(BasicDBObject)struct.getFilter();
 		
 		DatabaseClientConnection conn = getConn();
 		try {
@@ -1179,7 +1269,7 @@ public class MongodbSqlLib extends AbstractBase
 		Document doc = null;
 		DatabaseClientConnection conn = null;
 		try {
-			Map<String, Object> map = ParaConvertUtil.toMap(entity,includeType.getValue(),SuidType.INSERT);
+			Map<String, Object> map = ParaConvertUtil.toMap(entity,includeType==null?-1:includeType.getValue(),SuidType.INSERT);
 
 			conn = getConn();
 			MongoDatabase db = getMongoDatabase(conn);
@@ -1188,9 +1278,11 @@ public class MongodbSqlLib extends AbstractBase
 			doc = newDoc(map);
 
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null, null,
-					null, false, entity.getClass(), doc);
+					null, false, entity.getClass(), newDBObject(map));
 			sql = struct.getSql();
-			logSQLForMain(" Mongodb::insertAndReturnId: " + sql);
+			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
+			logSQLForMain("Mongodb::insertAndReturnId: " + sql);
+			logInsertOne(struct);
 			HoneyContext.addInContextForCache(sql, struct.getTableName());
 
 			ClientSession session = getClientSession();
@@ -1202,8 +1294,13 @@ public class MongodbSqlLib extends AbstractBase
 			
 			long r = 0;
 			if (bv != null) {
-				r = bv.asInt64().longValue();
+				if(bv instanceof BsonString) { //支持是数字的字符串
+					r =Long.parseLong(((BsonString)bv).getValue());
+				}else {
+				    r = bv.asInt64().longValue();
+				}
 				if (r > 0) num = 1;
+				
 			}
 			return r;
 		} catch (Exception e) {
@@ -1241,7 +1338,7 @@ public class MongodbSqlLib extends AbstractBase
 //		 last pipeline stage can not be null     不能在这拆分
 		
 		String tableName = _toTableName(entity);
-		Document filter = toDocument(entity, condition);
+		BasicDBObject filter = toDBObject(entity, condition);
 		
 		Bson funBson = null;
 		if ("id".equalsIgnoreCase(fieldForFun)) fieldForFun = IDKEY;
@@ -1299,10 +1396,10 @@ public class MongodbSqlLib extends AbstractBase
 
 	public <T> String _selectWithFun(MongoSqlStruct struct, Class<T> entityClass) {
 
-		Document filter = (Document) struct.getFilter();
+		BasicDBObject filter = (BasicDBObject) struct.getFilter();
 		String tableName = struct.getTableName();
 		String sql = struct.getSql();
-		logSQLForMain(" Mongodb::selectWithFun: "+sql);
+		logSQLForMain("Mongodb::selectWithFun: "+sql);
 		HoneyContext.addInContextForCache(sql, tableName);
 		
 		Object cacheObj = getCache().get(sql);
@@ -1318,8 +1415,12 @@ public class MongodbSqlLib extends AbstractBase
 
 			List<Bson> listBson = new ArrayList<>();
 			Bson funBson = (Bson) struct.getUpdateSet();
-			
-			if (filter != null) listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
+			BasicDBObject match=null;
+			if (filter != null) {
+				listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
+				match=new BasicDBObject();
+				match.put("$match", filter);
+			}
 
 //			if (FunctionType.MAX == functionType) {
 ////			fun=Arrays.asList(Aggregates.match(filter), group(null, max("_fun", "$"+fieldForFun)) );
@@ -1331,6 +1432,11 @@ public class MongodbSqlLib extends AbstractBase
 //			} else if (FunctionType.SUM == functionType) {
 //				funBson = group(null, sum("_fun", "$" + fieldForFun)); // 统计的值为null时, sum: 0
 //			}
+			
+
+			struct = new MongoSqlStruct("int", tableName, match, null, null,
+					null, null, false, null, funBson); // this method no entityClass
+			logGroup(struct); //不准确 TODO
 			
 			ClientSession session = getClientSession();
 			
@@ -1344,7 +1450,7 @@ public class MongodbSqlLib extends AbstractBase
 			String fun = "";
 
 			if (rs != null) {
-				Logger.debug("selectWithFun raw json: "+rs.toJson());
+				Logger.debug("selectWithFun result raw json: "+rs.toJson());
 //				Logger.debug(rs.get("_fun")+"");
 //				
 //				Map<String, Object> jsonMap = null;
@@ -1386,7 +1492,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		String tableName = _toTableName(entity);
 
-		Document filter = toDocument(entity, condition); // 加过滤条件.
+		BasicDBObject filter = toDBObject(entity, condition); // 加过滤条件.
 
 		DatabaseClientConnection conn = getConn();
 		try {
@@ -1419,10 +1525,24 @@ public class MongodbSqlLib extends AbstractBase
 			groupSearch.append("}}");
 			
 			List<Bson> listBson = new ArrayList<>();
-			
-			if (filter != null) listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
+			BasicDBObject match=null;
+			if (filter != null) {
+				listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
+				match=new BasicDBObject();
+				match.put("$match", filter);
+			}
 
 			listBson.add(BsonDocument.parse(groupSearch.toString()));
+			
+//			if(filter!=null)System.err.println(filter.toString());
+//			System.err.println(groupSearch.toString());
+			
+			Class<T> entityClass = toClassT(entity);
+			MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, match, null, null,
+					null, null, false,entityClass,groupSearch.toString());
+			String sql = struct.getSql();
+			logSQLForMain("Mongodb::selectWithGroupBy: " + sql);
+			logGroup(struct);
 			
 			ClientSession session = getClientSession();
 			AggregateIterable<Document> iterable=null;
@@ -1433,7 +1553,7 @@ public class MongodbSqlLib extends AbstractBase
 			
 			//////// test start
 //			System.out.println("--------------------start--");
-			Class<T> entityClass = toClassT(entity);
+//			Class<T> entityClass = toClassT(entity);
 			List<T> list = new ArrayList<>();
 			MongoCursor<Document> it=iterable.iterator();
 //			String json="";
@@ -1474,7 +1594,7 @@ public class MongodbSqlLib extends AbstractBase
 				
 				if(size>0) rsMap.putAll(groupNameMap); //要是排序字段有_id,会在groupNameMap保留
 				
-				Logger.debug("selectWithGroupBy doc2Map raw json: "+rsMap.toString());
+				Logger.debug("selectWithGroupBy doc2Map result raw json: "+rsMap.toString());
 				
 				try {
 					list.add(TransformResult.toEntity(rsMap, entityClass));
@@ -1583,14 +1703,15 @@ public class MongodbSqlLib extends AbstractBase
 		if (condition == null) return -1;
 		return condition.getIncludeType() == null ? -1 : condition.getIncludeType().getValue();
 	}
-
-	private <T> Document toDocument(T entity, Condition condition) {
-		Document doc = null;
+	
+	private <T> BasicDBObject toDBObject(T entity, Condition condition) {
+//		Document doc = null;
+		BasicDBObject doc = null;
 		try {
 			Map<String, Object> map = ParaConvertUtil.toMap(entity, getIncludeType(condition));
 			if (condition == null) {
 				if (ObjectUtils.isNotEmpty(map))
-					return newDoc(map);
+					return newDBObject(map);
 				else
 					return null;
 			}
@@ -1600,7 +1721,7 @@ public class MongodbSqlLib extends AbstractBase
 				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.
 			else if (ObjectUtils.isEmpty(map)) map = map2;
 
-			if (ObjectUtils.isNotEmpty(map)) doc = newDoc(map);
+			if (ObjectUtils.isNotEmpty(map)) doc = newDBObject(map);
 
 		} catch (Exception e) {
 			throw ExceptionHelper.convert(e);
@@ -1624,6 +1745,7 @@ public class MongodbSqlLib extends AbstractBase
 		}
 	}
 
+	// sharding  index??  可以通过HoneyContext.setTabSuffix(String suffix) 设置
 	private <T> boolean _createTable(Class<T> entityClass, boolean isDropExistTable) {
 		String tableName = _toTableNameByClass(entityClass);
 		String baseTableName = tableName.replace(StringConst.ShardingTableIndexStr, "");
@@ -1633,14 +1755,14 @@ public class MongodbSqlLib extends AbstractBase
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			if (isDropExistTable) {
-				logSQLForMain(" Mongodb::drop collection(table): " + baseTableName);
+				logSQLForMain("Mongodb::drop collection(table): " + baseTableName);
 				ClientSession session = getClientSession();
 				if (session == null)
 					mdb.getCollection(baseTableName).drop();
 				else
 					mdb.getCollection(baseTableName).drop(session);
 			}
-			logSQLForMain(" Mongodb::create collection(table): " + baseTableName);
+			logSQLForMain("Mongodb::create collection(table): " + baseTableName);
 			mdb.createCollection(baseTableName);
 			f = true;
 		} catch (Exception e) {
@@ -1660,9 +1782,10 @@ public class MongodbSqlLib extends AbstractBase
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
-			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
+			Bson bson = _getKeyBson(_toColumnName(fieldName), indexType);
 			
 			ClientSession session = getClientSession();
+			collectionName=_toTableName(collectionName);
 			String re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndex(bson);
@@ -1681,10 +1804,11 @@ public class MongodbSqlLib extends AbstractBase
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
-			Bson bson = _getKeyBson(tranfer(fieldName), indexType);
+			Bson bson = _getKeyBson(_toColumnName(fieldName), indexType);
 			IndexOptions indexOptions = new IndexOptions().unique(true);
 			
 			ClientSession session = getClientSession();
+			collectionName=_toTableName(collectionName);
 			String re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndex(bson, indexOptions);
@@ -1705,7 +1829,7 @@ public class MongodbSqlLib extends AbstractBase
 		Bson bson = null;
 		IndexOptions indexOptions = null;
 		for (IndexPair indexPair : indexes) {
-			bson = _getKeyBson(tranfer(indexPair.getFieldName()), indexPair.getIndexType());
+			bson = _getKeyBson(_toColumnName(indexPair.getFieldName()), indexPair.getIndexType());
 			indexOptions = indexPair.getIndexOptions();
 			if (indexOptions == null) indexOptions = new IndexOptions();
 			list.add(new IndexModel(bson, indexOptions));
@@ -1717,6 +1841,7 @@ public class MongodbSqlLib extends AbstractBase
 			MongoDatabase mdb = getMongoDatabase(conn);
 
 			ClientSession session = getClientSession();
+			collectionName=_toTableName(collectionName);
 			List<String> re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndexes(list);
@@ -1758,9 +1883,37 @@ public class MongodbSqlLib extends AbstractBase
 		return bson;
 	}
 
-	// TODO
-	private String tranfer(String fieldName) {
-		return fieldName;
+	private static String _toTableName(Object entity) {
+		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
+	}
+	
+	private String _toColumnName(String fieldName) {
+		return NameTranslateHandle.toColumnName(fieldName);
+	}
+	
+
+	@Override
+	public int modify(String commandStr) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String selectJson(String commandStr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Map<String, Object>> selectMapList(String commandStr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T> List<T> select(String commandStr, Class<T> returnTypeClass) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -1770,6 +1923,7 @@ public class MongodbSqlLib extends AbstractBase
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			ClientSession session = getClientSession();
+			collectionName=_toTableName(collectionName);
 			if (session == null)
 				mdb.getCollection(collectionName).dropIndexes();
 			else
@@ -1857,7 +2011,7 @@ public class MongodbSqlLib extends AbstractBase
 
 		MongoSqlStruct struct = parseMongoSqlStruct(gridFsFile, condition, "List<GridFsFile>");
 		struct.setTableName("fs.files");
-		logSQLForMain(" Mongodb::selectFiles: " + struct.getSql());
+		logSQLForMain("Mongodb::selectFiles: " + struct.getSql());
 
 		GridFSFindIterable iterable = gridFSFindIterable(struct);
 		MongoCursor<GridFSFile> cursor = iterable.iterator();
@@ -1967,7 +2121,13 @@ public class MongodbSqlLib extends AbstractBase
 
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-			throw ExceptionHelper.convert(e);
+			
+			boolean isMongoGridFSException=false;
+			if (e instanceof MongoGridFSException) {
+				Logger.warn(e.getMessage());
+				isMongoGridFSException=true;
+			}
+			if(! isMongoGridFSException) throw ExceptionHelper.convert(e);
 		} finally {
 			try {
 				if (bos != null) bos.close();
@@ -2073,6 +2233,10 @@ public class MongodbSqlLib extends AbstractBase
 		return new Document(map);
 	}
 	
+	@SuppressWarnings({ "rawtypes" })
+	private BasicDBObject newDBObject(Map map) {
+		return new BasicDBObject(map);
+	}
 	
 	private ClientSession getClientSession() {
 //		ClientSession session = MongoContext.getCurrentClientSession();
@@ -2094,9 +2258,9 @@ public class MongodbSqlLib extends AbstractBase
 		if (max < min) throw new BeeIllegalBusinessException("The maximum value must not be less than the minimum value!");
 
 		if (type == type_near) {
-			geoBson = Filters.near(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
+			geoBson = Filters.near(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
 		} else if (type == type_nearSphere) 
-			geoBson = Filters.nearSphere(tranfer(nearPara.getGeoFieldName()), refPoint, max, min);
+			geoBson = Filters.nearSphere(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
 
 		return geoBson;
 	}
@@ -2105,10 +2269,10 @@ public class MongodbSqlLib extends AbstractBase
 		Bson geoBson = null;
 //		Point refPoint = new Point(new Position(centerPara.getX(), centerPara.getY()));
 		if (type == type_geoWithinCenter) {
-			geoBson = Filters.geoWithinCenter(tranfer(centerPara.getGeoFieldName()),
+			geoBson = Filters.geoWithinCenter(_toColumnName(centerPara.getGeoFieldName()),
 					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
 		} else if (type == type_geoWithinCenterSphere)
-			geoBson = Filters.geoWithinCenterSphere(tranfer(centerPara.getGeoFieldName()),
+			geoBson = Filters.geoWithinCenterSphere(_toColumnName(centerPara.getGeoFieldName()),
 					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
 		return geoBson;
 	}
@@ -2190,4 +2354,208 @@ public class MongodbSqlLib extends AbstractBase
 		return _geoFind(entity, geoBson, condition);
 	}
 	//----------------------GEO-----------------------end-----------------------------
+	
+	private void _log(String str) {
+		logSQLForMain(str);
+	}
+	
+//	private void log(DBObject fields, DBObject query, DBObject orderByObject) {
+	private void log(MongoSqlStruct struct) {
+		// db.users.find({ "gender" : true , "age" : { "$gte" : 20}},{ "name" : 1 , "age" : 1 , "address" : 1}).sort({ "age" : -1}).limit(2).skip(0)
+
+		String table = struct.getTableName();
+
+		StringBuffer sql = new StringBuffer();
+		sql.append("db.");
+		sql.append(table);
+		sql.append(".find(");
+
+		if (null != struct.getFilter()) { 
+			String filter=((BasicDBObject)struct.getFilter()).toString();
+			sql.append(filter);
+			tranferCommandLog(sql);
+			
+			//_id加 ObjectId( )   已完成
+//			db.collection.find({"_id" :ObjectId("56063f17ade2f21f36b03133")})
+//			db.Noid0.find({"$or": [{"_id": {"$oid": "643fcd4b81c72a273cdebdf7"}}, {"_id": {"$oid": "643fcd57eb4c0000c9002626"}}, {"_id": "ewewewewew"}]})
+//			db.Noid0.find({"$or": [{"_id": ObjectId("643fcd4b81c72a273cdebdf7")}, {"_id": ObjectId("643fcd57eb4c0000c9002626")}, {"_id": "ewewewewew"}]})
+		}
+
+		//TODO 2. 设置一个开关，当显示所有的字段时，是否显示projection这部分
+		String[] selectFields = struct.getSelectFields();
+		boolean hasId = struct.isHasId();
+		if (selectFields != null) {
+			Map<String,Integer> map=new LinkedHashMap<>();
+			for (String s : selectFields) {
+				map.put(s, 1);
+			}
+			if (! hasId) map.put("_id", -1);
+			BasicDBObject projection=new BasicDBObject(map);
+//			sql.append(",");
+//			sql.append(projection.toString());
+		}
+
+		sql.append(")");
+		if (null != struct.getSortBson()) {
+			sql.append(".sort(");
+			sql.append(((BasicDBObject)struct.getSortBson()).toString());
+			sql.append(")");
+		}
+		if (struct.getSize() != null) {
+			sql.append(".limit(");
+			sql.append(struct.getSize());
+			sql.append(")");
+			if (struct.getStart() != null) {
+				sql.append(".skip(");
+				sql.append(struct.getStart());
+				sql.append(")");
+			}
+		}
+		
+		_log(sql.toString());
+	}
+	
+	private void logInsertOne(MongoSqlStruct struct) {
+		logInsert(struct, false);
+	}
+	
+	private void logInsertMany(MongoSqlStruct struct) {
+		//转成mongo shell能执行的json后，像数字的类型可能会有偏差.
+		logInsert(struct, true);
+	}
+	
+	private void logInsert(MongoSqlStruct struct,boolean insertMany) {
+		String insertType="One";
+		if(insertMany) insertType="Many";
+		String table = struct.getTableName();
+			if (null != struct.getUpdateSet()) {
+				StringBuffer sql = new StringBuffer();
+				sql.append("db.");
+				sql.append(table);
+				sql.append(".insert");
+				sql.append(insertType);
+				sql.append("(");
+				
+				if(insertMany) sql.append(struct.getUpdateSet().toString());
+				else sql.append(((BasicDBObject)struct.getUpdateSet()).toString());
+				
+				tranferCommandLog(sql);
+				
+				sql.append(")");
+				
+				_log(sql.toString());
+			}else {
+				_log("insert value is empty!");
+			}
+	}
+	
+	private void logUpdate(MongoSqlStruct struct) {
+		log1Obj2Str(struct, "updateMany");
+	}
+	
+	private void logGroup(MongoSqlStruct struct) {
+		log1Obj2Str(struct, "aggregate");
+	}
+	private void log1Obj2Str(MongoSqlStruct struct,String opType) {
+		String table = struct.getTableName();
+
+		StringBuffer sql = new StringBuffer();
+		sql.append("db.");
+		sql.append(table);
+		sql.append(".");
+		sql.append(opType);
+		sql.append("(");
+		
+		boolean hasFiltre=false;
+
+		if (null != struct.getFilter()) { 
+			String filter=((BasicDBObject)struct.getFilter()).toString();
+			sql.append(filter);
+			hasFiltre=true;
+			
+			tranferCommandLog(sql);
+		}
+		
+		if (null != struct.getUpdateSet()) {
+			if(hasFiltre) sql.append(",");
+			sql.append(struct.getUpdateSet().toString()); //notice
+			
+			tranferCommandLog(sql);
+		}
+		sql.append(")");
+		
+		_log(sql.toString());
+	}
+	
+	
+	private void logDeleteMany(MongoSqlStruct struct) {
+		logDelete(struct, false);
+	}
+	
+	private void logDelete(MongoSqlStruct struct,boolean isOne) {
+			String deleteType="deleteMany";
+			if(isOne) deleteType="deleteOne";
+			logWithFilter(struct, deleteType);
+	}
+	
+	private void logCount(MongoSqlStruct struct) {
+		logWithFilter(struct, "count");
+	}
+	
+	private void logWithFilter(MongoSqlStruct struct,String opType) {
+		String table = struct.getTableName();
+
+		StringBuffer sql = new StringBuffer();
+		sql.append("db.");
+		sql.append(table);
+		sql.append(".");
+		sql.append(opType);
+		sql.append("(");
+		
+		if (null != struct.getFilter()) { 
+			String filter=((BasicDBObject)struct.getFilter()).toString();
+			sql.append(filter);
+			tranferCommandLog(sql);
+		}
+		
+		sql.append(")");
+		
+		_log(sql.toString());
+	}
+	
+	
+	private void tranferCommandLog(StringBuffer sb) {
+		_tranferDate(sb);
+		_tranferOid(sb);
+	}
+	
+	private void _tranferDate(StringBuffer sb) {	
+		String target = ": {\"$oid\": ";
+		String newStr = ": ObjectId(";
+		boolean found=_tranferCommandLog(sb, target, newStr);
+		if(found) _tranferDate(sb);
+	}
+	
+	private void _tranferOid(StringBuffer sb) {
+		String target = ": {\"$date\": ";
+		String newStr = ": ISODate(";
+		boolean found=_tranferCommandLog(sb, target, newStr);
+		if(found) _tranferOid(sb);
+	}
+	
+	private boolean _tranferCommandLog(StringBuffer sb,String target,String newStr) {
+		String filter = sb.toString();
+		boolean found=false;
+//		String target = ": {\"$date\": ";
+		int a = StringParser.getKeyPosition(filter, target);
+		if (a > 0) {
+			int b = StringParser.getKeyEndPosition(filter.substring(a), "}");
+			if (b > 0) {
+				sb.replace(a + b, a + b + 1, ")");
+				sb.replace(a, a + target.length(), newStr);
+				found=true;
+			}
+		}
+		return found;
+	}
 }
