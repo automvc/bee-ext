@@ -20,7 +20,6 @@ package org.teasoft.beex.mongodb;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bson.conversions.Bson;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.exception.BeeErrorGrammarException;
@@ -29,11 +28,14 @@ import org.teasoft.honey.osql.core.Expression;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 
-import com.mongodb.client.model.Updates;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * @author Kingstar
  * @since  2.0
+ * use DBObject
+ * @since  2.1
  */
 public class MongoConditionUpdateSetHelper {
 
@@ -42,12 +44,12 @@ public class MongoConditionUpdateSetHelper {
 	private static final String setAddField = "setAddField";
 	private static final String setMultiplyField = "setMultiplyField";
 	private static final String setWithField = "setWithField";
-
-	static List<Bson> processConditionForUpdateSet(Condition condition) {
+	
+	static List<DBObject> processConditionForUpdateSet(Condition condition) {
 
 		if (condition == null) return null;
 
-		List<Bson> updateSetBsonList = null;
+		List<DBObject> updateSetBsonList = null;
 		ConditionImpl conditionImpl = (ConditionImpl) condition;
 		List<Expression> updateSetList = conditionImpl.getUpdateExpList();
 
@@ -60,8 +62,14 @@ public class MongoConditionUpdateSetHelper {
 
 		Expression expression = null;
 		Class<?> entityClass = null;
+		
+		DBObject setObject = null;
+		DBObject incObject = null;
+		DBObject mulObject = null;
+		boolean hasSet = false;
+		boolean hasInc = false;
+		boolean hasMul = false;
 
-		Bson bs = null;
 		for (int j = 0; updateSetList != null && j < updateSetList.size(); j++) {
 			if (j == 0) updateSetBsonList = new ArrayList<>();
 			expression = updateSetList.get(j);
@@ -75,16 +83,14 @@ public class MongoConditionUpdateSetHelper {
 
 				String columnName = _toColumnName(expression.getFieldName(), entityClass);
 
-//				if (opType == null && expression.getValue() == null) { // set("fieldName",null)
-//					bs = Updates.set(columnName, null);
-//					updateSetBsonList.add(bs);
-//
-//					continue;
-//				}
 				
 				if (opType == null) { // set("fieldName",value)
-					bs = Updates.set(columnName, expression.getValue());
-					updateSetBsonList.add(bs);
+//					bs = Updates.set(columnName, expression.getValue());
+//					updateSetBsonList.add(bs);
+					
+					if(! hasSet) setObject = new BasicDBObject();
+					setObject.put(columnName, expression.getValue());
+					hasSet=true;
 					continue;
 				}
 
@@ -95,14 +101,19 @@ public class MongoConditionUpdateSetHelper {
 //				}
 
 				if (setAdd.equals(opType)) { // price=price + num
-					bs = Updates.inc(columnName, (Number) expression.getValue());
-					updateSetBsonList.add(bs);
+//					bs = Updates.inc(columnName, (Number) expression.getValue());
+//					updateSetBsonList.add(bs);
+					if(!hasInc) incObject = new BasicDBObject();
+					hasInc=true;
+					incObject.put(columnName, (Number) expression.getValue());
 
 				} else if (setMultiply.equals(opType)) { // price=price * num
-					bs = Updates.mul(columnName, (Number) expression.getValue());
-					updateSetBsonList.add(bs);
+//					bs = Updates.mul(columnName, (Number) expression.getValue());
+//					updateSetBsonList.add(bs);
+					if(!hasMul) mulObject = new BasicDBObject();
+					hasMul=true;
+					mulObject.put(columnName, (Number) expression.getValue());
 
-//					System.out.println(bs.toString());
 				} else if (setAddField.equals(opType)) {// eg:setAdd("price","delta")--> price=price + field2
 
 					Logger.warn(
@@ -119,7 +130,13 @@ public class MongoConditionUpdateSetHelper {
 			}
 
 		}
-
+		
+		if (updateSetBsonList != null) {
+			updateSetBsonList.add(setObject);
+			updateSetBsonList.add(incObject);
+			updateSetBsonList.add(mulObject);
+		}
+		
 		return updateSetBsonList;
 	}
 
