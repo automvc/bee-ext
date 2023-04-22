@@ -247,10 +247,10 @@ public class TransformResult {
 		return list;
 	}
 	
-	public static Map<String,Object> doc2Map(Document document) {
-		Map<String,Object> map=new LinkedHashMap<>();
+	public static Map<String, Object> doc2Map(Document document) {
+		Map<String, Object> map = new LinkedHashMap<>();
 		for (Map.Entry<String, Object> entry : document.entrySet()) {
-			map.put(entry.getKey(), entry.getValue());
+			map.put(_toFieldName(entry.getKey(), null), entry.getValue());
 		}
 		return map;
 	}
@@ -401,6 +401,23 @@ public class TransformResult {
 	@SuppressWarnings("rawtypes")
 	private static String _toFieldName(String columnName, Class entityClass) {
 		return NameTranslateHandle.toFieldName(columnName, entityClass);
+	}
+	
+	
+	public static <T> List<T> toListEntity2(List<Document> listDoc, Class<T> entityClass) {
+		List<T> list = new ArrayList<>();
+
+		try {
+			for (Document doc : listDoc) {
+				list.add(toEntity(doc, entityClass));
+			}
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(
+					"Can not connect the Mongodb server. Maybe you did not start the Mongodb server!");
+			throw ExceptionHelper.convert(e);
+		}
+
+		return list;
 	}
 
 }

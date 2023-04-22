@@ -186,6 +186,12 @@
 			<version>0.9.5.4</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+             <groupId>com.alibaba</groupId>
+             <artifactId>fastjson</artifactId>
+             <version>2.0.23</version>
+		</dependency>
 
 		<!-- if necessary, can import the ohos.jar to java build path -->
 <!-- 		<dependency>
