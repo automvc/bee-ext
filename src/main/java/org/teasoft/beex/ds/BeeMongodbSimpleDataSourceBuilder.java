@@ -32,6 +32,7 @@ import org.teasoft.honey.util.StringUtils;
  * @since  2.1
  */
 public class BeeMongodbSimpleDataSourceBuilder implements DataSourceBuilder {
+	
 	@Override
 	public DataSource build(Map<String, String> properties) {
 
@@ -41,14 +42,65 @@ public class BeeMongodbSimpleDataSourceBuilder implements DataSourceBuilder {
 			if (StringUtils.isBlank(url)) {
 				throw new ConfigWrongException("The url for Mongodb can not be null!");
 			}
-			
+
 			String username = properties.getOrDefault("username", "");
 			String password = properties.getOrDefault("password", "");
 
+			url = processOptionKeys(properties, url);
+			
+//			System.err.println(url);
 			ds = new MongodbSimpleDataSource(url, username, password);
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}
 		return ds;
 	}
+	
+	private String processOptionKeys(Map<String, String> map, String url) {
+		StringBuffer n = new StringBuffer();
+		boolean has=false;
+		//不检测字段名称，交驱动处理
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			String key=entry.getKey();
+			if(isIgnore(key)) continue;
+			String v = entry.getValue();
+			if (StringUtils.isNotBlank(v)) {
+				if(has) n.append("&");
+				if(!has) has=true;
+				n.append(key);
+				n.append("=");
+				n.append(v.trim());
+			}
+		}
+		
+		if (n.length() > 1) {
+			url = url.trim();
+			if (url.endsWith("/"))
+				url = url.substring(0, url.length() - 1);
+			int i = url.indexOf('?');
+			if (i == -1)
+				n.insert(0,'?');
+			else
+				n.insert(0,'&');
+			url += n.toString();
+		}
+		return url;
+	}
+	
+	private boolean isIgnore(String key) {
+		return "url".equalsIgnoreCase(key) || "username".equalsIgnoreCase(key) || "password".equalsIgnoreCase(key);
+	}
+	
+//	public static void main(String[] args) {
+//		Map<String, String> map=new HashMap<>();
+//		
+//		map.put("url", "mongodb://localhost:27017/db0?tls=false");
+//		map.put("username", "aaa");
+//		map.put("password", "test123456");
+//		map.put("authMechanism", "MONGODB-AWS");
+////		map.put("tls", "false");
+//		
+//		BeeMongodbSimpleDataSourceBuilder b=new BeeMongodbSimpleDataSourceBuilder();
+//		b.build(map);
+//	}
 }
