@@ -17,6 +17,7 @@
 
 package org.teasoft.beex.mongodb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,10 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
+import org.teasoft.honey.database.DatabaseClientConnection;
+import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.HoneyContext;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 import com.mongodb.client.FindIterable;
@@ -43,32 +48,43 @@ public class MongodbUtil {
 	@SuppressWarnings("unchecked")
 	public static Set<Map.Entry<String, Object>> getCollectStrcut(String collectionName) {
 
-		MongoDatabase mongoDatabase = SingleMongodbFactory.getMongoDb(); // 单个数据源时,
-		
-		MongoCollection<Document> cols = mongoDatabase.getCollection(collectionName); // Collection 相当于表 ;Document相当于行.
-		FindIterable<Document> findIterable = cols.find().limit(1);
-		MongoCursor<Document> mongoCursor = findIterable.iterator();
+		DatabaseClientConnection conn = getConn();
+		try {
+			MongoDatabase mongoDatabase = getMongoDatabase(conn);
 
-		if (mongoCursor.hasNext()) { // 必须要有数据，不然不行。 没数据， navicat上也看不到结构。
-			Document d = mongoCursor.next();
-			return d.entrySet();
+			MongoCollection<Document> cols = mongoDatabase.getCollection(collectionName); // Collection 相当于表 ;Document相当于行.
+			FindIterable<Document> findIterable = cols.find().limit(1);
+			MongoCursor<Document> mongoCursor = findIterable.iterator();
+
+			if (mongoCursor.hasNext()) { // 必须要有数据，不然不行。 没数据， 客户端工具上也看不到结构。
+				Document d = mongoCursor.next();
+				return d.entrySet();
+			}
+		} finally {
+			close(conn);
 		}
 
 		return Collections.EMPTY_SET;
 	}
-	
+
 	public static String[] getAllCollectionNames() {
-		MongoDatabase mongoDatabase = SingleMongodbFactory.getMongoDb(); // 单个数据源时,
-
-		MongoIterable<String> itera = mongoDatabase.listCollectionNames();
+		DatabaseClientConnection conn = getConn();
 		List<String> list = new ArrayList<>();
-		for (String s : itera) {
-			list.add(s);
-		}
+		try {
+			MongoDatabase mongoDatabase = getMongoDatabase(conn); 
 
+			MongoIterable<String> itera = mongoDatabase.listCollectionNames();
+
+			for (String s : itera) {
+				if ("Fs.chunks".equalsIgnoreCase(s) || "Fs.files".equalsIgnoreCase(s)) continue;
+				list.add(s);
+			}
+		} finally {
+			close(conn);
+		}
 		return StringUtils.listToArray(list);
 	}
-	
+
 	public static boolean isMongodbId(final String hexString) {
 		if (hexString == null) {
 			return false;
@@ -93,5 +109,29 @@ public class MongodbUtil {
 			return false;
 		}
 		return true;
+	}
+
+	private static DatabaseClientConnection getConn() {
+		if (!HoneyConfig.getHoneyConfig().multiDS_enable) {
+			return null;
+		} else {
+			DatabaseClientConnection db = HoneyContext.getDatabaseConnection();
+			return db;
+		}
+	}
+
+	private static MongoDatabase getMongoDatabase(DatabaseClientConnection conn) {
+		if (conn == null) {
+			return SingleMongodbFactory.getMongoDb(); // 单个数据源时,
+		}
+		return (MongoDatabase) conn.getDbConnection();
+	}
+
+	private static void close(DatabaseClientConnection conn) {
+		try {
+			if (conn != null) conn.close();
+		} catch (IOException e) {
+			Logger.error(e.getMessage(), e);
+		}
 	}
 }
