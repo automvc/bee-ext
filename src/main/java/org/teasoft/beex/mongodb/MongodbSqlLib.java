@@ -65,6 +65,7 @@ import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.json.JsonUtil;
 import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
+import org.teasoft.beex.osql.mongodb.CommandEngine;
 import org.teasoft.beex.osql.mongodb.CreateIndex;
 import org.teasoft.beex.osql.mongodb.IndexPair;
 import org.teasoft.beex.osql.mongodb.IndexType;
@@ -91,6 +92,7 @@ import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectFunEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectJsonEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListStringArrayEngine;
 import org.teasoft.honey.util.ObjectUtils;
+import org.teasoft.honey.util.StringParser;
 import org.teasoft.honey.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -143,13 +145,11 @@ public class MongodbSqlLib extends AbstractBase
 			return db;
 		}
 	}
-	
+
 	private MongoDatabase getMongoDatabase(DatabaseClientConnection conn) {
-		
-		if(conn==null) {
-			return SingleMongodbFactory.getMongoDb();  //单个数据源时,
+		if (conn == null) {
+			return SingleMongodbFactory.getMongoDb(); // 单个数据源时,
 		}
-		
 		return (MongoDatabase) conn.getDbConnection();
 	}
 	
@@ -916,7 +916,7 @@ public class MongodbSqlLib extends AbstractBase
 		String sql=struct.getSql();
 		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		logSQLForMain("Mongodb::insert: "+sql);
+		logSQLForMain("Mongodb::batch insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
 		MongoDatabase db=getMongoDatabase(conn);
@@ -1891,30 +1891,166 @@ public class MongodbSqlLib extends AbstractBase
 		return NameTranslateHandle.toColumnName(fieldName);
 	}
 	
-
+	private String _removeComment(String str) {
+		return StringParser.removeComment(str);
+	}
+	
 	@Override
 	public int modify(String commandStr) {
-		// TODO Auto-generated method stub
-		return 0;
+		commandStr=_removeComment(commandStr);
+		CommandEngine cEngine = new CommandEngine();
+		
+		String tableAndType[]=cEngine.getTableAndType(commandStr);
+		String tableName = tableAndType[0];
+		String type = tableAndType[1];
+		
+		HoneyContext.addInContextForCache(commandStr, tableName);
+		initRoute(SuidType.MODIFY, null, commandStr);
+		
+		Integer num = 0;
+		try {
+			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
+			Document result = runByCommand(commandStr, commandBson);//操作驱动API
+			num = TransformResultForCommand.transformResult(type, result);//自动装配结果
+			
+			clearInCache(commandStr, "int", SuidType.MODIFY, num);
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		} 
+		return num;
 	}
+	
+	private Document runByCommand(String commandStr, Bson commandBson) {
+		DatabaseClientConnection conn = null;
+		Document result = null;
+		try {
+			conn = getConn();
+			ClientSession session = getClientSession();
 
+			if (session == null)
+				result = getMongoDatabase(conn).runCommand(commandBson);
+			else
+				result = getMongoDatabase(conn).runCommand(session, commandBson);
+
+			Logger.debug(result.toJson());
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}finally {
+			close(conn);
+		}
+		return result;
+	}
+	
 	@Override
 	public String selectJson(String commandStr) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+		commandStr = _removeComment(commandStr);
+		CommandEngine cEngine = new CommandEngine();
+		String tableAndType[] = cEngine.getTableAndType(commandStr);
+		String tableName = tableAndType[0];
+		HoneyContext.addInContextForCache(commandStr, tableName); //为了操作缓存，将相关信息添加到上下文
 
+		boolean isReg = updateInfoInCache(commandStr, "StringJson", SuidType.SELECT, null);
+		if (isReg) {
+			initRoute(SuidType.SELECT, null, commandStr);//初始化路由
+			Object cacheObj = getCache().get(commandStr); //检测缓存是否有数据
+			if (cacheObj != null) {
+				clearContext(commandStr); //清除上下文
+				return (String) cacheObj; //返回找到的缓存结果
+			}
+		}
+		String json = "";
+		try {
+			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
+			Document result = runByCommand(commandStr, commandBson); //操作驱动API
+			json=TransformResultForCommand.transformResult(result); //自动装配结果
+			
+			addInCache(commandStr, json, -1); // 添加数据到缓存；没有作最大结果集判断
+			Logger.debug(json);
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
+		return json;
+	}
+	
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> List<T> select(String commandStr, Class<T> returnTypeClass) {
+		commandStr=_removeComment(commandStr);
+		CommandEngine cEngine = new CommandEngine();
+		String tableAndType[]=cEngine.getTableAndType(commandStr);
+		String tableName = tableAndType[0];
+		HoneyContext.addInContextForCache(commandStr, tableName);
+		
+		boolean isReg = updateInfoInCache(commandStr, "List<T>", SuidType.SELECT, returnTypeClass);
+		if (isReg) {
+			initRoute(SuidType.SELECT, returnTypeClass, commandStr);
+			Object cacheObj = getCache().get(commandStr); 
+			if (cacheObj != null) {
+				clearContext(commandStr);
+				List<T> list = (List<T>) cacheObj;
+				logSelectRows(list.size());
+				return list;
+			}
+		}
+		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
+
+		List<T> rsList = null;
+		try {
+			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
+			Document result = runByCommand(commandStr, commandBson);
+			rsList=TransformResultForCommand.transformResultForListT(result, returnTypeClass);
+			
+			addInCache(commandStr, rsList, rsList.size());
+			logSelectRows(rsList.size());
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
+		return rsList;
+	}
+	
 	@Override
 	public List<Map<String, Object>> selectMapList(String commandStr) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+		commandStr=_removeComment(commandStr);
+		CommandEngine cEngine = new CommandEngine();
+		String tableAndType[] = cEngine.getTableAndType(commandStr);
+		String tableName = tableAndType[0];
+		HoneyContext.addInContextForCache(commandStr, tableName);
 
-	@Override
-	public <T> List<T> select(String commandStr, Class<T> returnTypeClass) {
-		// TODO Auto-generated method stub
-		return null;
+		boolean isReg = updateInfoInCache(commandStr, "List<Map<String, Object>>", SuidType.SELECT, null);
+		if (isReg) {
+			initRoute(SuidType.SELECT, null, commandStr);
+			Object cacheObj = getCache().get(commandStr);
+			if (cacheObj != null) {
+				clearContext(commandStr);
+				List<Map<String, Object>> list = (List<Map<String, Object>>) cacheObj;
+				logSelectRows(list.size());
+				return list;
+			}
+		}
+		if (isShardingMain()) return null; // sharding时,主线程没有缓存就返回.
+
+		List<Map<String, Object>> rsList = null;
+		try {
+			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
+			Document result = runByCommand(commandStr, commandBson);
+			rsList=TransformResultForCommand.transformResultForListMap(result); //自动装配结果
+			
+			addInCache(commandStr, rsList, rsList.size());
+			logSelectRows(rsList.size());
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
+		return rsList;
 	}
+	
+
+
 
 	@Override
 	public void dropIndexes(String collectionName) {
@@ -2359,7 +2495,6 @@ public class MongodbSqlLib extends AbstractBase
 		logSQLForMain(str);
 	}
 	
-//	private void log(DBObject fields, DBObject query, DBObject orderByObject) {
 	private void log(MongoSqlStruct struct) {
 		// db.users.find({ "gender" : true , "age" : { "$gte" : 20}},{ "name" : 1 , "age" : 1 , "address" : 1}).sort({ "age" : -1}).limit(2).skip(0)
 
@@ -2381,24 +2516,24 @@ public class MongodbSqlLib extends AbstractBase
 //			db.Noid0.find({"$or": [{"_id": ObjectId("643fcd4b81c72a273cdebdf7")}, {"_id": ObjectId("643fcd57eb4c0000c9002626")}, {"_id": "ewewewewew"}]})
 		}
 
-		//TODO 2. 设置一个开关，当显示所有的字段时，是否显示projection这部分
 		String[] selectFields = struct.getSelectFields();
 		boolean hasId = struct.isHasId();
 		if (selectFields != null) {
-			Map<String,Integer> map=new LinkedHashMap<>();
+			Map<String, Integer> map = new LinkedHashMap<>();
 			for (String s : selectFields) {
 				map.put(s, 1);
 			}
-			if (! hasId) map.put("_id", -1);
-			BasicDBObject projection=new BasicDBObject(map);
-//			sql.append(",");
-//			sql.append(projection.toString());
+			if (!hasId) map.put("_id", -1);
+
+			BasicDBObject projection = new BasicDBObject(map);
+			sql.append(",");
+			sql.append(projection.toString());
 		}
 
 		sql.append(")");
 		if (null != struct.getSortBson()) {
 			sql.append(".sort(");
-			sql.append(((BasicDBObject)struct.getSortBson()).toString());
+			sql.append(((BasicDBObject) struct.getSortBson()).toString());
 			sql.append(")");
 		}
 		if (struct.getSize() != null) {
@@ -2411,7 +2546,7 @@ public class MongodbSqlLib extends AbstractBase
 				sql.append(")");
 			}
 		}
-		
+
 		_log(sql.toString());
 	}
 	
@@ -2549,7 +2684,7 @@ public class MongodbSqlLib extends AbstractBase
 //		String target = ": {\"$date\": ";
 		int a = StringParser.getKeyPosition(filter, target);
 		if (a > 0) {
-			int b = StringParser.getKeyEndPosition(filter.substring(a), "}");
+			int b = StringParser.getKeyPosition(filter.substring(a), "}");
 			if (b > 0) {
 				sb.replace(a + b, a + b + 1, ")");
 				sb.replace(a, a + target.length(), newStr);
