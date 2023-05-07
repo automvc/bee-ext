@@ -65,7 +65,6 @@ import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.json.JsonUtil;
 import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
-import org.teasoft.beex.osql.mongodb.CommandEngine;
 import org.teasoft.beex.osql.mongodb.CreateIndex;
 import org.teasoft.beex.osql.mongodb.IndexPair;
 import org.teasoft.beex.osql.mongodb.IndexType;
