@@ -404,7 +404,7 @@ public class TransformResult {
 	}
 	
 	
-	public static <T> List<T> toListEntity2(List<Document> listDoc, Class<T> entityClass) {
+	static <T> List<T> toListEntity2(List<Document> listDoc, Class<T> entityClass) {
 		List<T> list = new ArrayList<>();
 
 		try {

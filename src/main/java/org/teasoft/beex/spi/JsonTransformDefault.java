@@ -17,15 +17,19 @@
 
 package org.teasoft.beex.spi;
 
+import java.util.List;
+
 import org.teasoft.bee.spi.JsonTransform;
 import org.teasoft.beex.json.JsonUtil;
 
 /**
+ * default is jackson.
+ * 
  * @author AiTeaSoft
- * @since  2.0
+ * @since 2.0
  */
 public class JsonTransformDefault implements JsonTransform {
-	
+
 	private static final long serialVersionUID = 1592803913604L;
 
 	@Override
@@ -39,8 +43,13 @@ public class JsonTransformDefault implements JsonTransform {
 	}
 
 	@Override
-	public <T> T toEntity(String json, Class<T> clazz, Class elementClass) {
+	public <T> T toEntity(String json, Class<T> clazz, Class<?> elementClass) {
 		return JsonUtil.toEntity(json, clazz, elementClass);
 	}
 
+	@Override
+	public <T> List<T> toEntityList(String json, Class<T> elementClass) {
+		return JsonUtil.toEntityList(json, elementClass);
+	}
+	
 }
