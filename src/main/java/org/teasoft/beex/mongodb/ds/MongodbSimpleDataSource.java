@@ -29,7 +29,6 @@ import com.mongodb.client.MongoDatabase;
  * @author Kingstar
  * @since  2.0
  */
-//DataSource
 public class MongodbSimpleDataSource extends ClientDataSource {
 
 	private MongodbManager mongodbManager = null;
@@ -64,7 +63,6 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 	public Object getDbConnection() {
 		return getMongoDb();
 	}
-	
 	
 	private MongoDatabase getMongoDb() {
 		if (Boolean.TRUE == MongoContext.getCurrentBeginFirst()) {// tran 首次

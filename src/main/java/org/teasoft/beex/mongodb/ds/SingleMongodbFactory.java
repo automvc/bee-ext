@@ -38,6 +38,8 @@ public class SingleMongodbFactory {
 		manager = new MongodbManager(config.getUrl(), config.getUsername(), config.getPassword());
 		mongoClient = manager.getMongoClient();
 	}
+	
+	private SingleMongodbFactory() {}
 
 	public static MongoDatabase getMongoDb() {
 		MongoDatabase db = null;

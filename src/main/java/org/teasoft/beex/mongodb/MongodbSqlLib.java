@@ -140,8 +140,7 @@ public class MongodbSqlLib extends AbstractBase
 		if (!HoneyConfig.getHoneyConfig().multiDS_enable) {
 			return null;
 		} else {
-			DatabaseClientConnection db = HoneyContext.getDatabaseConnection();
-			return db;
+			return HoneyContext.getDatabaseConnection();
 		}
 	}
 
@@ -218,7 +217,8 @@ public class MongodbSqlLib extends AbstractBase
 			else
 				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, filter, updateDocument);
 			 
-			return num = (int) rs.getModifiedCount();
+			num = (int) rs.getModifiedCount();
+			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);

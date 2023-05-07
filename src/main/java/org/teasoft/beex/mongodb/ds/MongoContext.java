@@ -40,6 +40,8 @@ public class MongoContext {
 		currentClientSession = new InheritableThreadLocal<>();
 		currentBeginFirst = new InheritableThreadLocal<>();
 	}
+	
+	private MongoContext() {}
 
 	public static MongoClient getCurrentMongoClient() {
 		return currentMongoClient.get();
