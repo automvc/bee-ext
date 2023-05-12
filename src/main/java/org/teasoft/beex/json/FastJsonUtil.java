@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.teasoft.honey.osql.core.Logger;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
 
 /**
  * Json工具(用fastjson).Json Util with fastjson.
@@ -16,7 +16,7 @@ public class FastJsonUtil {
 	
 	public static String toJson(Object obj) {
 		try {
-			return JSONObject.toJSONString(obj);
+			return JSON.toJSONString(obj);
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
 		}
@@ -25,7 +25,7 @@ public class FastJsonUtil {
 	
 	public static <T> T toEntity(String json, Class<T> clazz) {
 		try {
-			return (T)JSONObject.parseObject(json, clazz);
+			return (T)JSON.parseObject(json, clazz);
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
 		}
@@ -37,7 +37,7 @@ public class FastJsonUtil {
 		try {
 			if(json==null) return null;
 			if (List.class.isAssignableFrom(clazz))
-			  return (T)JSONObject.parseArray(json, elementClass);// 把字符串转换成List<> ok
+			  return (T)JSON.parseArray(json, elementClass);// 把字符串转换成List<> ok
 			else {
 				Logger.warn("This method with fastjson,just support List type!");
 			}
@@ -51,8 +51,7 @@ public class FastJsonUtil {
 	public static <T> List<T> toEntityList(String json, Class<T> elementClass) {
 		if (json == null) return null;
 		try {
-			List<T> list = JSONObject.parseArray(json, elementClass);// 把字符串转换成List<> ok
-			return list;
+			return JSON.parseArray(json, elementClass);// 把字符串转换成List<> ok
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
 		}

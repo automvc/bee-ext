@@ -20,7 +20,7 @@ package org.teasoft.beex.spi;
 import java.util.List;
 
 import org.teasoft.bee.spi.JsonTransform;
-import org.teasoft.beex.json.JsonUtil;
+import org.teasoft.beex.json.JacksonJsonUtil;
 
 /**
  * default is jackson.
@@ -34,22 +34,22 @@ public class JsonTransformDefault implements JsonTransform {
 
 	@Override
 	public <T> T toEntity(String json, Class<T> clazz) {
-		return JsonUtil.toEntity(json, clazz);
+		return JacksonJsonUtil.toEntity(json, clazz);
 	}
 
 	@Override
 	public String toJson(Object obj) {
-		return JsonUtil.toJson(obj);
+		return JacksonJsonUtil.toJson(obj);
 	}
 
 	@Override
 	public <T> T toEntity(String json, Class<T> clazz, Class<?> elementClass) {
-		return JsonUtil.toEntity(json, clazz, elementClass);
+		return JacksonJsonUtil.toEntity(json, clazz, elementClass);
 	}
 
 	@Override
 	public <T> List<T> toEntityList(String json, Class<T> elementClass) {
-		return JsonUtil.toEntityList(json, elementClass);
+		return JacksonJsonUtil.toEntityList(json, elementClass);
 	}
 	
 }

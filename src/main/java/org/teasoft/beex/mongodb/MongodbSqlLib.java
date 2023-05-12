@@ -805,7 +805,7 @@ public class MongodbSqlLib extends AbstractBase
 			if (session == null)
 				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateSet);
 			else
-				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, oldDoc,updateSet);
+				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, oldDoc, updateSet);
 			
 			Logger.debug("Update result raw json: "+rs.toString());
 			num=(int) rs.getModifiedCount();
@@ -1240,7 +1240,7 @@ public class MongodbSqlLib extends AbstractBase
 					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments();
 			} else {
 				if (filter != null)
-					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(session,filter);
+					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(session, filter);
 				else
 					c = (int) getMongoDatabase(conn).getCollection(tableName).countDocuments(session);
 			}
@@ -1413,7 +1413,7 @@ public class MongodbSqlLib extends AbstractBase
 			MongoCollection<Document> collection = getMongoDatabase(conn).getCollection(tableName);
 
 			List<Bson> listBson = new ArrayList<>();
-			Bson funBson = (Bson) struct.getUpdateSet();
+			Bson funBson = (Bson) struct.getUpdateSetOrInsertOrFunOrOther();
 			BasicDBObject match=null;
 			if (filter != null) {
 				listBson.add(Aggregates.match(filter)); // 过滤条件,要放在match里
@@ -1435,7 +1435,7 @@ public class MongodbSqlLib extends AbstractBase
 
 			struct = new MongoSqlStruct("int", tableName, match, null, null,
 					null, null, false, null, funBson); // this method no entityClass
-			logGroup(struct); //不准确 TODO
+			logGroup(struct); //不准确 todo
 			
 			ClientSession session = getClientSession();
 			
@@ -2331,10 +2331,11 @@ public class MongodbSqlLib extends AbstractBase
 
 		try {
 			ClientSession session = getClientSession();
-			if (session == null)
+			if (session == null) {
 				gridFSBucket.rename(new ObjectId(fileId), newName);
-			else
-				gridFSBucket.rename(new ObjectId(fileId), newName);
+			} else {
+				gridFSBucket.rename(session, new ObjectId(fileId), newName);
+			}
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -2351,10 +2352,11 @@ public class MongodbSqlLib extends AbstractBase
 		GridFSBucket gridFSBucket = getGridFSBucket(database);
 		try {
 			ClientSession session = getClientSession();
-			if (session == null)
+			if (session == null) {
 				gridFSBucket.delete(new ObjectId(fileId));
-			else
-				gridFSBucket.delete(new ObjectId(fileId));
+			} else {
+				gridFSBucket.delete(session, new ObjectId(fileId));
+			}
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -2443,7 +2445,7 @@ public class MongodbSqlLib extends AbstractBase
 		MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "List<T>");
 
 		if (geoBson != null) {
-			Document filter = (Document) struct.getFilter();
+			BasicDBObject filter = (BasicDBObject) struct.getFilter();
 			if (filter == null) {
 				struct.setFilter(geoBson);
 			} else {
@@ -2504,8 +2506,14 @@ public class MongodbSqlLib extends AbstractBase
 		sql.append(table);
 		sql.append(".find(");
 
-		if (null != struct.getFilter()) { 
-			String filter=((BasicDBObject)struct.getFilter()).toString();
+		if (struct.getFilter() != null) {
+			String filter="";
+			try {
+				filter=((BasicDBObject)struct.getFilter()).toString();
+			} catch (Exception e) {
+				filter=struct.getFilter().toString();
+				Logger.info("This is an inaccurate raw statement!");
+			}
 			sql.append(filter);
 			tranferCommandLog(sql);
 			
@@ -2530,7 +2538,7 @@ public class MongodbSqlLib extends AbstractBase
 		}
 
 		sql.append(")");
-		if (null != struct.getSortBson()) {
+		if (struct.getSortBson() != null) {
 			sql.append(".sort(");
 			sql.append(((BasicDBObject) struct.getSortBson()).toString());
 			sql.append(")");
@@ -2562,7 +2570,7 @@ public class MongodbSqlLib extends AbstractBase
 		String insertType="One";
 		if(insertMany) insertType="Many";
 		String table = struct.getTableName();
-			if (null != struct.getUpdateSet()) {
+		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
 				StringBuffer sql = new StringBuffer();
 				sql.append("db.");
 				sql.append(table);
@@ -2570,8 +2578,8 @@ public class MongodbSqlLib extends AbstractBase
 				sql.append(insertType);
 				sql.append("(");
 				
-				if(insertMany) sql.append(struct.getUpdateSet().toString());
-				else sql.append(((BasicDBObject)struct.getUpdateSet()).toString());
+				if(insertMany) sql.append(struct.getUpdateSetOrInsertOrFunOrOther().toString());
+				else sql.append(((BasicDBObject)struct.getUpdateSetOrInsertOrFunOrOther()).toString());
 				
 				tranferCommandLog(sql);
 				
@@ -2588,6 +2596,9 @@ public class MongodbSqlLib extends AbstractBase
 	}
 	
 	private void logGroup(MongoSqlStruct struct) {
+		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
+			Logger.info("This is an inaccurate raw statement!");
+		}
 		log1Obj2Str(struct, "aggregate");
 	}
 	private void log1Obj2Str(MongoSqlStruct struct,String opType) {
@@ -2602,7 +2613,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		boolean hasFiltre=false;
 
-		if (null != struct.getFilter()) { 
+		if (struct.getFilter() != null) { 
 			String filter=((BasicDBObject)struct.getFilter()).toString();
 			sql.append(filter);
 			hasFiltre=true;
@@ -2610,9 +2621,9 @@ public class MongodbSqlLib extends AbstractBase
 			tranferCommandLog(sql);
 		}
 		
-		if (null != struct.getUpdateSet()) {
+		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
 			if(hasFiltre) sql.append(",");
-			sql.append(struct.getUpdateSet().toString()); //notice
+			sql.append(struct.getUpdateSetOrInsertOrFunOrOther().toString()); //notice
 			
 			tranferCommandLog(sql);
 		}
@@ -2646,7 +2657,7 @@ public class MongodbSqlLib extends AbstractBase
 		sql.append(opType);
 		sql.append("(");
 		
-		if (null != struct.getFilter()) { 
+		if (struct.getFilter() != null) {
 			String filter=((BasicDBObject)struct.getFilter()).toString();
 			sql.append(filter);
 			tranferCommandLog(sql);

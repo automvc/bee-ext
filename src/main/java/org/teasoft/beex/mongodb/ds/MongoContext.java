@@ -38,6 +38,7 @@ public class MongoContext {
 	static {
 		currentMongoClient = new InheritableThreadLocal<>();
 		currentClientSession = new InheritableThreadLocal<>();
+		if (currentBeginFirst != null) currentBeginFirst.remove();
 		currentBeginFirst = new InheritableThreadLocal<>();
 	}
 	
@@ -63,7 +64,7 @@ public class MongoContext {
 	}
 
 	private static void initSession() {
-		if (Boolean.TRUE == currentBeginFirst.get()) {
+		if (Boolean.TRUE.equals(currentBeginFirst.get())) {
 			setCurrentBeginFirst(false);
 			MongoClient client = getCurrentMongoClient();
 			if (client == null) {
@@ -93,6 +94,6 @@ public class MongoContext {
 	}
 	
 	public static boolean inTransaction() {
-		return (Boolean.TRUE == currentBeginFirst.get() || getCurrentClientSession()!=null);
+		return (Boolean.TRUE.equals(currentBeginFirst.get()) || getCurrentClientSession()!=null);
 	}
 }

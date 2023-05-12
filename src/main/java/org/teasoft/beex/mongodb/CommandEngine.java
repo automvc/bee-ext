@@ -217,14 +217,17 @@ public class CommandEngine {
 
 	public String[] getTableAndType(String str) {
 
-		if (str == null) return null;
+		if (str == null) return null; 
+			
 		str = str.trim();
-		if (str.endsWith(";")) str = str.substring(0, str.length() - 1).trim();
-
 		// 检测
 		if (str != null && !str.startsWith("db.")) {
 			throw new BeeErrorGrammarException("The mongo command must start with 'db.'!");
 		}
+		
+		if (str == null) return null; //for sonarqube's bug
+			
+		if (str.endsWith(";")) str = str.substring(0, str.length() - 1).trim();
 
 		int index1 = str.indexOf('.');
 		int index3 = str.indexOf('(', index1 + 1);
@@ -252,7 +255,7 @@ public class CommandEngine {
 				type = tableNameAndType.substring(index21 + 1).trim();
 			}
 		}
-		String[] r = new String[] { tableName, type };
-		return r;
-	}
+		
+		return new String[] { tableName, type };
+      }
 }

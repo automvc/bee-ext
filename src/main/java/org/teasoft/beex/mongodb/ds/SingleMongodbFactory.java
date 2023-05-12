@@ -44,7 +44,7 @@ public class SingleMongodbFactory {
 	public static MongoDatabase getMongoDb() {
 		MongoDatabase db = null;
 		try {
-			if (Boolean.TRUE == MongoContext.getCurrentBeginFirst()) {// tran 首次
+			if (Boolean.TRUE.equals(MongoContext.getCurrentBeginFirst())) {// tran 首次
 				MongoClient mongoClient0 = manager.getMongoClient();
 				MongoContext.setCurrentMongoClient(mongoClient0);
 				return mongoClient0.getDatabase(manager.getDatabaseName());

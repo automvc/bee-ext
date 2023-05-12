@@ -354,16 +354,50 @@ public class TransformResult {
 						&& field.getType() != Map.class
 						&& field.getType() != java.util.Date.class
 						&& field.getType() != java.sql.Date.class
-						&& field.getType() != java.sql.Timestamp.class)) { 
-
+						&& field.getType() != java.sql.Timestamp.class
+						&& !HoneyUtil.isNumberArray(field.getType())
+						) ) { 
 					Object t_obj = ObjectCreatorFactory.create(obj.toString(), field.getType());
 					if (t_obj != null) obj = t_obj; // 转换成功才要.
 				}else if(field.getType() == java.sql.Timestamp.class && obj.getClass()== java.util.Date.class)  {
 					obj=DateUtil.toTimestamp((java.util.Date)obj);
+				} 
+				
+//				java.util.ArrayList
+//				[Ljava.lang.Double;
+				if (obj != null && List.class.isAssignableFrom(obj.getClass())) {  // not else if
+					if ("[Ljava.lang.Double;".equals(field.getType().getName())) {// List-> Double[]
+						List list = (List) obj;
+						if (list.size() > 0) {
+							Double[] arr = (Double[]) list.toArray(new Double[list.size()]);
+							if (arr != null) obj = arr;
+						}
+					}else if ("[Ljava.lang.Long;".equals(field.getType().getName())) {// List-> Double[]
+						List list = (List) obj;
+						if (list.size() > 0) {
+							Long[] arr = (Long[]) list.toArray(new Long[list.size()]);
+							if (arr != null) obj = arr;
+						}
+					}if ("[Ljava.lang.Integer;".equals(field.getType().getName())) {// List-> Double[]
+						List list = (List) obj;
+						if (list.size() > 0) {
+							Integer[] arr = (Integer[]) list.toArray(new Integer[list.size()]);
+							if (arr != null) obj = arr;
+						}
+					}
+					
+//					if(HoneyUtil.isNumberArray(field.getType())){
+//						List list = (List) obj;
+//						if (list.size() > 0) {
+//							Number arr[] = (Number[]) list.toArray(new Number[list.size()]);
+////							[Ljava.lang.Number; cannot be cast to [Ljava.lang.Double;
+//							if (arr != null) obj = (Double[])arr;
+//						}
+//					}
 				}
 				field.set(targetObj, obj); // 对相应Field设置
 			} catch (IllegalArgumentException e) {
-				Logger.warn(e.getMessage(), e);
+				Logger.debug(e.getMessage(), e);
 			}
 		}
 		return targetObj;

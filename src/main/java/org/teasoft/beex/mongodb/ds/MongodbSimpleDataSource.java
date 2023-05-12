@@ -65,7 +65,7 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 	}
 	
 	private MongoDatabase getMongoDb() {
-		if (Boolean.TRUE == MongoContext.getCurrentBeginFirst()) {// tran 首次
+		if (Boolean.TRUE.equals(MongoContext.getCurrentBeginFirst())) {// tran 首次
 			return _getMongoDb();
 		} else if (MongoContext.getCurrentClientSession() != null) { // 同一tran，非首次获取
 			return MongoContext.getCurrentMongoClient().getDatabase(mongodbManager.getDatabaseName());

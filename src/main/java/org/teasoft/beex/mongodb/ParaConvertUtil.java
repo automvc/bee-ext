@@ -93,6 +93,8 @@ public class ParaConvertUtil {
 					GridFs sysValue = fields[i].getAnnotation(GridFs.class);
 					String fileid = sysValue.fileIdName();
 					String filename = sysValue.fileName();
+					fileid=_toColumnName(fileid,entity.getClass());
+					filename=_toColumnName(filename,entity.getClass());
 					documentAsMap.put(StringConst.GridFs_FileId, fileid);
 					documentAsMap.put(StringConst.GridFs_FileName, filename);
 					documentAsMap.put(StringConst.GridFs_FileColumnName, column);
