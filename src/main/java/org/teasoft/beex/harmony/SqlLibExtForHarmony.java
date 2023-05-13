@@ -50,8 +50,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 	
 	private static final long serialVersionUID = 1596710362264L;
 
-	private static boolean openFieldTypeHandler = HoneyConfig
-			.getHoneyConfig().openFieldTypeHandler;
+	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
 
 	private RdbStore rdbStore; 
 

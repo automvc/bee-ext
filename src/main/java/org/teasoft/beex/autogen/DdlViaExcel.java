@@ -39,7 +39,7 @@ public class DdlViaExcel {
 
 	private static final String CREATE_TABLE = "CREATE TABLE ";
 	private static String LINE_SEPARATOR = System.getProperty("line.separator"); // 换行符
-	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
+//	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 	
 	/**
 	 * 
@@ -63,6 +63,7 @@ public class DdlViaExcel {
 				}
 			}
 			List<String[]> list =null;
+			PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 				String tableComment = getTableCommentBySheetName(sheetNames[i]);
@@ -118,6 +119,7 @@ public class DdlViaExcel {
 
 		// drop table
 		if (isDropExistTable) {
+			PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 

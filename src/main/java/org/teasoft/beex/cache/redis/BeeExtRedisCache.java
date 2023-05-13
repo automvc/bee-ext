@@ -45,10 +45,14 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	private static final String FIELD = "Bee";
 	private static final byte[] FIELD_BYTES = FIELD.getBytes();
 
-	private static final int TIMEOUT = HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
+//	private static final int TIMEOUT = HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
 
 	public BeeExtRedisCache() {
 		initRedis();
+	}
+	
+	private int getTimeOUt() {
+		return HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
 	}
 
 	public void initRedis() {
@@ -90,7 +94,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 		Jedis jedis1 = getJedis();
 		try {
 			jedis1.hset(key.getBytes(), FIELD_BYTES, getSerializer().serialize(result));
-			jedis1.expire(key.getBytes(), TIMEOUT);
+			jedis1.expire(key.getBytes(), getTimeOUt());
 		} catch (Exception e) {
 			Logger.warn(e.getMessage(), e);
 		}

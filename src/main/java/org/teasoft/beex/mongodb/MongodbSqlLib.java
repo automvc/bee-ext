@@ -1882,7 +1882,7 @@ public class MongodbSqlLib extends AbstractBase
 		return bson;
 	}
 
-	private static String _toTableName(Object entity) {
+	private String _toTableName(Object entity) {
 		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
 	}
 	
@@ -1932,7 +1932,7 @@ public class MongodbSqlLib extends AbstractBase
 			else
 				result = getMongoDatabase(conn).runCommand(session, commandBson);
 
-			Logger.debug(result.toJson());
+//			Logger.debug(result.toJson());
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -1966,7 +1966,7 @@ public class MongodbSqlLib extends AbstractBase
 			json=TransformResultForCommand.transformResult(result); //自动装配结果
 			
 			addInCache(commandStr, json, -1); // 添加数据到缓存；没有作最大结果集判断
-			Logger.debug(json);
+//			Logger.debug(json);
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);

@@ -68,10 +68,10 @@ public class BeeDatabaseHelper {
 		}
 	}
 
-	private BeeDatabaseHelper() {}
-
+//	private BeeDatabaseHelper() {}
+//
 //	
-	public BeeDatabaseHelper(Context context) {}
+//	public BeeDatabaseHelper(Context context) {}
 
 	public static RdbStore getRdbStore() {
 		RdbStore tempDb=rdbStore;
