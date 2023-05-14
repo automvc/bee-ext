@@ -128,7 +128,7 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 
 	@Override
 	public List<GridFsFile> selectFiles(GridFsFile gridFsFile, Condition condition) {
-		setNameTranslate(new OriginalName());
+		setNameTranslateOneTime(new OriginalName());
 		doBeforePasreEntity(gridFsFile, SuidType.SELECT);
 		List<GridFsFile> list = getMongodbBeeSql().selectFiles(gridFsFile, condition);
 		doBeforeReturn(list);
