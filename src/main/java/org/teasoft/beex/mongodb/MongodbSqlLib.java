@@ -44,28 +44,25 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.teasoft.bee.mongodb.BoxPara;
-import org.teasoft.bee.mongodb.CenterPara;
-import org.teasoft.bee.mongodb.Geo;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.MongoSqlStruct;
 import org.teasoft.bee.mongodb.MongodbBeeSql;
-import org.teasoft.bee.mongodb.NearPara;
 import org.teasoft.bee.mongodb.SuidFile;
 import org.teasoft.bee.osql.Cache;
-import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.FunctionType;
 import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.ObjSQLException;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
+import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.exception.BeeErrorGrammarException;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.json.JsonUtil;
 import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
 import org.teasoft.beex.osql.mongodb.CreateIndex;
+import org.teasoft.beex.osql.mongodb.GeoFind;
 import org.teasoft.beex.osql.mongodb.IndexPair;
 import org.teasoft.beex.osql.mongodb.IndexType;
 import org.teasoft.honey.database.DatabaseClientConnection;
@@ -115,8 +112,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.geojson.Point;
-import com.mongodb.client.model.geojson.Position;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.UpdateResult;
@@ -130,7 +125,7 @@ import com.mongodb.client.result.UpdateResult;
  * @since  2.1
  */
 public class MongodbSqlLib extends AbstractBase
-		implements MongodbBeeSql, SuidFile, CreateIndex, Geo, Serializable {
+		implements MongodbBeeSql, SuidFile, CreateIndex, GeoFind, Serializable {
 	
 	private static final long serialVersionUID = 1596710362261L;
 	
@@ -367,6 +362,7 @@ public class MongodbSqlLib extends AbstractBase
 			if (HoneyContext.getSqlIndexLocal() == null) { //分片,主线程
 				
 				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
+				//TODO 是否带分隔了?
 				struct.setTableName(struct.getTableName().replace(StringConst.ShardingTableIndexStr, tabNameList==null?"":tabNameList.toString()));
 				List<T> list =_select(struct, entityClass); //检测缓存的           
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
@@ -1735,9 +1731,7 @@ public class MongodbSqlLib extends AbstractBase
 			return _createTable(entityClass, isDropExistTable); // 不用分片走的分支
 		} else {
 			if (HoneyContext.getSqlIndexLocal() == null) { // 分片,主线程
-				boolean f = new MongodbShardingDdlEngine().asynProcess(entityClass, this,
-						isDropExistTable);
-				return f;
+				return new MongodbShardingDdlEngine().asynProcess(entityClass, this, isDropExistTable);
 			} else { // 子线程执行
 				return _createTable(entityClass, isDropExistTable);
 			}
@@ -1781,21 +1775,44 @@ public class MongodbSqlLib extends AbstractBase
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
-			Bson bson = _getKeyBson(_toColumnName(fieldName), indexType);
+			fieldName=_toColumnName(fieldName);
+			Bson bson = _getKeyBson(fieldName, indexType);
 			
 			ClientSession session = getClientSession();
-			collectionName=_toTableName(collectionName);
+			collectionName=_toTableName2(collectionName); //fixed bug
 			String re;
-			if (session == null)
+			if (session == null) {
 				re = mdb.getCollection(collectionName).createIndex(bson);
-			else
+				//用原生语句也ok。
+//				Bson commandBson = index(collectionName, fieldName);
+//				Document result = runByCommand(commandBson);//操作驱动API
+//				re=result.toJson();
+			}else {
 				re = mdb.getCollection(collectionName).createIndex(session, bson);
-
+			}
 			return re;
 		} finally {
 			close(conn);
 		}
 	}
+	
+	//ok
+//	private Bson index(String tableName, String fieldName) {
+//		BasicDBObject doc = new BasicDBObject();
+//		doc.append("createIndexes", tableName);
+//
+//		BasicDBObject index = new BasicDBObject();
+//		BasicDBObject index2Dsphere = new BasicDBObject();
+//		index2Dsphere.put(fieldName, "2dsphere");
+//
+//		index.put("key", index2Dsphere);
+//		index.append("name", fieldName + "_" + "2dsphere");
+//
+//		doc.append("indexes", Arrays.asList(index));
+//
+//		return doc;
+//	}
+
 
 	@Override
 	public String unique(String collectionName, String fieldName, IndexType indexType) {
@@ -1807,7 +1824,7 @@ public class MongodbSqlLib extends AbstractBase
 			IndexOptions indexOptions = new IndexOptions().unique(true);
 			
 			ClientSession session = getClientSession();
-			collectionName=_toTableName(collectionName);
+			collectionName=_toTableName2(collectionName);
 			String re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndex(bson, indexOptions);
@@ -1840,7 +1857,7 @@ public class MongodbSqlLib extends AbstractBase
 			MongoDatabase mdb = getMongoDatabase(conn);
 
 			ClientSession session = getClientSession();
-			collectionName=_toTableName(collectionName);
+			collectionName=_toTableName2(collectionName);
 			List<String> re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndexes(list);
@@ -1886,6 +1903,10 @@ public class MongodbSqlLib extends AbstractBase
 		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
 	}
 	
+	private String _toTableName2(String entityName) {//fixed bug
+		return NameTranslateHandle.toTableName(entityName);
+	}
+	
 	private String _toColumnName(String fieldName) {
 		return NameTranslateHandle.toColumnName(fieldName);
 	}
@@ -1900,6 +1921,7 @@ public class MongodbSqlLib extends AbstractBase
 		CommandEngine cEngine = new CommandEngine();
 		
 		String tableAndType[]=cEngine.getTableAndType(commandStr);
+		checkIsSelectCommandException(tableAndType[1]);
 		String tableName = tableAndType[0];
 		String type = tableAndType[1];
 		
@@ -1909,7 +1931,7 @@ public class MongodbSqlLib extends AbstractBase
 		Integer num = 0;
 		try {
 			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
-			Document result = runByCommand(commandStr, commandBson);//操作驱动API
+			Document result = runByCommand(commandBson);//操作驱动API
 			num = TransformResultForCommand.transformResult(type, result);//自动装配结果
 			
 			clearInCache(commandStr, "int", SuidType.MODIFY, num);
@@ -1920,7 +1942,7 @@ public class MongodbSqlLib extends AbstractBase
 		return num;
 	}
 	
-	private Document runByCommand(String commandStr, Bson commandBson) {
+	private Document runByCommand(Bson commandBson) {
 		DatabaseClientConnection conn = null;
 		Document result = null;
 		try {
@@ -1962,7 +1984,7 @@ public class MongodbSqlLib extends AbstractBase
 		String json = "";
 		try {
 			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
-			Document result = runByCommand(commandStr, commandBson); //操作驱动API
+			Document result = runByCommand(commandBson); //操作驱动API
 			json=TransformResultForCommand.transformResult(result); //自动装配结果
 			
 			addInCache(commandStr, json, -1); // 添加数据到缓存；没有作最大结果集判断
@@ -1974,6 +1996,18 @@ public class MongodbSqlLib extends AbstractBase
 		return json;
 	}
 	
+	private boolean isSelectType(String type) {
+		return "find".equals(type) || "findOne".equals(type) ;
+	}
+	
+	private void checkIsNotSelectCommandException(String type) {
+		if(! isSelectType(type)) throw new BeeIllegalBusinessException("The command type is not find/findone!");
+	}
+	
+	private void checkIsSelectCommandException(String type) {
+		if(isSelectType(type)) throw new BeeIllegalBusinessException("The command type is find/findone, but it should modify type!");
+	}
+	
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -1981,6 +2015,7 @@ public class MongodbSqlLib extends AbstractBase
 		commandStr=_removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[]=cEngine.getTableAndType(commandStr);
+		checkIsNotSelectCommandException(tableAndType[1]);
 		String tableName = tableAndType[0];
 		HoneyContext.addInContextForCache(commandStr, tableName);
 		
@@ -2000,7 +2035,7 @@ public class MongodbSqlLib extends AbstractBase
 		List<T> rsList = null;
 		try {
 			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
-			Document result = runByCommand(commandStr, commandBson);
+			Document result = runByCommand(commandBson);
 			rsList=TransformResultForCommand.transformResultForListT(result, returnTypeClass);
 			
 			addInCache(commandStr, rsList, rsList.size());
@@ -2017,6 +2052,7 @@ public class MongodbSqlLib extends AbstractBase
 		commandStr=_removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[] = cEngine.getTableAndType(commandStr);
+		checkIsNotSelectCommandException(tableAndType[1]);
 		String tableName = tableAndType[0];
 		HoneyContext.addInContextForCache(commandStr, tableName);
 
@@ -2036,7 +2072,7 @@ public class MongodbSqlLib extends AbstractBase
 		List<Map<String, Object>> rsList = null;
 		try {
 			Bson commandBson = cEngine.parseSuidCommand(commandStr, tableAndType);//解析及重组
-			Document result = runByCommand(commandStr, commandBson);
+			Document result = runByCommand(commandBson);
 			rsList=TransformResultForCommand.transformResultForListMap(result); //自动装配结果
 			
 			addInCache(commandStr, rsList, rsList.size());
@@ -2058,7 +2094,7 @@ public class MongodbSqlLib extends AbstractBase
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			ClientSession session = getClientSession();
-			collectionName=_toTableName(collectionName);
+			collectionName=_toTableName2(collectionName);
 			if (session == null)
 				mdb.getCollection(collectionName).dropIndexes();
 			else
@@ -2382,63 +2418,9 @@ public class MongodbSqlLib extends AbstractBase
 	
 	
 	//----------------------GEO-----------------------start-----------------------------
-	private static int type_near=1;
-	private static int type_nearSphere=2;
-	private static int type_geoWithinCenter=3;
-	private static int type_geoWithinCenterSphere=4;
 	
-	private Bson getGeoBson(NearPara nearPara, int type) {
-		Bson geoBson = null;
-		Point refPoint = new Point(new Position(nearPara.getX(), nearPara.getY()));
-		Double max = nearPara.getMaxDistance();
-		Double min = nearPara.getMinDistance();
-		if (max < min) throw new BeeIllegalBusinessException("The maximum value must not be less than the minimum value!");
-
-		if (type == type_near) {
-			geoBson = Filters.near(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
-		} else if (type == type_nearSphere) 
-			geoBson = Filters.nearSphere(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
-
-		return geoBson;
-	}
-	
-	private Bson getGeoBson(CenterPara centerPara, int type) {
-		Bson geoBson = null;
-//		Point refPoint = new Point(new Position(centerPara.getX(), centerPara.getY()));
-		if (type == type_geoWithinCenter) {
-			geoBson = Filters.geoWithinCenter(_toColumnName(centerPara.getGeoFieldName()),
-					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
-		} else if (type == type_geoWithinCenterSphere)
-			geoBson = Filters.geoWithinCenterSphere(_toColumnName(centerPara.getGeoFieldName()),
-					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
-		return geoBson;
-	}
-	
-	private Bson getGeoBson2(BoxPara boxPara) {
-		Bson geoBson = null;
-		geoBson = Filters.geoWithinBox(boxPara.getGeoFieldName(), boxPara.getLowerLeftX(),
-				boxPara.getLowerLeftY(), boxPara.getUpperRightX(), boxPara.getUpperRightY());
-		return geoBson;
-	}
-	
-	private Bson getGeoBson3(String fieldName, List<List<Double>> points) {
-		Bson geoBson = null;
-		geoBson = Filters.geoWithinPolygon(fieldName, points);
-		return geoBson;
-	}
-	
-	private <T> List<T> _near(T entity, NearPara nearPara,Condition condition, int type) { // near,nearSphere
-		Bson geoBson=getGeoBson(nearPara, type);
-		return _geoFind(entity, geoBson, condition);
-	}
-	
-	private  <T> List<T> _geoWithinCenter(T entity, CenterPara centerPara ,Condition condition, int type) {
-		// geoWithinCenterSphere, geoWithinCenter
-		Bson geoBson=getGeoBson(centerPara, type);
-		return _geoFind(entity, geoBson, condition);
-	}
-	
-	private <T> List<T> _geoFind(T entity, Bson geoBson,Condition condition) { // near,nearSphere
+	@Override
+	public <T> List<T> geoFind(T entity, Bson geoBson,Condition condition) { // near,nearSphere
 
 		if (entity == null) return Collections.emptyList();
 
@@ -2457,39 +2439,6 @@ public class MongodbSqlLib extends AbstractBase
 		return select(struct, entityClass);
 	};
 
-	@Override
-	public <T> List<T> near(T entity, NearPara nearPara, Condition condition) {
-		return _near(entity, nearPara, condition, type_near);
-	}
-
-	@Override
-	public <T> List<T> nearSphere(T entity, NearPara nearPara, Condition condition) {
-		return _near(entity, nearPara, condition, type_nearSphere);
-	}
-
-	@Override
-	public <T> List<T> geoWithinCenter(T entity, CenterPara centerPara, Condition condition) {
-		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenter);
-	}
-
-	@Override
-	public <T> List<T> geoWithinCenterSphere(T entity, CenterPara centerPara,
-			Condition condition) {
-		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenterSphere);
-	}
-
-	@Override
-	public <T> List<T> geoWithinBox(T entity, BoxPara boxPara, Condition condition) {
-		Bson geoBson=getGeoBson2(boxPara);
-		return _geoFind(entity, geoBson, condition);
-	}
-	
-	@Override
-	public <T> List<T> geoWithinPolygon(T entity, String fieldName, List<List<Double>> points,
-			Condition condition) {
-		Bson geoBson=getGeoBson3(fieldName, points);
-		return _geoFind(entity, geoBson, condition);
-	}
 	//----------------------GEO-----------------------end-----------------------------
 	
 	private void _log(String str) {
@@ -2500,6 +2449,7 @@ public class MongodbSqlLib extends AbstractBase
 		// db.users.find({ "gender" : true , "age" : { "$gte" : 20}},{ "name" : 1 , "age" : 1 , "address" : 1}).sort({ "age" : -1}).limit(2).skip(0)
 
 		String table = struct.getTableName();
+		table = table.replace(StringConst.ShardingTableIndexStr, "");
 
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
@@ -2570,6 +2520,7 @@ public class MongodbSqlLib extends AbstractBase
 		String insertType="One";
 		if(insertMany) insertType="Many";
 		String table = struct.getTableName();
+		table = table.replace(StringConst.ShardingTableIndexStr, "");
 		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
 				StringBuffer sql = new StringBuffer();
 				sql.append("db.");
@@ -2601,9 +2552,11 @@ public class MongodbSqlLib extends AbstractBase
 		}
 		log1Obj2Str(struct, "aggregate");
 	}
-	private void log1Obj2Str(MongoSqlStruct struct,String opType) {
-		String table = struct.getTableName();
 
+	private void log1Obj2Str(MongoSqlStruct struct, String opType) {
+		String table = struct.getTableName();
+		table = table.replace(StringConst.ShardingTableIndexStr, "");
+		
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
 		sql.append(table);
@@ -2647,9 +2600,10 @@ public class MongodbSqlLib extends AbstractBase
 		logWithFilter(struct, "count");
 	}
 	
-	private void logWithFilter(MongoSqlStruct struct,String opType) {
+	private void logWithFilter(MongoSqlStruct struct, String opType) {
 		String table = struct.getTableName();
-
+		table = table.replace(StringConst.ShardingTableIndexStr, "");
+		
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
 		sql.append(table);

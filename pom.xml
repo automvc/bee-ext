@@ -195,7 +195,7 @@
 		</dependency>
 
 		<!-- if necessary, can import the ohos.jar to java build path -->
-<!-- 		<dependency>
+<!-- 	<dependency>
 			<groupId>ohos</groupId>
 			<artifactId>harmony</artifactId>
 			<version>4</version>

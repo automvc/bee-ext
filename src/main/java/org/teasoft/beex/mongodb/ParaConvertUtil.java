@@ -25,13 +25,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.conversions.Bson;
-import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.Geo2dsphere;
 import org.teasoft.bee.osql.annotation.GridFs;
 import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.annotation.customizable.Json;
+import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.type.SetParaTypeConvert;
 import org.teasoft.bee.sharding.ShardingSortStruct;
 import org.teasoft.honey.osql.constant.NullEmpty;

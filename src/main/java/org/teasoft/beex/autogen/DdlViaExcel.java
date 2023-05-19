@@ -20,7 +20,7 @@ package org.teasoft.beex.autogen;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import org.teasoft.bee.osql.PreparedSql;
+import org.teasoft.bee.osql.api.PreparedSql;
 import org.teasoft.beex.poi.ExcelReader;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;

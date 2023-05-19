@@ -26,17 +26,21 @@ import org.teasoft.bee.mongodb.BoxPara;
 import org.teasoft.bee.mongodb.CenterPara;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.NearPara;
-import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.SuidType;
+import org.teasoft.bee.osql.api.Condition;
+import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.MongodbSqlLib;
 import org.teasoft.beex.osql.FieldNameUtil;
-//import org.teasoft.beex.osql.SuidRichExt;
 import org.teasoft.beex.osql.FieldNameUtil.SerialFunction;
 import org.teasoft.honey.osql.core.MongodbObjSQLRich;
+import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.name.OriginalName;
 
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.geojson.Geometry;
+import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Position;
 
 /**
  * @author Kingstar
@@ -45,7 +49,7 @@ import com.mongodb.client.model.geojson.Geometry;
 @SuppressWarnings("unchecked")
 public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSuidRichExt {
 	
-	private static final long serialVersionUID = 1596710362268L;
+	private static final long serialVersionUID = 1596710362269L;
 
 	@Override
 	public <T> List<T> select(T entity, SerialFunction<T, ?>... selectFields) {
@@ -155,7 +159,7 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 		getMongodbBeeSql().deleteFile(fileId);
 	}
 
-	//create index
+	//------------------------------------create index-------------------------------
 	@Override
 	public String index(String collectionName, String fieldName, IndexType indexType) {
 		return ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
@@ -178,85 +182,186 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 
 	
 	//----------------------GEO-----------------------start-----------------------------
-	@Override
-	public <T> List<T> near(T entity, String fieldName, double x, double y, Double maxDistance,
-			Double minDistance) {
-		return getMongodbBeeSql().near(entity, new NearPara(fieldName, x, y, maxDistance, minDistance), null);
-	}
+	
+	private static int type_near=1;
+	private static int type_nearSphere=2;
+	private static int type_geoWithinCenter=3;
+	private static int type_geoWithinCenterSphere=4;
+	
+	private Bson getGeoBson(NearPara nearPara, int type) {
+		Bson geoBson = null;
+		Point refPoint = new Point(new Position(nearPara.getX(), nearPara.getY()));
+		Double max = nearPara.getMaxDistance();
+		Double min = nearPara.getMinDistance();
+		if (max < min) throw new BeeIllegalBusinessException("The maximum value must not be less than the minimum value!");
 
-	@Override
-	public <T> List<T> nearSphere(T entity, String fieldName, double x, double y,
-			Double maxDistance, Double minDistance) {
-		return getMongodbBeeSql().nearSphere(entity, new NearPara(fieldName, x, y, maxDistance, minDistance), null);
-	}
+		if (type == type_near) {
+			geoBson = Filters.near(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
+		} else if (type == type_nearSphere) 
+			geoBson = Filters.nearSphere(_toColumnName(nearPara.getGeoFieldName()), refPoint, max, min);
 
-	@Override
-	public <T> List<T> geoWithinCenter(T entity, String fieldName, double x, double y,
-			double radius) {
-		return getMongodbBeeSql().geoWithinCenter(entity, new CenterPara(fieldName, x, y, radius), null);
+		return geoBson;
 	}
-
-	@Override
-	public <T> List<T> geoWithinCenterSphere(T entity, String fieldName, double x, double y,
-			double radius) {
-		return getMongodbBeeSql().geoWithinCenterSphere(entity, new CenterPara(fieldName, x, y, radius), null);
+	
+	private Bson getGeoBson(CenterPara centerPara, int type) {
+		Bson geoBson = null;
+//		Point refPoint = new Point(new Position(centerPara.getX(), centerPara.getY()));
+		if (type == type_geoWithinCenter) {
+			geoBson = Filters.geoWithinCenter(_toColumnName(centerPara.getGeoFieldName()),
+					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
+		} else if (type == type_geoWithinCenterSphere)
+			geoBson = Filters.geoWithinCenterSphere(_toColumnName(centerPara.getGeoFieldName()),
+					centerPara.getX(), centerPara.getY(), centerPara.getRadius());
+		return geoBson;
 	}
-
-	@Override
-	public <T> List<T> geoWithinBox(T entity, String fieldName, double lowerLeftX,
-			double lowerLeftY, double upperRightX, double upperRightY) {
-		return getMongodbBeeSql().geoWithinBox(entity,
-				new BoxPara(fieldName, lowerLeftX, lowerLeftY, upperRightX, upperRightY), null);
+	
+	private Bson getGeoBson2(BoxPara boxPara) {
+		Bson geoBson = null;
+		geoBson = Filters.geoWithinBox(boxPara.getGeoFieldName(), boxPara.getLowerLeftX(),
+				boxPara.getLowerLeftY(), boxPara.getUpperRightX(), boxPara.getUpperRightY());
+		return geoBson;
 	}
-
-	@Override
-	public <T> List<T> geoWithinPolygon(T entity, String fieldName, List<List<Double>> points,
-			Condition condition) {
-		return getMongodbBeeSql().geoWithinPolygon(entity, fieldName, points, condition);
+	
+	private Bson getGeoBson3(String fieldName, List<List<Double>> points) {
+		Bson geoBson = null;
+		geoBson = Filters.geoWithinPolygon(fieldName, points);
+		return geoBson;
 	}
-
+	
+	
+	private <T> List<T> _near(T entity, NearPara nearPara,Condition condition, int type) { // near,nearSphere
+		Bson geoBson=getGeoBson(nearPara, type);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	private  <T> List<T> _geoWithinCenter(T entity, CenterPara centerPara ,Condition condition, int type) {
+		// geoWithinCenterSphere, geoWithinCenter
+		Bson geoBson=getGeoBson(centerPara, type);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
 	@Override
 	public <T> List<T> near(T entity, NearPara nearPara, Condition condition) {
-		return getMongodbBeeSql().near(entity, nearPara, condition);
+		return _near(entity, nearPara, condition, type_near);
 	}
 
 	@Override
 	public <T> List<T> nearSphere(T entity, NearPara nearPara, Condition condition) {
-		return getMongodbBeeSql().nearSphere(entity, nearPara, condition);
+		return _near(entity, nearPara, condition, type_nearSphere);
 	}
 
 	@Override
 	public <T> List<T> geoWithinCenter(T entity, CenterPara centerPara, Condition condition) {
-		return getMongodbBeeSql().geoWithinCenter(entity, centerPara, condition);
+		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenter);
 	}
 
 	@Override
 	public <T> List<T> geoWithinCenterSphere(T entity, CenterPara centerPara,
 			Condition condition) {
-		return getMongodbBeeSql().geoWithinCenterSphere(entity, centerPara, condition);
+		return _geoWithinCenter(entity, centerPara, condition, type_geoWithinCenterSphere);
 	}
 
 	@Override
 	public <T> List<T> geoWithinBox(T entity, BoxPara boxPara, Condition condition) {
-		return getMongodbBeeSql().geoWithinBox(entity, boxPara, condition);
+		Bson geoBson=getGeoBson2(boxPara);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	@Override
+	public <T> List<T> geoWithinPolygon(T entity, String fieldName, List<List<Double>> points,
+			Condition condition) {
+		fieldName=_toColumnName(fieldName);
+		Bson geoBson=getGeoBson3(fieldName, points);
+		return _geoFind(entity, geoBson, condition);
+	}
+	
+	private String _toColumnName(String fieldName) {
+		return NameTranslateHandle.toColumnName(fieldName);
+	}
+	
+	
+	//----------------------GEO-----------------------...-----------------------------
+	
+	@Override
+	public <T> List<T> near(T entity, String fieldName, double x, double y, Double maxDistance,
+			Double minDistance) {
+		fieldName=_toColumnName(fieldName);
+		return near(entity, new NearPara(fieldName, x, y, maxDistance, minDistance), null);
 	}
 
 	@Override
+	public <T> List<T> nearSphere(T entity, String fieldName, double x, double y,
+			Double maxDistance, Double minDistance) {
+		fieldName=_toColumnName(fieldName);
+		return nearSphere(entity, new NearPara(fieldName, x, y, maxDistance, minDistance), null);
+	}
+
+	@Override
+	public <T> List<T> geoWithinCenter(T entity, String fieldName, double x, double y,
+			double radius) {
+		fieldName=_toColumnName(fieldName);
+		return geoWithinCenter(entity, new CenterPara(fieldName, x, y, radius), null);
+	}
+
+	@Override
+	public <T> List<T> geoWithinCenterSphere(T entity, String fieldName, double x, double y,
+			double radius) {
+		fieldName=_toColumnName(fieldName);
+		return geoWithinCenterSphere(entity, new CenterPara(fieldName, x, y, radius), null);
+	}
+
+	@Override
+	public <T> List<T> geoWithinBox(T entity, String fieldName, double lowerLeftX,
+			double lowerLeftY, double upperRightX, double upperRightY) {
+		fieldName=_toColumnName(fieldName);
+		return geoWithinBox(entity,new BoxPara(fieldName, lowerLeftX, lowerLeftY, upperRightX, upperRightY), null);
+	}
+
+	//-------------------------------------------------
+
+	@Override
 	public <T> List<T> geoWithin(T entity, String fieldName, Geometry geometry) {
-		return null;
+		fieldName=_toColumnName(fieldName);
+		Bson geoBson= Filters.geoWithin(fieldName,geometry);
+		return _geoFind(entity, geoBson, null);
 	}
 	@Override
 	public <T> List<T> geoWithin(T entity, String fieldName, Bson geometry) {
-		return null;
+		fieldName=_toColumnName(fieldName);
+		Bson geoBson= Filters.geoWithin(fieldName,geometry);
+		return _geoFind(entity, geoBson, null);
 	}
 	@Override
 	public <T> List<T> geoIntersects(T entity, String fieldName, Bson geometry) {
-		return null;
+		fieldName=_toColumnName(fieldName);
+		Bson geoBson= Filters.geoIntersects(fieldName,geometry);
+		return _geoFind(entity, geoBson, null);
 	}
 	@Override
 	public <T> List<T> geoIntersects(T entity, String fieldName, Geometry geometry) {
-		return null;
+		fieldName=_toColumnName(fieldName);
+		Bson geoBson= Filters.geoIntersects(fieldName,geometry);
+		return _geoFind(entity, geoBson, null);
 	}
+	
+	
+	
+	
+	//重要
+	private <T> List<T> _geoFind(T entity, Bson geoBson, Condition condition) {
+		if (entity == null)
+			return null;
+		regCondition(condition); // 改为用父类的 TODO
+		doBeforePasreEntity(entity, SuidType.SELECT);
+		if (condition != null)
+			condition.setSuidType(SuidType.SELECT);
+
+		List<T> list = ((MongodbSqlLib) getMongodbBeeSql()).geoFind(entity, geoBson, condition);
+
+		doBeforeReturn(list);
+		return list;
+	}
+	
 	//----------------------GEO-----------------------end-----------------------------
 	
 }

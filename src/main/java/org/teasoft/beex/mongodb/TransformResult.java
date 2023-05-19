@@ -366,19 +366,25 @@ public class TransformResult {
 //				java.util.ArrayList
 //				[Ljava.lang.Double;
 				if (obj != null && List.class.isAssignableFrom(obj.getClass())) {  // not else if
-					if ("[Ljava.lang.Double;".equals(field.getType().getName())) {// List-> Double[]
+//					if ("[Ljava.lang.Double;".equals(field.getType().getName())) {// List-> Double[]
+//					if(isNumArray(field.getType().getName(),0)) {
+					if (Double[].class.equals(field.getType())) {
 						List list = (List) obj;
 						if (list.size() > 0) {
 							Double[] arr = (Double[]) list.toArray(new Double[list.size()]);
 							if (arr != null) obj = arr;
 						}
-					}else if ("[Ljava.lang.Long;".equals(field.getType().getName())) {// List-> Double[]
+//					}else if ("[Ljava.lang.Long;".equals(field.getType().getName())) {// List-> Long[]
+//					}else if(isNumArray(field.getType().getName(),1)) {
+					}if (Long[].class.equals(field.getType())) {
 						List list = (List) obj;
 						if (list.size() > 0) {
 							Long[] arr = (Long[]) list.toArray(new Long[list.size()]);
 							if (arr != null) obj = arr;
 						}
-					}if ("[Ljava.lang.Integer;".equals(field.getType().getName())) {// List-> Double[]
+//					}if ("[Ljava.lang.Integer;".equals(field.getType().getName())) {// List-> Integer[]
+//					}if (isNumArray(field.getType().getName(), 2)) {
+					}if (Integer[].class.equals(field.getType())) {
 						List list = (List) obj;
 						if (list.size() > 0) {
 							Integer[] arr = (Integer[]) list.toArray(new Integer[list.size()]);
@@ -402,6 +408,16 @@ public class TransformResult {
 		}
 		return targetObj;
 	}
+	
+//	private static boolean isNumArray(String type, int index) {
+//		String arrayTypes[] = { 
+//				"[Ljava.lang.Double;", 
+//				"[Ljava.lang.Long;",
+//				"[Ljava.lang.Integer;" 
+//				};
+//		return arrayTypes[index].equals(type);
+//	}
+	
 	
 //	private static Map<String, Object> toMap(Map<String, Object> document) {
 //		if (document == null || document.size() < 1) return new LinkedHashMap<>();

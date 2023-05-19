@@ -19,9 +19,9 @@ package org.teasoft.beex.osql;
 
 import java.util.List;
 
-import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.IncludeType;
-import org.teasoft.bee.osql.SuidRich;
+import org.teasoft.bee.osql.api.Condition;
+import org.teasoft.bee.osql.api.SuidRich;
 import org.teasoft.beex.osql.FieldNameUtil.SerialFunction;
 
 /**

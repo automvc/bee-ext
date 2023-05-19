@@ -239,9 +239,9 @@ public class CommandEngine {
 		if (index2 > 0) {
 			tableName = tableNameAndType.substring(0, index2).trim();
 			type = tableNameAndType.substring(index2 + 1, tableNameAndType.length()).trim();
-		} else { // 处理这种语法: db.getCollection('movies')
+		} else { // 处理这种语法: db.getCollection('movies'),   //暂不支持这种:db.getSiblingDB("examples")
 			if (!"getCollection".equals(tableNameAndType)) {
-				throw new BeeErrorGrammarException("The mongo command grammar error!");
+				throw new BeeErrorGrammarException("Do not support this mongo command grammar!");
 			} else {
 				int index4 = str.indexOf('(', index3 + 1);
 				tableNameAndType = str.substring(index3 + 1, index4).trim();
