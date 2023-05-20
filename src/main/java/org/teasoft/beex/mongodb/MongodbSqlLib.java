@@ -362,7 +362,6 @@ public class MongodbSqlLib extends AbstractBase
 			if (HoneyContext.getSqlIndexLocal() == null) { //分片,主线程
 				
 				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
-				//TODO 是否带分隔了?
 				struct.setTableName(struct.getTableName().replace(StringConst.ShardingTableIndexStr, tabNameList==null?"":tabNameList.toString()));
 				List<T> list =_select(struct, entityClass); //检测缓存的           
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
@@ -1741,22 +1740,23 @@ public class MongodbSqlLib extends AbstractBase
 	// sharding  index??  可以通过HoneyContext.setTabSuffix(String suffix) 设置
 	private <T> boolean _createTable(Class<T> entityClass, boolean isDropExistTable) {
 		String tableName = _toTableNameByClass(entityClass);
-		String baseTableName = tableName.replace(StringConst.ShardingTableIndexStr, "");
+//		out.println(tableName); //eg: orders5[$#(index)#$] or orders_5[$#(index)#$]
+		tableName = tableName.replace(StringConst.ShardingTableIndexStr, ""); //分片时,是会带有下标的.
 		DatabaseClientConnection conn = null;
 		boolean f = false;
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			if (isDropExistTable) {
-				logSQLForMain("Mongodb::drop collection(table): " + baseTableName);
+				_log("Mongodb::drop collection(table): " + tableName);
 				ClientSession session = getClientSession();
 				if (session == null)
-					mdb.getCollection(baseTableName).drop();
+					mdb.getCollection(tableName).drop();
 				else
-					mdb.getCollection(baseTableName).drop(session);
+					mdb.getCollection(tableName).drop(session);
 			}
-			logSQLForMain("Mongodb::create collection(table): " + baseTableName);
-			mdb.createCollection(baseTableName);
+			_log("Mongodb::create collection(table): " + tableName);
+			mdb.createCollection(tableName);
 			f = true;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
@@ -2443,6 +2443,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	private void _log(String str) {
 		logSQLForMain(str);
+//		Logger.info(str);
 	}
 	
 	private void log(MongoSqlStruct struct) {
