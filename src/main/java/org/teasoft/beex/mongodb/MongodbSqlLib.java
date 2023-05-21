@@ -910,7 +910,7 @@ public class MongodbSqlLib extends AbstractBase
 		String sql=struct.getSql();
 		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		logSQLForMain("Mongodb::batch insert: "+sql);
+		_log("Mongodb::batch insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
 		MongoDatabase db=getMongoDatabase(conn);
@@ -938,7 +938,7 @@ public class MongodbSqlLib extends AbstractBase
 					logValueSql.append("]");
 					struct = new MongoSqlStruct("int", tableName, null, null, null,
 							null, null, false,entity.getClass(),logValueSql.toString());
-					logInsertMany(struct);
+					logInsertMany(struct); //_log
 					
 					InsertManyResult irs;
 					ClientSession session = MongoContext.getCurrentClientSession();
@@ -948,7 +948,6 @@ public class MongodbSqlLib extends AbstractBase
 						irs = db.getCollection(tableName).insertMany(session, list);
 					}
 					
-//					System.out.println(irs.getInsertedIds());
 					count += irs.getInsertedIds().size();
 //				MongoUtils.getCollection(tableName).bulkWrite(list);
 //					if (i != len) {
@@ -2182,7 +2181,7 @@ public class MongodbSqlLib extends AbstractBase
 
 		MongoSqlStruct struct = parseMongoSqlStruct(gridFsFile, condition, "List<GridFsFile>");
 		struct.setTableName("fs.files");
-		logSQLForMain("Mongodb::selectFiles: " + struct.getSql());
+		_log("Mongodb::selectFiles: " + struct.getSql());
 
 		GridFSFindIterable iterable = gridFSFindIterable(struct);
 		MongoCursor<GridFSFile> cursor = iterable.iterator();
@@ -2442,8 +2441,13 @@ public class MongodbSqlLib extends AbstractBase
 	//----------------------GEO-----------------------end-----------------------------
 	
 	private void _log(String str) {
-		logSQLForMain(str);
-//		Logger.info(str);
+		logSQL(str);
+	}
+	
+	//主线程才打印（不需要分片或不是子线程）
+	private void logSQLForMain(String hardStr) {
+		if (!ShardingUtil.hadSharding() || HoneyContext.getSqlIndexLocal() == null)
+			logSQL(hardStr);
 	}
 	
 	private void log(MongoSqlStruct struct) {
