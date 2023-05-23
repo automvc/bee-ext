@@ -1527,8 +1527,8 @@ public class MongodbSqlLib extends AbstractBase
 
 			listBson.add(BsonDocument.parse(groupSearch.toString()));
 			
-//			if(filter!=null)System.err.println(filter.toString());
-//			System.err.println(groupSearch.toString());
+//			if(filter!=null)err.println(filter.toString());
+//			err.println(groupSearch.toString());
 			
 			Class<T> entityClass = toClassT(entity);
 			MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, match, null, null,
@@ -1778,7 +1778,7 @@ public class MongodbSqlLib extends AbstractBase
 			Bson bson = _getKeyBson(fieldName, indexType);
 			
 			ClientSession session = getClientSession();
-			collectionName=_toTableName2(collectionName); //fixed bug
+			collectionName=_toTableName2(collectionName); //fixed bug 2.1
 			String re;
 			if (session == null) {
 				re = mdb.getCollection(collectionName).createIndex(bson);
@@ -1902,7 +1902,7 @@ public class MongodbSqlLib extends AbstractBase
 		return NameTranslateHandle.toTableName(NameUtil.getClassFullName(entity));
 	}
 	
-	private String _toTableName2(String entityName) {//fixed bug
+	private String _toTableName2(String entityName) {//fixed bug 2.1
 		return NameTranslateHandle.toTableName(entityName);
 	}
 	
@@ -2467,7 +2467,7 @@ public class MongodbSqlLib extends AbstractBase
 				filter=((BasicDBObject)struct.getFilter()).toString();
 			} catch (Exception e) {
 				filter=struct.getFilter().toString();
-				Logger.info("This is an inaccurate raw statement!");
+				_log("This is an inaccurate raw statement!");
 			}
 			sql.append(filter);
 			tranferCommandLog(sql);
@@ -2553,7 +2553,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	private void logGroup(MongoSqlStruct struct) {
 		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
-			Logger.info("This is an inaccurate raw statement!");
+			_log("This is an inaccurate raw statement!");
 		}
 		log1Obj2Str(struct, "aggregate");
 	}

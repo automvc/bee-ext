@@ -303,7 +303,6 @@ public class TransformResult {
 
 			field.setAccessible(true);
 			Object obj = entry.getValue();
-//			System.err.println("obj type :"+obj.getClass().getName());
 			boolean isRegHandlerPriority = false;
 			try {
 				boolean processAsJson = false;
