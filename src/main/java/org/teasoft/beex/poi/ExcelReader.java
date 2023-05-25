@@ -262,7 +262,7 @@ public class ExcelReader {
 			workbook = WorkbookFactory.create(inputStream);
 			sheet = workbook.getSheetAt(sheetIndex);
 		} catch (Exception e) {
-			Logger.error(e.getMessage());
+//			Logger.error(e.getMessage());
 			throw ExceptionHelper.convert(e);
 		} finally {
 			try {
@@ -283,7 +283,7 @@ public class ExcelReader {
 			workbook = WorkbookFactory.create(inputStream);
 			sheet = workbook.getSheet(sheetName); //根据sheet名称获取
 		} catch (Exception e) {
-			Logger.error(e.getMessage());
+//			Logger.error(e.getMessage());
 			throw ExceptionHelper.convert(e);
 		} finally {
 			try {
