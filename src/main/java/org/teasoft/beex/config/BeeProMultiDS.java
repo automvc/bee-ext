@@ -35,6 +35,8 @@ public class BeeProMultiDS {
 	private String matchTable; //multiDsType=2
 	//	支持同时使用多种类型数据库的数据源.support different type muli-Ds at same time.
 	private Boolean differentDbType;
+	private Boolean sharding; //2.0 用于分库分表的分片
+	private Boolean justMongodb; //2.1 仅使用Mongodb. 用于判断生成Mongodb专用的Suid实现类
 
 	public Boolean getEnable() {
 		return enable;
@@ -108,4 +110,20 @@ public class BeeProMultiDS {
 		this.differentDbType = differentDbType;
 	}
 
+	public Boolean getSharding() {
+		return sharding;
+	}
+
+	public void setSharding(Boolean sharding) {
+		this.sharding = sharding;
+	}
+
+	public Boolean getJustMongodb() {
+		return justMongodb;
+	}
+
+	public void setJustMongodb(Boolean justMongodb) {
+		this.justMongodb = justMongodb;
+	}
+	
 }

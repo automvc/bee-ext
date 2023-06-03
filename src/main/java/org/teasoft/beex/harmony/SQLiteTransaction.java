@@ -18,8 +18,7 @@
 package org.teasoft.beex.harmony;
 
 import org.teasoft.bee.osql.BeeSQLException;
-import org.teasoft.bee.osql.transaction.Transaction;
-import org.teasoft.bee.osql.transaction.TransactionIsolationLevel;
+import org.teasoft.beex.transaction.EmptyTransaction;
 import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.Logger;
@@ -31,14 +30,15 @@ import ohos.data.rdb.RdbStore;
  * @author Kingstar
  * @since  1.17
  */
-public class SQLiteTransaction implements Transaction {
+public class SQLiteTransaction extends EmptyTransaction {
 	
 	private RdbStore db;
 	private boolean isBegin = false;
 
 	@Override
 	public void begin() {
-		Logger.info("[Bee] SQLiteTransaction begin. ");
+		super.MSG = "method in SQLiteTransaction(harmony).";
+		Logger.info("[Bee] SQLiteTransaction(harmony) begin. ");
 		
 		db=	BeeDatabaseHelper.getRdbStore();	
 		db.beginTransaction();
@@ -48,7 +48,7 @@ public class SQLiteTransaction implements Transaction {
 
 	@Override
 	public void commit() {
-		Logger.info("[Bee] SQLiteTransaction commit. ");
+		Logger.info("[Bee] SQLiteTransaction(harmony) commit. ");
 		if (!isBegin) throw new BeeSQLException("The SQLiteTransaction did not to begin!");
 		try {
 			db.markAsCommit();
@@ -61,10 +61,9 @@ public class SQLiteTransaction implements Transaction {
 		}
 	}
 
-
 	@Override
 	public void rollback() {
-		Logger.info("[Bee] SQLiteTransaction rollback. ");
+		Logger.info("[Bee] SQLiteTransaction(harmony) rollback. ");
 		try {
 			db.endTransaction();
 		} finally {
@@ -84,41 +83,5 @@ public class SQLiteTransaction implements Transaction {
 			}
 		}
 	}
-	
-	
-	
-	//will ignore following methods
-	
-	@Override
-	public int getTransactionIsolation() {
-		//will ignore this method
-		Logger.debug("No need getTransactionIsolation() method in SQLiteTransaction");
-		return 4;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		//will ignore this method
-		Logger.debug("No need isReadOnly() method in SQLiteTransaction");
-		return false;
-	}
-
-	@Override
-	public void setReadOnly(boolean readOnly) {
-		//will ignore this method
-		Logger.debug("No need readOnly() method in SQLiteTransaction");
-	}
-
-	@Override
-	public void setTimeout(int seconds) {
-		Logger.debug("Donot support setTimeout(int seconds) in SQLiteTransaction");
-	}
-
-	@Override
-	public void setTransactionIsolation(TransactionIsolationLevel level) {
-		//will ignore this method
-		Logger.debug("No need setTransactionIsolation(TransactionIsolationLevel level) method in SQLiteTransaction");
-	}
-	
 
 }

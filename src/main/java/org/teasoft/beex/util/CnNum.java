@@ -27,9 +27,9 @@ import java.util.Map;
  */
 public class CnNum {
 	
-	private static String[] uint= {"","十","百","千","万","十万","百万","千万","亿","十亿","百亿","千亿"};
-	private static String[] upperUint= {"","拾","佰","仟","万","拾万","百万","仟万","亿","拾亿","百亿","仟亿"};//"","拾","佰","仟"
-	private static String[] upperDecimalUint= {"角","分","厘","","",""};
+	private static final String[] uint= {"","十","百","千","万","十万","百万","千万","亿","十亿","百亿","千亿"};
+	private static final String[] upperUint= {"","拾","佰","仟","万","拾万","百万","仟万","亿","拾亿","百亿","仟亿"};//"","拾","佰","仟"
+	private static final String[] upperDecimalUint= {"角","分","厘","","",""};
 	
 	private static Map<String,String> numMap=new HashMap<>();
 	private static Map<String,String> numUpperMap=new HashMap<>();
@@ -159,5 +159,10 @@ public class CnNum {
 		}
 		return sbu.toString();
 	}
+	
+//	public static void main(String[] args) {
+//		System.out.println(CnNum.tran(1234567.89));
+//		System.out.println(CnNum.tranToUpper(12.89));
+//	}
 
 }

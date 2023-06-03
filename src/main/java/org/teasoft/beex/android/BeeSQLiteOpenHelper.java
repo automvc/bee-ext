@@ -1,3 +1,20 @@
+/*
+ * Copyright 2016-2022 the original author.All rights reserved.
+ * Kingstar(honeysoft@126.com)
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.teasoft.beex.android;
 
 import org.teasoft.bee.android.CreateAndUpgrade;
@@ -18,7 +35,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  * @since 1.17
  */
 public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
-	private static int num = 1;
+//	private static int num = 1;
 
 	private static int VERSION;
 	private static String DBNAME;
@@ -76,9 +93,9 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {// 创建数据库,在安装app时执行; 升级版本也不执行
-		// TODO 添加创建数据库业务逻辑
-		Logger.info("测试.....in onCreate method, num: " + num);
-		num++;
+		// 添加创建数据库业务逻辑
+//		Logger.info("测试.....in onCreate method, num: " + num);
+//		num++;
 
 		try {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
@@ -97,9 +114,9 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)// 数据库版本升级时运行. (降版本会报异常)
 	{
-		// TODO 添加更新数据库业务逻辑
-		Logger.info("测试.....in onUpgrade method, num: " + num);
-		num++;
+		// 添加更新数据库业务逻辑
+//		Logger.info("测试.....in onUpgrade method, num: " + num);
+//		num++;
 
 		try {
 			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry

@@ -41,7 +41,7 @@ public class BeeDatabaseHelper {
 	private static StoreConfig config = null;
 	private static RdbOpenCallback rdbOpenCallback = null;
 	private static RdbStore rdbStore = null;
-	private static boolean isInit=true;
+	private static volatile boolean isInit=true;
 	
 	static {
 		Context temp = ContextRegistry.getContext();
@@ -62,16 +62,16 @@ public class BeeDatabaseHelper {
 			rdbStore = databaseHelper.getRdbStore(config, VERSION, rdbOpenCallback, null);
 			isInit=false;
 			} catch (Exception e) {
-				Logger.info("---------------获取DB对象失败");
+//				Logger.info("---------------获取DB对象失败");
 				Logger.error(e.getMessage(), e);
 			}
 		}
 	}
 
-	private BeeDatabaseHelper() {}
-
+//	private BeeDatabaseHelper() {}
+//
 //	
-	public BeeDatabaseHelper(Context context) {}
+//	public BeeDatabaseHelper(Context context) {}
 
 	public static RdbStore getRdbStore() {
 		RdbStore tempDb=rdbStore;

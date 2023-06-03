@@ -20,7 +20,7 @@ package org.teasoft.beex.autogen;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import org.teasoft.bee.osql.PreparedSql;
+import org.teasoft.bee.osql.api.PreparedSql;
 import org.teasoft.beex.poi.ExcelReader;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
@@ -39,7 +39,7 @@ public class DdlViaExcel {
 
 	private static final String CREATE_TABLE = "CREATE TABLE ";
 	private static String LINE_SEPARATOR = System.getProperty("line.separator"); // 换行符
-	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
+//	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 	
 	/**
 	 * 
@@ -50,28 +50,20 @@ public class DdlViaExcel {
 	@SuppressWarnings("deprecation")
 	public static void createTable(String excelFullPath, String sheetNames[],
 			String checkTitle) {
-
-		//	String sheetName0="stock-库存"; //表名与中文名用"-"分开
-		//	String sheetName1="out_stock-出库";
-		//	String sheetName2="customs_list-报关清单";
-		//	String sheetNames[]= {sheetName0,sheetName1,sheetName2};
-		//		String checkTitle="字段名,类型,中文注解,英文注解";
-
 		if (sheetNames == null || StringUtils.isBlank(excelFullPath)) {
 			Logger.warn("sheetNames or excelFullPath is null or empty !");
 			return;
 		}
 
 		int NUM = sheetNames.length;
-
 		try {
-
 			if (StringUtils.isNotBlank(checkTitle)) {
 				for (int i = 0; i < NUM; i++) {
 					ExcelReader.checkAndReadExcel(excelFullPath, i, checkTitle, 0);
 				}
 			}
 			List<String[]> list =null;
+			PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 				String tableComment = getTableCommentBySheetName(sheetNames[i]);
@@ -90,7 +82,6 @@ public class DdlViaExcel {
 		} catch (FileNotFoundException e) {
 			Logger.warn(e.getMessage(), e);
 		}
-
 	}
 
 	public static String getTableNameBySheetName(String sheetName) {
@@ -124,11 +115,11 @@ public class DdlViaExcel {
 			Logger.warn("sheetNames or excelFullPath is null or empty !");
 			return;
 		}
-
 		int NUM = sheetNames.length;
 
 		// drop table
 		if (isDropExistTable) {
+			PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 
@@ -154,10 +145,7 @@ public class DdlViaExcel {
 						}
 					}
 				}
-				
 				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=old;
-				
-				
 			} //end for 
 		} //end if
 		createTable(excelFullPath, sheetNames, checkTitle);
@@ -217,7 +205,6 @@ public class DdlViaExcel {
 		sqlBuffer.append(LINE_SEPARATOR);
 		sqlBuffer.append(" )");
 		return sqlBuffer.toString();
-
 	}
 
 }

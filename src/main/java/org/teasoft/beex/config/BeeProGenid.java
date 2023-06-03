@@ -31,6 +31,7 @@ public class BeeProGenid {
 	private Boolean replaceOldId; 
 	private String includesEntityList;
 	private String excludesEntityList;
+	private Integer startYear; //2.0
 
 	public Integer getWorkerid() {
 		return workerid;
@@ -78,6 +79,14 @@ public class BeeProGenid {
 
 	public void setExcludesEntityList(String excludesEntityList) {
 		this.excludesEntityList = excludesEntityList;
+	}
+
+	public Integer getStartYear() {
+		return startYear;
+	}
+
+	public void setStartYear(Integer startYear) {
+		this.startYear = startYear;
 	}
 
 }

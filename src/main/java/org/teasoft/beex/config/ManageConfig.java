@@ -48,6 +48,8 @@ public class ManageConfig {
 	private BeeProMoreTable beeProMoreTable;
 
 	private BeeProMultiDS beeProMultiDS;
+	
+	private BeeProSharding beeProSharding;//V2.0
 
 	private BeeProNaming beeProNaming;
 
@@ -59,8 +61,7 @@ public class ManageConfig {
 
 	private BeeProShowSql beeProShowSql;
 
-	//V1.11
-	private BeeProCacheRedis beeProCacheRedis;
+	private BeeProCacheRedis beeProCacheRedis;//V1.11
 
 	public void updateConfig() {
 		Map<String, Object> newConfigMap = new LinkedHashMap<>();
@@ -74,6 +75,7 @@ public class ManageConfig {
 		newConfigMap.putAll(process(beeProGenid));
 		newConfigMap.putAll(process(beeProMoreTable));
 		newConfigMap.putAll(process(beeProMultiDS));
+		newConfigMap.putAll(process(beeProSharding));
 		newConfigMap.putAll(process(beeProNaming));
 		newConfigMap.putAll(process(beeProPearFlowerId));
 		newConfigMap.putAll(process(beeProReturnStringList));
@@ -227,6 +229,14 @@ public class ManageConfig {
 
 	public void setBeeProCacheRedis(BeeProCacheRedis beeProCacheRedis) {
 		this.beeProCacheRedis = beeProCacheRedis;
+	}
+
+	public BeeProSharding getBeeProSharding() {
+		return beeProSharding;
+	}
+
+	public void setBeeProSharding(BeeProSharding beeProSharding) {
+		this.beeProSharding = beeProSharding;
 	}
 
 }

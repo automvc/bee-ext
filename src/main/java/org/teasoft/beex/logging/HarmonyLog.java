@@ -30,7 +30,6 @@ public class HarmonyLog implements org.teasoft.bee.logging.Log {
 
 	@Override
 	public boolean isTraceEnabled() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

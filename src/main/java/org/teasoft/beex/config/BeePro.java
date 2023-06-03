@@ -41,10 +41,11 @@ public class BeePro {
 	private Boolean notCatchModifyDuplicateException;
 	
 	private Boolean notShowModifyDuplicateException;
-
+	
 	private Integer insertBatchSize;
 
 	private Boolean showSQL;
+	private Boolean showShardingSQL;//2.0
 	
 	private String lang;
 
@@ -119,7 +120,7 @@ public class BeePro {
 	public void setNotShowModifyDuplicateException(Boolean notShowModifyDuplicateException) {
 		this.notShowModifyDuplicateException = notShowModifyDuplicateException;
 	}
-
+	
 	public Integer getInsertBatchSize() {
 		return insertBatchSize;
 	}
@@ -134,6 +135,14 @@ public class BeePro {
 
 	public void setShowSQL(Boolean showSQL) {
 		this.showSQL = showSQL;
+	}
+	
+	public Boolean getShowShardingSQL() {
+		return showShardingSQL;
+	}
+
+	public void setShowShardingSQL(Boolean showShardingSQL) {
+		this.showShardingSQL = showShardingSQL;
 	}
 
 	public String getLang() {

@@ -33,13 +33,12 @@ public class AndroidLog implements org.teasoft.bee.logging.Log {
 
 	@Override
 	public boolean isTraceEnabled() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void trace(String msg) {
-		Log.d(DEBUG, msg); // todo
+		Log.d(DEBUG, msg); 
 	}
 
 	@Override

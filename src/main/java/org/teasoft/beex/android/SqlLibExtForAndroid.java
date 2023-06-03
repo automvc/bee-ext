@@ -17,6 +17,7 @@
 
 package org.teasoft.beex.android;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -48,8 +49,8 @@ import android.database.sqlite.SQLiteStatement;
  * @since 1.17
  */
 public class SqlLibExtForAndroid implements BeeSqlForApp {
-
-	private SQLiteDatabase database; // 有事务管理.
+	
+	private SQLiteDatabase database=null; // 有事务管理.
 
 	public SQLiteDatabase getDatabase() {
 
@@ -80,7 +81,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> List<T> select(String sql, T entity, String[] selectionArgs) {
+	public <T> List<T> select(String sql, Class<T> entityClass, String[] selectionArgs) {
 
 		T targetObj = null;
 		List<T> rsList = null;
@@ -98,15 +99,15 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			map = new Hashtable<>();
 
 			while (cursor.moveToNext()) {
-				targetObj = (T) entity.getClass().newInstance();
+				targetObj = entityClass.newInstance();
 
 				for (int i = 0; i < columnCount; i++) {
 					try {
 //						columnName = cursor.getColumnName(i + 1);// 会有异常,但提示不明确. Exception: datatype mismatch
 						columnName = cursor.getColumnName(i); // 列下标,从0开始
-						name = _toFieldName(columnName, entity.getClass());
+						name = _toFieldName(columnName, entityClass);
 						if (isFirst) {
-							field = entity.getClass().getDeclaredField(name);// 可能会找不到Javabean的字段
+							field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 							map.put(name, field);
 						} else {
 							field = map.get(name);
@@ -174,10 +175,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		} catch (android.database.SQLException e) {
 			Logger.error(e.getMessage(), e);
 		} catch (IllegalAccessException e) {
-//			hasException = true;
 			throw ExceptionHelper.convert(e);
 		} catch (InstantiationException e) {
-//		hasException = true;
 			throw ExceptionHelper.convert(e);
 		} finally {
 			close(db);
@@ -468,8 +467,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			default:
 				st.bindString(i + 1, (String) value);
 				
-				
-				//要支持自定义的  TODO
+				//要支持自定义的  todo
 		}
 	}
 
@@ -580,10 +578,10 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object jsonHandlerProcess(Field field, Object obj, TypeHandler jsonHandler) {
 		if (List.class.isAssignableFrom(field.getType())) {
-			Object newOjb[] = new Object[2];
-			newOjb[0] = obj;
-			newOjb[1] = field;
-			obj = jsonHandler.process(field.getType(), newOjb);
+			Object newObj[] = new Object[2];
+			newObj[0] = obj;
+			newObj[1] = field;
+			obj = jsonHandler.process(field.getType(), newObj);
 		} else {
 			obj = jsonHandler.process(field.getType(), obj);
 		}
