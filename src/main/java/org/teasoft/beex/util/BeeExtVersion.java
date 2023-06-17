@@ -30,8 +30,8 @@ public final class BeeExtVersion {
 	
 	private BeeExtVersion() {}
 
-	public static final String version = "1.17";
-	public static final String buildId = "1.17.0.99";
+	public static final String version = "1.17.21";
+	public static final String buildId = version + ".06";
 	
 	static {
 		printVersion();
@@ -42,7 +42,7 @@ public final class BeeExtVersion {
 		
 		Logger.debug("[Bee] ========= Bee    buildId  " + BeeVersion.buildId);
 		Logger.debug("[Bee] ========= Honey  buildId  " + HoneyVersion.buildId);
-		Logger.debug("[Bee] ========= BeeExt buildId " + buildId);
+		Logger.debug("[Bee] ========= BeeExt buildId  " + buildId);
 	}
 
 }
