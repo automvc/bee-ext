@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author.All rights reserved.
+ * Copyright 2016-2023 the original author.All rights reserved.
  * Kingstar(honeysoft@126.com)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,6 +48,12 @@ public class BeeProCache {
 	private String forever;
 
 	private String modifySyn;
+	
+	//V2.1.6
+	private Boolean useLevelTwo; 
+	private Boolean levelOneTolevelTwo; 
+	private Integer levelTwoTimeout; //二级缓存保存时间(秒 second)
+	private String levelTwoEntityList;
 
 	public Integer getTimeout() {
 		return timeout;
@@ -143,6 +149,38 @@ public class BeeProCache {
 
 	public void setModifySyn(String modifySyn) {
 		this.modifySyn = modifySyn;
+	}
+
+	public Boolean getUseLevelTwo() {
+		return useLevelTwo;
+	}
+
+	public void setUseLevelTwo(Boolean useLevelTwo) {
+		this.useLevelTwo = useLevelTwo;
+	}
+
+	public Boolean getLevelOneTolevelTwo() {
+		return levelOneTolevelTwo;
+	}
+
+	public void setLevelOneTolevelTwo(Boolean levelOneTolevelTwo) {
+		this.levelOneTolevelTwo = levelOneTolevelTwo;
+	}
+
+	public Integer getLevelTwoTimeout() {
+		return levelTwoTimeout;
+	}
+
+	public void setLevelTwoTimeout(Integer levelTwoTimeout) {
+		this.levelTwoTimeout = levelTwoTimeout;
+	}
+
+	public String getLevelTwoEntityList() {
+		return levelTwoEntityList;
+	}
+
+	public void setLevelTwoEntityList(String levelTwoEntityList) {
+		this.levelTwoEntityList = levelTwoEntityList;
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author.All rights reserved.
+ * Copyright 2016-2023 the original author.All rights reserved.
  * Kingstar(honeysoft@126.com)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,6 +48,12 @@ public class BeePro {
 	private Boolean showShardingSQL;//2.0
 	
 	private String lang;
+	
+	//2.1.6
+	private Boolean openDefineColumn;
+	private Boolean openFieldTypeHandler;
+	private Boolean closeDefaultParaResultRegistry;
+	private String systemLoggerLevel;
 
 	public String getLoggerType() {
 		return loggerType;
@@ -153,4 +159,36 @@ public class BeePro {
 		this.lang = lang;
 	}
 
+	public Boolean getOpenDefineColumn() {
+		return openDefineColumn;
+	}
+
+	public void setOpenDefineColumn(Boolean openDefineColumn) {
+		this.openDefineColumn = openDefineColumn;
+	}
+
+	public Boolean getOpenFieldTypeHandler() {
+		return openFieldTypeHandler;
+	}
+
+	public void setOpenFieldTypeHandler(Boolean openFieldTypeHandler) {
+		this.openFieldTypeHandler = openFieldTypeHandler;
+	}
+
+	public Boolean getCloseDefaultParaResultRegistry() {
+		return closeDefaultParaResultRegistry;
+	}
+
+	public void setCloseDefaultParaResultRegistry(Boolean closeDefaultParaResultRegistry) {
+		this.closeDefaultParaResultRegistry = closeDefaultParaResultRegistry;
+	}
+
+	public String getSystemLoggerLevel() {
+		return systemLoggerLevel;
+	}
+
+	public void setSystemLoggerLevel(String systemLoggerLevel) {
+		this.systemLoggerLevel = systemLoggerLevel;
+	}
+	
 }
