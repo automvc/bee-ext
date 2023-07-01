@@ -52,8 +52,11 @@ public class BeeProCache {
 	//V2.1.6
 	private Boolean useLevelTwo; 
 	private Boolean levelOneTolevelTwo; 
-	private Integer levelTwoTimeout; //二级缓存保存时间(秒 second)
 	private String levelTwoEntityList;
+	private Integer levelTwoTimeout; //二级缓存保存时间(秒 second)
+	
+	private Double randTimeoutRate; //2.1.7
+	private Boolean randTimeoutAutoRefresh;//2.1.7
 
 	public Integer getTimeout() {
 		return timeout;
@@ -183,4 +186,20 @@ public class BeeProCache {
 		this.levelTwoEntityList = levelTwoEntityList;
 	}
 
+	public Double getRandTimeoutRate() {
+		return randTimeoutRate;
+	}
+
+	public void setRandTimeoutRate(Double randTimeoutRate) {
+		this.randTimeoutRate = randTimeoutRate;
+	}
+
+	public Boolean getRandTimeoutAutoRefresh() {
+		return randTimeoutAutoRefresh;
+	}
+
+	public void setRandTimeoutAutoRefresh(Boolean randTimeoutAutoRefresh) {
+		this.randTimeoutAutoRefresh = randTimeoutAutoRefresh;
+	}
+	
 }

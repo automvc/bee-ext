@@ -17,6 +17,8 @@
 
 package org.teasoft.beex.cache.redis;
 
+import java.util.Random;
+
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.teasoft.bee.osql.Serializer;
 import org.teasoft.honey.osql.core.DefaultBeeExtCache;
@@ -44,15 +46,30 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 
 	private static final String FIELD = "Bee";
 	private static final byte[] FIELD_BYTES = FIELD.getBytes();
-
-//	private static final int TIMEOUT = HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
+	
+	private final Random random=new Random();
+	private int max=0;
+	private int min=0;
+	private int baseNum=0;
 
 	public BeeExtRedisCache() {
 		initRedis();
 	}
 	
 	private int getTimeOUt() {
-		return HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
+		HoneyConfig config = HoneyConfig.getHoneyConfig();
+		int levelTwoTimeout = config.cache_levelTwoTimeout;
+		Double randTimeoutRate = config.cache_randTimeoutRate;
+		boolean randTimeoutAutoRefresh = config.cache_randTimeoutAutoRefresh;
+		if (randTimeoutRate != null && randTimeoutRate > 0 && randTimeoutRate < 1) {
+			if (randTimeoutAutoRefresh || baseNum == 0) {
+				max = (int) (levelTwoTimeout * (1 + randTimeoutRate));
+				min = (int) (levelTwoTimeout * (1 - randTimeoutRate));
+				baseNum = max - min + 1;
+			}
+			return random.nextInt(baseNum) + min;
+		}
+		return levelTwoTimeout;
 	}
 
 	public void initRedis() {

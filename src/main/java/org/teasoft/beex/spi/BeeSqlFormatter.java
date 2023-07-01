@@ -20,7 +20,7 @@ import com.github.vertical_blank.sqlformatter.languages.Dialect;
 
 /**
  * @author Kingstar
- * @since  2.1.6
+ * @since  2.1.7
  */
 public class BeeSqlFormatter implements SqlFormat {
 
