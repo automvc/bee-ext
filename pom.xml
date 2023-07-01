@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.teasoft</groupId>
 	<artifactId>bee-ext</artifactId>
-	<version>2.1.6</version>
+	<version>2.1.7</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -200,7 +200,14 @@
              <version>2.0.23</version>
              <scope>provided</scope>
 		</dependency>
-
+		
+		<dependency>
+             <groupId>com.github.vertical-blank</groupId>
+             <artifactId>sql-formatter</artifactId>
+             <version>2.0.4</version>
+             <scope>provided</scope>
+		</dependency>
+				
 		<!-- if necessary, can import the ohos.jar to java build path -->
 <!-- 	<dependency>
 			<groupId>ohos</groupId>
