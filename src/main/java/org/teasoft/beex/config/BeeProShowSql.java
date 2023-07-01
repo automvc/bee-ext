@@ -28,6 +28,7 @@ public class BeeProShowSql {
 	private Boolean showType;
 
 	private Boolean showExecutableSql;
+	private Boolean sqlFormat; //2.1.6
 
 	private Boolean donotPrintCurrentDate;
 
@@ -45,6 +46,14 @@ public class BeeProShowSql {
 
 	public void setShowExecutableSql(Boolean showExecutableSql) {
 		this.showExecutableSql = showExecutableSql;
+	}
+	
+	public Boolean getSqlFormat() {
+		return sqlFormat;
+	}
+
+	public void setSqlFormat(Boolean sqlFormat) {
+		this.sqlFormat = sqlFormat;
 	}
 
 	public Boolean getDonotPrintCurrentDate() {
