@@ -15,6 +15,7 @@ public class BeeProSharding {
 	private Boolean forkJoinBatchInsert;
 	private Boolean jdbcStreamSelect; 
 	private Boolean notSupportUnionQuery;
+	private Integer executorSize;
 
 	public Boolean getForkJoinBatchInsert() {
 		return forkJoinBatchInsert;
@@ -40,4 +41,12 @@ public class BeeProSharding {
 		this.notSupportUnionQuery = notSupportUnionQuery;
 	}
 
+	public Integer getExecutorSize() {
+		return executorSize;
+	}
+
+	public void setExecutorSize(Integer executorSize) {
+		this.executorSize = executorSize;
+	}
+	
 }

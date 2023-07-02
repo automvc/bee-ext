@@ -42,9 +42,9 @@ public class DdlViaExcel {
 //	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
 	
 	/**
-	 * 
+	 * create table via sheet of excel.
 	 * @param excelFullPath excel FullPath
-	 * @param sheetNames  sheetNames
+	 * @param sheetNames  sheetNames,可以只使用某一个sheet
 	 * @param checkTitle  order:  0:column name; 1: type; 2:comment
 	 */
 	@SuppressWarnings("deprecation")
@@ -74,7 +74,12 @@ public class DdlViaExcel {
 				
 				boolean old=HoneyConfig.getHoneyConfig().showSql_showExecutableSql;
 				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=false;
-				preparedSql.modify(create_sql);
+				try { //V2.1.7 可以只生成部分表
+					preparedSql.modify(create_sql);
+				} catch (Exception e) {
+					Logger.warn(e.getMessage());
+				}
+				
 				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=old;
 				
 			}
@@ -107,6 +112,13 @@ public class DdlViaExcel {
 		return create_sql;
 	}
 	
+	/**
+	 * create table via sheet of excel.
+	 * @param excelFullPath excel FullPath
+	 * @param sheetNames  sheetNames,可以只使用某一个sheet
+	 * @param checkTitle  order:  0:column name; 1: type; 2:comment
+	 * @param isDropExistTable 是否删除已存在的表
+	 */
 	@SuppressWarnings("deprecation")
 	public static void createTable(String excelFullPath, String sheetNames[], String checkTitle,
 			boolean isDropExistTable) {
