@@ -54,6 +54,10 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 
 	private RdbStore rdbStore; 
 
+	/**
+	 * 不推荐在多线程环境下使用;若使用,由使用者保证线程安全.
+	 * @return RdbStore instance
+	 */
 	public RdbStore getRdbStore() {
 
 		// 从上下文获取

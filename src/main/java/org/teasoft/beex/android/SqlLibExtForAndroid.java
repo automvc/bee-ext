@@ -52,9 +52,9 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 //	private SQLiteDatabase database=null; // 有事务管理.    close in 2.1.7
 
 	/**
-	 * 当用户在多线程程环境下使用时,线程的安全由用户保证
+	 * 不推荐在多线程环境下使用;若使用,由使用者保证线程安全.
 	 * V2.1.7 改为每个操作都重新获取.
-	 * @return SQLiteDatabase
+	 * @return SQLiteDatabase instance
 	 */
 	public SQLiteDatabase getDatabase() {
 		

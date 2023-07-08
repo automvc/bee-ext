@@ -30,33 +30,52 @@ import org.teasoft.bee.spi.AnnoAdapter;
  * @since  1.17
  */
 public class AnnoAdapterDefault implements AnnoAdapter {
+	
+	private boolean jakarta=false;
+	private boolean xjpa=false;
+	
+	public AnnoAdapterDefault() {
+		try {
+			Class.forName("jakarta.persistence.Table"); // check
+			jakarta = true;
+		} catch (Exception e) {
+			// ignore
+		}
+
+		try {
+			Class.forName("javax.persistence.Table"); // check
+			xjpa = true;
+		} catch (Exception e) {
+			// ignore
+		}
+	}
 
 	@Override
 	public boolean isPrimaryKey(Field field) {
 		return field.isAnnotationPresent(PrimaryKey.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Id.class)
-				|| field.isAnnotationPresent(javax.persistence.Id.class);
+				|| (jakarta && field.isAnnotationPresent(jakarta.persistence.Id.class))
+				|| (xjpa && field.isAnnotationPresent(javax.persistence.Id.class));
 	}
 
 	@Override
 	public boolean isTable(Class<?> clazz) {
 		return clazz.isAnnotationPresent(Table.class)
-				|| clazz.isAnnotationPresent(jakarta.persistence.Table.class)
-				|| clazz.isAnnotationPresent(javax.persistence.Table.class);
+				|| (jakarta && clazz.isAnnotationPresent(jakarta.persistence.Table.class))
+				|| (xjpa && clazz.isAnnotationPresent(javax.persistence.Table.class));
 	}
 
 	@Override
 	public boolean isColumn(Field field) {
 		return field.isAnnotationPresent(Column.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Column.class)
-				|| field.isAnnotationPresent(javax.persistence.Column.class);
+				|| (jakarta && field.isAnnotationPresent(jakarta.persistence.Column.class))
+				|| (xjpa && field.isAnnotationPresent(javax.persistence.Column.class));
 	}
 	
 	@Override
 	public boolean isIgnore(Field field) {
 		return field.isAnnotationPresent(Ignore.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Transient.class)
-				|| field.isAnnotationPresent(javax.persistence.Transient.class);
+				|| (jakarta && field.isAnnotationPresent(jakarta.persistence.Transient.class))
+				|| (xjpa && field.isAnnotationPresent(javax.persistence.Transient.class));
 	}
 
 	@Override
@@ -67,15 +86,13 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 			return column.value();
 		}
 
-		if (field.isAnnotationPresent(jakarta.persistence.Column.class)) {
-			jakarta.persistence.Column column = field
-					.getAnnotation(jakarta.persistence.Column.class);
+		if (jakarta && field.isAnnotationPresent(jakarta.persistence.Column.class)) {
+			jakarta.persistence.Column column = field.getAnnotation(jakarta.persistence.Column.class);
 			return column.name();
 		}
 
-		if (field.isAnnotationPresent(javax.persistence.Column.class)) {
-			javax.persistence.Column column = field
-					.getAnnotation(javax.persistence.Column.class);
+		if (xjpa && field.isAnnotationPresent(javax.persistence.Column.class)) {
+			javax.persistence.Column column = field.getAnnotation(javax.persistence.Column.class);
 			return column.name();
 		}
 
@@ -89,10 +106,14 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 			Table tab = (Table) clazz.getAnnotation(Table.class);
 			return tab.value();
 		}
+		
+		if (jakarta && clazz.isAnnotationPresent(jakarta.persistence.Table.class)) {
+			jakarta.persistence.Table tab = (jakarta.persistence.Table) clazz.getAnnotation(jakarta.persistence.Table.class);
+			return tab.name();
+		}
 
-		if (clazz.isAnnotationPresent(javax.persistence.Table.class)) {
-			javax.persistence.Table tab = (javax.persistence.Table) clazz
-					.getAnnotation(javax.persistence.Table.class);
+		if (xjpa && clazz.isAnnotationPresent(javax.persistence.Table.class)) {
+			javax.persistence.Table tab = (javax.persistence.Table) clazz.getAnnotation(javax.persistence.Table.class);
 			return tab.name();
 		}
 
