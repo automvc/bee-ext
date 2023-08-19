@@ -121,13 +121,19 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 	
 	@Override
 	public String uploadFile(String filename, InputStream fileStream) {
-		return getMongodbBeeSql().uploadFile(filename, fileStream);
+		_doBeforePasreEntity();
+		String r= getMongodbBeeSql().uploadFile(filename, fileStream);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
 	public String uploadFile(String filename, InputStream fileStream,
 			Map<String, Object> metadataMap) {
-		return getMongodbBeeSql().uploadFile(filename, fileStream, metadataMap);
+		_doBeforePasreEntity();
+		String r= getMongodbBeeSql().uploadFile(filename, fileStream, metadataMap);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
@@ -138,46 +144,72 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 		doBeforeReturn(list);
 		return list;
 	}
+	
+	private void _doBeforePasreEntity() {
+		Object entity=null;
+		doBeforePasreEntity(entity, SuidType.SELECT);
+	}
 
 	@Override
 	public byte[] getFileByName(String fileName) {
-		return getMongodbBeeSql().getFileByName(fileName);
+		_doBeforePasreEntity();
+		byte[] r= getMongodbBeeSql().getFileByName(fileName);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
 	public byte[] getFileById(String fileId) {
-		return getMongodbBeeSql().getFileById(fileId);
+		_doBeforePasreEntity();
+		byte[] r= getMongodbBeeSql().getFileById(fileId);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
 	public void renameFile(String fileId, String newName) {
+		_doBeforePasreEntity();
 		getMongodbBeeSql().renameFile(fileId, newName);
+		doBeforeReturn();
 	}
 
 	@Override
 	public void deleteFile(String fileId) {
+		_doBeforePasreEntity();
 		getMongodbBeeSql().deleteFile(fileId);
+		doBeforeReturn();
 	}
 
 	//------------------------------------create index-------------------------------
 	@Override
 	public String index(String collectionName, String fieldName, IndexType indexType) {
-		return ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+		_doBeforePasreEntity();
+		String r= ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
 	public String unique(String collectionName, String fieldName, IndexType indexType) {
-		return ((MongodbSqlLib) getMongodbBeeSql()).unique(collectionName, fieldName, indexType);
+		_doBeforePasreEntity();
+		String r= ((MongodbSqlLib) getMongodbBeeSql()).unique(collectionName, fieldName, indexType);
+		doBeforeReturn();
+		return r;
 	}
 
 	@Override
 	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
-		return ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+		_doBeforePasreEntity();
+		List<String> list= ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+		doBeforeReturn();
+		return list;
 	}
 
 	@Override
 	public void dropIndexes(String collectionName) {
+		_doBeforePasreEntity();
 		((MongodbSqlLib) getMongodbBeeSql()).dropIndexes(collectionName);
+		doBeforeReturn();
 	}
 
 	
@@ -280,7 +312,7 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 	}
 	
 	
-	//----------------------GEO-----------------------...-----------------------------
+	//----------------------GEO-----------------------
 	
 	@Override
 	public <T> List<T> near(T entity, String fieldName, double x, double y, Double maxDistance,
