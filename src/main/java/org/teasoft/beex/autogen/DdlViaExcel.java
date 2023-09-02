@@ -19,11 +19,15 @@ package org.teasoft.beex.autogen;
 
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 
 import org.teasoft.bee.osql.api.PreparedSql;
 import org.teasoft.beex.poi.ExcelReader;
+import org.teasoft.honey.osql.autogen.DdlToSql;
+import org.teasoft.honey.osql.autogen.Java2DbType;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
@@ -64,13 +68,19 @@ public class DdlViaExcel {
 			}
 			List<String[]> list =null;
 			PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
+			String create_sql ="";
 			for (int i = 0; i < NUM; i++) {
 				String tableName = getTableNameBySheetName(sheetNames[i]);
 				String tableComment = getTableCommentBySheetName(sheetNames[i]);
 				list = ExcelReader.readExcel(excelFullPath, sheetNames[i], 1, -1); // by sheet name, 获取从第1行开始所有的行
-				String create_sql = toCreateTableSQLForMySQL(list, tableName);
 				
-				create_sql = addTableComment(create_sql, tableComment);
+				// mysql
+				if (HoneyUtil.isMysql()) {
+					create_sql = toCreateTableSQLForMySQL(list, tableName);
+					create_sql = addTableComment(create_sql, tableComment);
+				} else {//V2.1.8  其它  不提供添加注释
+					create_sql = toCreateTableSQLComm(list, tableName);
+				}
 				
 				boolean old=HoneyConfig.getHoneyConfig().showSql_showExecutableSql;
 				if(old) HoneyConfig.getHoneyConfig().showSql_showExecutableSql=false;
@@ -165,7 +175,7 @@ public class DdlViaExcel {
 
 	//MySQL
 	/**
-	 * 
+	 * 生成创建表语句.Generate Create Table Statement.
 	 * @param list element is String[], order: 0:column name; 1: type; 2:comment
 	 * @param tableName  table name
 	 * @return  Create table SQL string
@@ -182,7 +192,6 @@ public class DdlViaExcel {
 			if(StringUtils.isBlank(col[0])) continue;
 			
 			if (isFirst) {  //首次不加逗号,当有下一行时,才为上一行加逗号
-//				sqlBuffer.append("  ");
 				isFirst=false;
 			}else {
 				sqlBuffer.append(",  ");
@@ -192,7 +201,13 @@ public class DdlViaExcel {
 			//0:column name; 1: type; 2:comment
 			sqlBuffer.append(col[0]).append("  ");
 			if ("id".equalsIgnoreCase(col[0])) {
-				sqlBuffer.append("bigint(20) PRIMARY KEY NOT NULL AUTO_INCREMENT");
+				String type = col[1];
+				if ("int".equals(type)) //V2.1.8
+					sqlBuffer.append("int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT");
+				else if (StringUtils.isBlank(type)) 
+					sqlBuffer.append("varchar(255) PRIMARY KEY NOT NULL");
+				else
+					sqlBuffer.append("bigint(20) PRIMARY KEY NOT NULL AUTO_INCREMENT");
 			} else {
 				String type = col[1];
 				if (StringUtils.isBlank(type)) {
@@ -217,6 +232,67 @@ public class DdlViaExcel {
 		sqlBuffer.append(LINE_SEPARATOR);
 		sqlBuffer.append(" )");
 		return sqlBuffer.toString();
+	}
+	
+	
+	/**
+	 * 生成创建表语句,但不提供添加注释.Generate a statement to create a table, but do not provide adding comments.
+	 * @param list element is String[], order: 0:column name; 1: type; 2:comment
+	 * @param tableName  table name
+	 * @return  Create table SQL string
+	 * @since 2.1.8
+	 */
+	public static String toCreateTableSQLComm(List<String[]> list, String tableName) {
+		
+		String databaseName=HoneyConfig.getHoneyConfig().getDbName();
+		StringBuilder sqlBuffer = new StringBuilder();
+		sqlBuffer.append(CREATE_TABLE + tableName + " (").append(LINE_SEPARATOR);
+
+		String col[] = null;
+        boolean isFirst=true;		
+		for (int i = 0; list != null && i < list.size(); i++) {
+			col = list.get(i);
+			if(StringUtils.isBlank(col[0])) continue;
+			
+			if (isFirst) {  //首次不加逗号,当有下一行时,才为上一行加逗号
+				isFirst=false;
+			}else {
+				sqlBuffer.append(",  ");
+				sqlBuffer.append(LINE_SEPARATOR);
+			}
+			
+			//0:column name; 1: type; 2:comment
+			sqlBuffer.append(col[0]).append("  ");
+			if ("id".equalsIgnoreCase(col[0])) {
+				String type = col[1];
+				if (!"string".equalsIgnoreCase(type))
+					sqlBuffer.append(DdlToSql.getPrimaryKeyStatement(databaseName));// different
+				else
+					sqlBuffer.append(DdlToSql.getStringPrimaryKeyStatement(databaseName));
+			} else {
+				String type = col[1];
+				
+				if (type == null) {
+					type = getJava2DbType().get("String");
+				}
+				sqlBuffer.append(type);
+				
+				if ("timestamp".equalsIgnoreCase(type) || "datetime".equalsIgnoreCase(type)) {
+					sqlBuffer.append(" DEFAULT CURRENT_TIMESTAMP");
+				} else {
+					sqlBuffer.append(" DEFAULT NULL");
+				}
+			}
+			
+//			no COMMENT part 
+		}
+		sqlBuffer.append(LINE_SEPARATOR);
+		sqlBuffer.append(" )");
+		return sqlBuffer.toString();
+	}
+	
+	private static Map<String, String> getJava2DbType() {  //可能返回null
+		return Java2DbType.getJava2DbType(HoneyContext.getDbDialect());
 	}
 
 }
