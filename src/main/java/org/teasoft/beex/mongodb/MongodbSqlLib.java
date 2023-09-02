@@ -2477,19 +2477,25 @@ public class MongodbSqlLib extends AbstractBase
 //			db.Noid0.find({"$or": [{"_id": {"$oid": "643fcd4b81c72a273cdebdf7"}}, {"_id": {"$oid": "643fcd57eb4c0000c9002626"}}, {"_id": "ewewewewew"}]})
 //			db.Noid0.find({"$or": [{"_id": ObjectId("643fcd4b81c72a273cdebdf7")}, {"_id": ObjectId("643fcd57eb4c0000c9002626")}, {"_id": "ewewewewew"}]})
 		}
+		
+		boolean isSelectAllFields=HoneyContext.isTrueInSysCommStrLocal(StringConst.MongoDB_SelectAllFields);
+		boolean showMongoSelectAllFields=HoneyConfig.getHoneyConfig().showMongoSelectAllFields;
+		
+		if (showMongoSelectAllFields || ! isSelectAllFields) { //假如查全部,不需要显示这些
+			String[] selectFields = struct.getSelectFields();
+			boolean hasId = struct.isHasId();
+			if (selectFields != null) {
+				Map<String, Integer> map = new LinkedHashMap<>();
+				for (String s : selectFields) {
+					map.put(s, 1);
+				}
+				if (!hasId) map.put("_id", -1);
 
-		String[] selectFields = struct.getSelectFields();
-		boolean hasId = struct.isHasId();
-		if (selectFields != null) {
-			Map<String, Integer> map = new LinkedHashMap<>();
-			for (String s : selectFields) {
-				map.put(s, 1);
+				BasicDBObject projection = new BasicDBObject(map);
+				sql.append(",");
+				sql.append(projection.toString());
 			}
-			if (!hasId) map.put("_id", -1);
 
-			BasicDBObject projection = new BasicDBObject(map);
-			sql.append(",");
-			sql.append(projection.toString());
 		}
 
 		sql.append(")");
