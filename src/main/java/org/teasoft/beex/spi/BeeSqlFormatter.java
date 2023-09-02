@@ -27,8 +27,8 @@ public class BeeSqlFormatter implements SqlFormat {
 	private static final long serialVersionUID = 1592803913618L;
 	
 	private static Map<String, Formatter> cacheFormatter;
-	private static boolean isFirst = true;
-	private static byte lock[] = new byte[0];
+	private static volatile boolean isFirst = true;
+	private static final byte lock[] = new byte[0];
 
 	private static boolean isOneDs = true;
 
