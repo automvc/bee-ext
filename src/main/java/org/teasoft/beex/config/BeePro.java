@@ -42,6 +42,8 @@ public class BeePro {
 	
 	private Boolean notShowModifyDuplicateException;
 	
+	private Boolean showMongoSelectAllFields;
+	
 	private Integer insertBatchSize;
 
 	private Boolean showSQL;
@@ -127,6 +129,14 @@ public class BeePro {
 		this.notShowModifyDuplicateException = notShowModifyDuplicateException;
 	}
 	
+	public Boolean getShowMongoSelectAllFields() {
+		return showMongoSelectAllFields;
+	}
+
+	public void setShowMongoSelectAllFields(Boolean showMongoSelectAllFields) {
+		this.showMongoSelectAllFields = showMongoSelectAllFields;
+	}
+
 	public Integer getInsertBatchSize() {
 		return insertBatchSize;
 	}
