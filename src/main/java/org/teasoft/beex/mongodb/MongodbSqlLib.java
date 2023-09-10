@@ -88,6 +88,7 @@ import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectFunEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectJsonEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListStringArrayEngine;
 import org.teasoft.honey.util.ObjectUtils;
+import org.teasoft.honey.util.StreamUtil;
 import org.teasoft.honey.util.StringParser;
 import org.teasoft.honey.util.StringUtils;
 
@@ -279,7 +280,16 @@ public class MongodbSqlLib extends AbstractBase
 			String fileColumnName = (String) map.get(StringConst.GridFs_FileColumnName);
 			String filename_key = (String) map.get(StringConst.GridFs_FileName);
 			String filename_value = (String) map.get(filename_key);
-			InputStream source = (InputStream) map.get(fileColumnName);
+//			InputStream source = (InputStream) map.get(fileColumnName);
+			Object source0 =  map.get(fileColumnName);
+			InputStream source=null;
+			
+			if (byte[].class.equals(source0.getClass())) {
+				source =StreamUtil.byteArray2Stream((byte[])source0);
+//			} else if (InputStream.class.equals(source0.getClass())) {
+			} else if (InputStream.class.isAssignableFrom(source0.getClass())) {
+				source = (InputStream) source0;
+			} 
 
 			// 如何区分哪些是metadataMap??? 使用注解?? 标明哪些字段作为Metadata??    使用GridFsMetadata注解标注的Map<String,Object>
 			Map<String, Object> metadataMap = (Map<String, Object>) map.get(GridFsMetadata.class.getName());
@@ -311,10 +321,73 @@ public class MongodbSqlLib extends AbstractBase
 
 			MongoSqlStruct struct = parseMongoSqlStruct(entity, condition, "List<T>");
 			Class<T> entityClass = toClassT(entity);
-
-			return select(struct, entityClass);
+			
+			List<T> list= select(struct, entityClass);
+			
+			fillGridFs(entityClass, condition, list); //文件没有放缓存;每次都是重新获取；       //上下文处理？？
+			
+			return list;
 		}
 	}
+	
+	private <T> void fillGridFs(Class<T> entityClass, Condition condition, List<T> list) {
+		
+		Map<String, Object> map = ParaConvertUtil.toMapForGridFsSelect(entityClass, getIncludeType(condition));
+		if (map == null || map.size() == 0) return;
+
+		if (map.containsKey(StringConst.GridFs_FileId)) {
+			String fileColumnName = (String) map.get(StringConst.GridFs_FileColumnName);
+			String filename_name = (String) map.get(StringConst.GridFs_FileName); // 存文件名的字段名
+			String fileid_name = (String) map.get(StringConst.GridFs_FileId); // 存文件id的字段名
+
+			boolean isByteArray = false;
+			boolean isInputStream = false;
+			boolean isFirst = true;
+
+			byte[] data = null;
+			for (T t : list) { //更新查询到的list
+				try {
+					Field field3 = t.getClass().getDeclaredField(fileColumnName);
+					if (isFirst) {
+						isFirst = false;
+						if (byte[].class.equals(field3.getType())) {
+							isByteArray = true;
+						} else if (InputStream.class.equals(field3.getType())) {
+							isInputStream = true;
+						} else {
+							break;
+						}
+					}
+
+					Field field = t.getClass().getDeclaredField(fileid_name);
+					field.setAccessible(true);
+					String fileid_value = (String) field.get(t);
+					if (StringUtils.isNotBlank(fileid_value)) {
+						// 上下文处理？？
+						data = getFileById(fileid_value); // fileid_value为GridFs文件对应的fileid,插入后会存入实体表对应的字段fileid_name(若有);查询时即可使用
+					} else {
+						Field field2 = t.getClass().getDeclaredField(filename_name); // GridFs文件对应的文件名字段的名称
+						field2.setAccessible(true);
+						String filename_value = (String) field2.get(t); // 文件名的值:filename_value
+						if (StringUtils.isNotBlank(filename_value)) {
+							data = getFileByName(filename_value);
+						}
+					}
+
+					field3.setAccessible(true);
+					if (isByteArray) {
+						field3.set(t, data);
+					} else if (isInputStream) {
+						field3.set(t, StreamUtil.byteArray2Stream(data));
+					}
+
+				} catch (Exception e) {
+                    Logger.debug(e.getMessage(), e);
+				}
+			}
+		}
+	}
+	
 	
 	@Override
 	public <T> List<T> selectById(Class<T> entityClass, Object id) {
@@ -333,7 +406,11 @@ public class MongodbSqlLib extends AbstractBase
 		MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, filter, null, null,
 				null, null, true,entityClass);
 
-		return select(struct, entityClass);
+		List<T> list= select(struct, entityClass);
+		fillGridFs(entityClass, null, list); 
+		
+		return list;
+		
 	}
 	
 	@Override
@@ -349,7 +426,10 @@ public class MongodbSqlLib extends AbstractBase
 		MongoSqlStruct struct = new MongoSqlStruct("List<T>", tableName, filter, sortBson, null,
 				null, null, true,entityClass);
 		
-		return select(struct, entityClass);
+		List<T> list= select(struct, entityClass);
+		fillGridFs(entityClass, null, list); 
+		
+		return list;
 	}
 	
 	//用于判断单源和分片的, selectById也可以用
@@ -563,7 +643,7 @@ public class MongodbSqlLib extends AbstractBase
 		if (condition != null) condition.setSuidType(SuidType.SELECT);
 
 		String tableName = _toTableName(entity);
-		BasicDBObject filter = toDBObject(entity, condition);
+		BasicDBObject filter = toDBObjectForFilter(entity, condition);
 		Bson sortBson = ParaConvertUtil.toSortBson(condition);
 		
 		Integer size = null;
@@ -646,7 +726,7 @@ public class MongodbSqlLib extends AbstractBase
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> int delete(T entity, Condition condition) {
 		String tableName = _toTableName(entity);
-		BasicDBObject filter = toDBObject(entity, condition);
+		BasicDBObject filter = toDBObjectForFilter(entity, condition);
 		
 		int num = 0;
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
@@ -1166,7 +1246,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	public <T> int count(T entity, Condition condition) {
 		String tableName = _toTableName(entity);
-		BasicDBObject filter = toDBObject(entity, condition);
+		BasicDBObject filter = toDBObjectForFilter(entity, condition);
 
 		Class<T> entityClass = toClassT(entity);
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null, null,
@@ -1331,7 +1411,7 @@ public class MongodbSqlLib extends AbstractBase
 //		 last pipeline stage can not be null     不能在这拆分
 		
 		String tableName = _toTableName(entity);
-		BasicDBObject filter = toDBObject(entity, condition);
+		BasicDBObject filter = toDBObjectForFilter(entity, condition);
 		
 		Bson funBson = null;
 		if ("id".equalsIgnoreCase(fieldForFun)) fieldForFun = IDKEY;
@@ -1485,7 +1565,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		String tableName = _toTableName(entity);
 
-		BasicDBObject filter = toDBObject(entity, condition); // 加过滤条件.
+		BasicDBObject filter = toDBObjectForFilter(entity, condition); // 加过滤条件.
 
 		DatabaseClientConnection conn = getConn();
 		try {
@@ -1697,7 +1777,8 @@ public class MongodbSqlLib extends AbstractBase
 		return condition.getIncludeType() == null ? -1 : condition.getIncludeType().getValue();
 	}
 	
-	private <T> BasicDBObject toDBObject(T entity, Condition condition) {
+	//用于过滤条件
+	private <T> BasicDBObject toDBObjectForFilter(T entity, Condition condition) {
 //		Document doc = null;
 		BasicDBObject doc = null;
 		try {
@@ -1713,7 +1794,17 @@ public class MongodbSqlLib extends AbstractBase
 			if (ObjectUtils.isNotEmpty(map) && ObjectUtils.isNotEmpty(map2))
 				map.putAll(map2); // map的值,会被map2中有同样key的值覆盖.
 			else if (ObjectUtils.isEmpty(map)) map = map2;
-
+			
+			//toMapForGridFsSelect   没用.   要在查fs时才有用.       //与插入不同.  插入也是放在fs
+//			Map<String, Object> map3=ParaConvertUtil.toMapForGridFsSelect(entity.getClass(), getIncludeType(condition));
+//			if(ObjectUtils.isNotEmpty(map3) ) {
+//			  Object metadata=map3.get(StringConst.GridFsMetadata_FieldName);
+//			}
+//			Map<String,Object> metadata=new HashMap<>();
+//			metadata.put("type", "txt-7z-23");
+//			history.setMetadata(metadata);   // select时,可以作为过滤条件吗?  可以   db.fs.files.find({"metadata.type":"7z"});
+//			JAVA Mongodb驱动,没有相应接口.
+			
 			if (ObjectUtils.isNotEmpty(map)) doc = newDBObject(map);
 
 		} catch (Exception e) {
@@ -2246,11 +2337,13 @@ public class MongodbSqlLib extends AbstractBase
 	
 	@Override
 	public byte[] getFileByName(String fileName) {
+		logSQL("getFileByName, fileName: "+fileName);
 		return _getFileByKey(fileName);
 	}
 	
 	@Override
 	public byte[] getFileById(String fileId) {
+		logSQL("getFileById, fileId: "+fileId);
 		return _getFileByKey(new ObjectId(fileId));
 	}
 

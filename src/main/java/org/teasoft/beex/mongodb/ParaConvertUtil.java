@@ -37,9 +37,11 @@ import org.teasoft.bee.sharding.ShardingSortStruct;
 import org.teasoft.honey.osql.constant.NullEmpty;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.HoneyUtil;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
+import org.teasoft.honey.osql.util.AnnoUtil;
 import org.teasoft.honey.sharding.ShardingUtil;
 
 import com.mongodb.BasicDBObject;
@@ -71,7 +73,9 @@ public class ParaConvertUtil {
 		Object value = null;
 		for (int i = 0; i < len; i++) {
 			fields[i].setAccessible(true);
-			if (HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
+			if (((suidType == SuidType.INSERT && !AnnoUtil.isGridFs(fields[i])
+					&& !AnnoUtil.isGridFsMetadata(fields[i])) || suidType != SuidType.INSERT)
+					&& HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
 				continue;
 			} else {
 				if (isFirst) {
@@ -89,7 +93,7 @@ public class ParaConvertUtil {
 					if (converter != null) {
 						value=(String)converter.convert(value);
 					}
-				}else if(value!=null && suidType==SuidType.INSERT && fields[i].isAnnotationPresent(GridFs.class)) { //V2.1 一个实体只支持一个文件
+				}else if(value!=null && suidType==SuidType.INSERT && AnnoUtil.isGridFs(fields[i])) { //V2.1 一个实体只支持一个文件
 					GridFs sysValue = fields[i].getAnnotation(GridFs.class);
 					String fileid = sysValue.fileIdName();
 					String filename = sysValue.fileName();
@@ -99,8 +103,7 @@ public class ParaConvertUtil {
 					documentAsMap.put(StringConst.GridFs_FileName, filename);
 					documentAsMap.put(StringConst.GridFs_FileColumnName, column);
 				} else if (value != null && suidType == SuidType.INSERT
-						&& (fields[i].isAnnotationPresent(Geo2dsphere.class) || fields[i]
-								.getType().isAnnotationPresent(Geo2dsphere.class))) {
+						&& (fields[i].isAnnotationPresent(Geo2dsphere.class) || fields[i].getType().isAnnotationPresent(Geo2dsphere.class))) {
 					Map m = toMap(value);
 					if (m.get("coordinates") instanceof Double[]) {
 						m.put("coordinates", Arrays.asList((Double[]) m.get("coordinates")));
@@ -113,9 +116,9 @@ public class ParaConvertUtil {
 				if ("_id".equalsIgnoreCase(column) && value == null) {
 					// ignore
 				} else {
-					if (value != null && fields[i].isAnnotationPresent(GridFsMetadata.class)) {
+					if (value != null && AnnoUtil.isGridFsMetadata(fields[i]) && suidType==SuidType.INSERT) {
 						documentAsMap.put(GridFsMetadata.class.getName(), value);
-					} else {
+					} else if (suidType==SuidType.INSERT || (!AnnoUtil.isGridFs(fields[i]) && ! AnnoUtil.isGridFsMetadata(fields[i]))) { //不是这两种注解的才返回; 是这两种的,在上面已处理
 						documentAsMap.put(column, value);
 					}
 				}
@@ -124,6 +127,60 @@ public class ParaConvertUtil {
 
 		return documentAsMap;
 	}
+	
+	public static Map<String, Object> toMapForGridFsSelect(Class entityClass, int includeType) {
+		Map<String, Object> documentAsMap = null;
+		Field fields[] = entityClass.getDeclaredFields();
+		boolean isFirst = true;
+		int len = fields.length;
+		String column = "";
+//		Object value = null;
+		for (int i = 0; i < len; i++) {
+
+			try {
+
+				fields[i].setAccessible(true);
+//				if (HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
+//					continue;
+//				} else {
+					if (isFirst) {
+						isFirst = false;
+						documentAsMap = new LinkedHashMap<String, Object>();
+					}
+					column = _toColumnName(fields[i].getName(), entityClass);
+					if ("id".equalsIgnoreCase(column)) {// 替换id为_id
+						column = "_id";
+					}
+//					value = fields[i].get(entity); // value
+					if (AnnoUtil.isGridFs(fields[i])) { // V2.1 一个实体只支持一个文件
+						GridFs sysValue = fields[i].getAnnotation(GridFs.class);
+						String fileid = sysValue.fileIdName();
+						String filename = sysValue.fileName();
+						fileid = _toColumnName(fileid, entityClass);
+						filename = _toColumnName(filename, entityClass);
+						documentAsMap.put(StringConst.GridFs_FileId, fileid);
+						documentAsMap.put(StringConst.GridFs_FileName, filename);
+						documentAsMap.put(StringConst.GridFs_FileColumnName, column);
+					}
+					
+//					else if (AnnoUtil.isGridFsMetadata(fields[i])) {  //处理结果不需要GridFsMetadata注解对应的字段.  过虑时,mongo JAVA api
+//						documentAsMap.put(StringConst.GridFsMetadata_FieldName,fields[i].getName());
+//					}
+					
+					//GridFsMetadata对应map的值,是传入的实体,不是查询出来的. TODO
+//					else if (value != null && fields[i].isAnnotationPresent(GridFsMetadata.class)) {
+//						documentAsMap.put(GridFsMetadata.class.getName(), value);
+
+//				}
+
+			} catch (Exception e) {
+				Logger.debug(e.getMessage());
+			}
+		} // end for
+
+		return documentAsMap;
+	}
+	
 	
 //	private static List<Double> toDoubleList(Double dArray[]) {
 //		if(dArray==null || dArray.length==0) return new ArrayList<>(); 
