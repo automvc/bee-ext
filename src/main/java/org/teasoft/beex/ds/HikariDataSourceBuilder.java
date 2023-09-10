@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.teasoft.bee.ds.DataSourceBuilder;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.Converter;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -45,6 +46,7 @@ public class HikariDataSourceBuilder implements DataSourceBuilder {
 			map.put("driverClassName", map.get("driverName"));
 			map.remove("driverName");
 		}
+		Logger.info("[Bee] Using HikariDataSourceBuilder...");
 		return new HikariDataSource(new HikariConfig(Converter.map2Prop(map)));
 	}
 

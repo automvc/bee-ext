@@ -49,6 +49,8 @@ public class BeeMongodbSimpleDataSourceBuilder implements DataSourceBuilder {
 			url = processOptionKeys(properties, url);
 			
 			ds = new MongodbSimpleDataSource(url, username, password);
+			
+			Logger.info("[Bee] Using BeeMongodbSimpleDataSourceBuilder...");
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}

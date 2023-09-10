@@ -17,6 +17,7 @@ import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 /**
+ * bee.db.dbs[i].type=BeeSimpleDs
  * @author Kingstar
  * @since  2.1.8
  */
@@ -36,6 +37,8 @@ public class BeeSimpleDataSourceBuilder implements DataSourceBuilder {
 			String password = properties.getOrDefault("password", "");
 
 			ds = new SimpleDataSource(url, username, password);
+			
+			Logger.info("[Bee] Using BeeSimpleDataSourceBuilder...");
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}

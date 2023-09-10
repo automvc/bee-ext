@@ -38,7 +38,7 @@ public class Dbcp2DataSourceBuilder implements DataSourceBuilder {
 		DataSource ds = null;
 		try {
 			ds = BasicDataSourceFactory.createDataSource(Converter.map2Prop(propertiesMap));
-
+			Logger.info("[Bee] Using Dbcp2DataSourceBuilder...");
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}

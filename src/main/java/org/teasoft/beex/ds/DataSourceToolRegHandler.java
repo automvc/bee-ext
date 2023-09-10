@@ -37,7 +37,7 @@ public class DataSourceToolRegHandler {
 		DataSourceBuilderFactory.register("C3p0", new C3p0DataSourceBuilder());
 		DataSourceBuilderFactory.register("Tomcat", new TomcatDataSourceBuilder());
 		DataSourceBuilderFactory.register("BeeSimpleDs", new BeeSimpleDataSourceBuilder()); //V2.1.8
-		DataSourceBuilderFactory.register("BeeSingleThreadDs", new BeeSingleThreadDataSourceBuilder()); //V2.1.8
+//		DataSourceBuilderFactory.register("BeeSingleThreadDs", new BeeSingleThreadDataSourceBuilder()); //V2.1.8
 		
 //		DataSourceBuilderFactory.register("BeeMongo", new BeeMongodbSimpleDataSourceBuilder());
 	}

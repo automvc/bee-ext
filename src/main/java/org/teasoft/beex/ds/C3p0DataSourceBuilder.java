@@ -124,6 +124,8 @@ public class C3p0DataSourceBuilder implements DataSourceBuilder {
 		if((tempBoolean=getBoolean(p,"debugUnreturnedConnectionStackTraces"))!=null) ds.setDebugUnreturnedConnectionStackTraces(tempBoolean);
 		if((tempBoolean=getBoolean(p,"forceSynchronousCheckins"))!=null) ds.setForceSynchronousCheckins(tempBoolean);
 
+		Logger.info("[Bee] Using C3p0DataSourceBuilder...");
+		
 		return ds;
 	}
 

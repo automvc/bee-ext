@@ -38,6 +38,7 @@ public class DruidDataSourceBuilder implements DataSourceBuilder {
 		DataSource ds = null;
 		try {
 			ds = DruidDataSourceFactory.createDataSource(propertiesMap);
+			Logger.info("[Bee] Using DruidDataSourceBuilder...");
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}
