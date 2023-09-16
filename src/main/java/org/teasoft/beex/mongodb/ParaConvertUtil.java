@@ -72,7 +72,8 @@ public class ParaConvertUtil {
 		String column = "";
 		Object value = null;
 		for (int i = 0; i < len; i++) {
-			fields[i].setAccessible(true);
+//			fields[i].setAccessible(true);
+			HoneyUtil.setAccessibleTrue(fields[i]);
 			if (((suidType == SuidType.INSERT && !AnnoUtil.isGridFs(fields[i])
 					&& !AnnoUtil.isGridFsMetadata(fields[i])) || suidType != SuidType.INSERT)
 					&& HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
@@ -139,7 +140,9 @@ public class ParaConvertUtil {
 
 			try {
 
-				fields[i].setAccessible(true);
+//				fields[i].setAccessible(true);
+				HoneyUtil.setAccessibleTrue(fields[i]);
+				
 //				if (HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
 //					continue;
 //				} else {

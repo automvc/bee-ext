@@ -360,25 +360,28 @@ public class MongodbSqlLib extends AbstractBase
 					}
 
 					Field field = t.getClass().getDeclaredField(fileid_name);
-					field.setAccessible(true);
+//					field.setAccessible(true);
+					HoneyUtil.setAccessibleTrue(field);
 					String fileid_value = (String) field.get(t);
 					if (StringUtils.isNotBlank(fileid_value)) {
 						// 上下文处理？？
 						data = getFileById(fileid_value); // fileid_value为GridFs文件对应的fileid,插入后会存入实体表对应的字段fileid_name(若有);查询时即可使用
 					} else {
 						Field field2 = t.getClass().getDeclaredField(filename_name); // GridFs文件对应的文件名字段的名称
-						field2.setAccessible(true);
+//						field2.setAccessible(true);
+						HoneyUtil.setAccessibleTrue(field2);	
 						String filename_value = (String) field2.get(t); // 文件名的值:filename_value
 						if (StringUtils.isNotBlank(filename_value)) {
 							data = getFileByName(filename_value);
 						}
 					}
 
-					field3.setAccessible(true);
+//					field3.setAccessible(true);
+					HoneyUtil.setAccessibleTrue(field3);
 					if (isByteArray) {
-						field3.set(t, data);
+						HoneyUtil.setFieldValue(field3, t, data);
 					} else if (isInputStream) {
-						field3.set(t, StreamUtil.byteArray2Stream(data));
+						HoneyUtil.setFieldValue(field3, t, StreamUtil.byteArray2Stream(data));
 					}
 
 				} catch (Exception e) {

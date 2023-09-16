@@ -301,7 +301,8 @@ public class TransformResult {
 //  				regSort(rmeta);  片合并后，如何重新排序？？
 //  			}
 
-			field.setAccessible(true);
+//			field.setAccessible(true);
+			HoneyUtil.setAccessibleTrue(field);
 			Object obj = entry.getValue();
 			boolean isRegHandlerPriority = false;
 			try {
@@ -358,9 +359,12 @@ public class TransformResult {
 						) ) { 
 					Object t_obj = ObjectCreatorFactory.create(obj.toString(), field.getType());
 					if (t_obj != null) obj = t_obj; // 转换成功才要.
-				}else if(field.getType() == java.sql.Timestamp.class && obj.getClass()== java.util.Date.class)  {
-					obj=DateUtil.toTimestamp((java.util.Date)obj);
-				} 
+				} else if (obj.getClass() == java.util.Date.class) {
+					if (field.getType() == java.sql.Timestamp.class)
+						obj = DateUtil.toTimestamp((java.util.Date) obj);
+					else if (field.getType() == java.sql.Date.class)  //注意：java.sql.Date只保留日期部分，不包含时间信息。
+						obj = DateUtil.toSqlDate((java.util.Date) obj);
+				}
 				
 //				java.util.ArrayList
 //				[Ljava.lang.Double;
@@ -400,7 +404,8 @@ public class TransformResult {
 //						}
 //					}
 				}
-				field.set(targetObj, obj); // 对相应Field设置
+//				field.set(targetObj, obj); // 对相应Field设置
+				HoneyUtil.setFieldValue(field, targetObj, obj); // 对相应Field设置
 			} catch (IllegalArgumentException e) {
 				Logger.debug(e.getMessage(), e);
 			}

@@ -75,14 +75,14 @@ public class FieldNameUtil {
 
 		// 从序列化方法取出序列化的lambda信息
 		boolean isAccessible = method.isAccessible();
-		method.setAccessible(true);
+		method.setAccessible(true); // NOSONAR
 		SerializedLambda serializedLambda;
 		try {
 			serializedLambda = (SerializedLambda) method.invoke(fn);
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}
-		method.setAccessible(isAccessible);
+		method.setAccessible(isAccessible); // NOSONAR
 		return serializedLambda;
 	}
 }

@@ -121,7 +121,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 					} catch (NoSuchFieldException e) {
 						continue;
 					}
-					field.setAccessible(true);
+//					field.setAccessible(true);
+					HoneyUtil.setAccessibleTrue(field);
 					Object obj = null;
 					boolean isRegHandlerPriority = false;
 
@@ -147,10 +148,10 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 						if (isRegHandlerPriority) {
 							obj = TypeHandlerRegistry.handlerProcess(field.getType(), obj);
-							field.set(targetObj, obj); // 对相应Field设置
-						} else {
-							field.set(targetObj, obj); // 对相应Field设置
 						}
+//						field.set(targetObj, obj); // 对相应Field设置
+						HoneyUtil.setFieldValue(field, targetObj, obj); // 对相应Field设置
+						
 					} catch (IllegalArgumentException e) {
 						boolean alreadyProcess = false;
 						obj = cursor.getString(cursor.getColumnIndex(columnName));//SQLite in Android get the String first and then transfer
@@ -160,7 +161,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 							if (handler != null) {
 								try {
 									Object newObj = handler.process(type, obj);
-									field.set(targetObj, newObj);
+//									field.set(targetObj, newObj);
+									HoneyUtil.setFieldValue(field, targetObj, newObj);
 									alreadyProcess = true;
 								} catch (Exception e2) {
 									alreadyProcess = false;
@@ -168,7 +170,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 							}
 						}
 						if (!alreadyProcess) {
-							field.set(targetObj, obj);
+//							field.set(targetObj, obj);
+							HoneyUtil.setFieldValue(field, targetObj, obj);
 						}
 					}
 

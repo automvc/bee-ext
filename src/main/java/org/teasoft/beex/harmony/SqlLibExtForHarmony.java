@@ -118,7 +118,8 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 					} catch (NoSuchFieldException e) {
 						continue;
 					}
-					field.setAccessible(true);
+//					field.setAccessible(true);
+					HoneyUtil.setAccessibleTrue(field);
 					Object obj = null;
 					boolean isRegHandlerPriority = false;
 
@@ -143,10 +144,10 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 
 						if (isRegHandlerPriority) {
 							obj = TypeHandlerRegistry.handlerProcess(field.getType(), obj);
-							field.set(targetObj, obj); // 对相应Field设置
-						} else {
-							field.set(targetObj, obj); // 对相应Field设置
-						}
+						} 
+//						field.set(targetObj, obj); // 对相应Field设置
+						HoneyUtil.setFieldValue(field, targetObj, obj); // 对相应Field设置
+						
 					} catch (IllegalArgumentException e) {
 						boolean alreadyProcess = false;
 						obj = rs.getString(i);
@@ -156,7 +157,8 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 							if (handler != null) {
 								try {
 									Object newObj = handler.process(type, obj);
-									field.set(targetObj, newObj);
+//									field.set(targetObj, newObj);
+									HoneyUtil.setFieldValue(field, targetObj, newObj);
 									alreadyProcess = true;
 								} catch (Exception e2) {
 									alreadyProcess = false;
@@ -164,7 +166,8 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 							}
 						}
 						if (!alreadyProcess) {
-							field.set(targetObj, obj);
+//							field.set(targetObj, obj);
+							HoneyUtil.setFieldValue(field, targetObj, obj);
 						}
 					}
 
