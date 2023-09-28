@@ -359,7 +359,7 @@ public class TransformResult {
 						) ) { 
 					Object t_obj = ObjectCreatorFactory.create(obj.toString(), field.getType());
 					if (t_obj != null) obj = t_obj; // 转换成功才要.
-				} else if (obj.getClass() == java.util.Date.class) {
+				} else if (obj != null && obj.getClass() == java.util.Date.class) {
 					if (field.getType() == java.sql.Timestamp.class)
 						obj = DateUtil.toTimestamp((java.util.Date) obj);
 					else if (field.getType() == java.sql.Date.class)  //注意：java.sql.Date只保留日期部分，不包含时间信息。
