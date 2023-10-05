@@ -30,7 +30,7 @@ Bee-Ext
 * 11.**Mongodb ORM 功能**  
 * 12.**Mongodb Sharding分片**  
 
-* 13.多数据源简易配置  
+* 13.多数据源简易配置(2.1.8 支持spring boot的active参数)  
 * 14.支持Mongodb GridFS文件存储  
 * 15.支持Mongodb地理信息插入、查询,包括分片  
 
