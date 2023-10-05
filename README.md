@@ -32,7 +32,11 @@ Bee-Ext
 * 12.**mongodb Sharding function**  
 
 * 13.properties file support config multi-dataSource(this type no need xml,java code config)  
+  2.1.8 support active with spring boot  
+  
 * 14.Mongodb GridFS file store  
+
+* 15.add SuidRichExt,MongoSuidRichExt and BFX.  
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
