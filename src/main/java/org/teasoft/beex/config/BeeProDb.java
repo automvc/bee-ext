@@ -39,7 +39,10 @@ public class BeeProDb {
 	
 	private Boolean pagingWithLimitOffset;
 	
-    private List<Map<String,String>> dbs; //V2.1 配置多个数据源, 属性值已具体工具对应
+//    private List<Map<String,String>> dbs; //V2.1 配置多个数据源, 属性值已具体工具对应
+    
+    private Map<String,Map<String,String>> dbs;  //V2.1.10
+    
     private Boolean extendFirst;//V2.1
 
 	public String getDbName() {
@@ -122,11 +125,11 @@ public class BeeProDb {
 		this.pagingWithLimitOffset = pagingWithLimitOffset;
 	}
 
-	public List<Map<String, String>> getDbs() {
+	public Map<String, Map<String, String>> getDbs() {
 		return dbs;
 	}
 
-	public void setDbs(List<Map<String, String>> dbs) {
+	public void setDbs(Map<String, Map<String, String>> dbs) {
 		this.dbs = dbs;
 	}
 	
