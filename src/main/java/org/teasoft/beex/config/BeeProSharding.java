@@ -12,6 +12,7 @@ package org.teasoft.beex.config;
  */
 public class BeeProSharding {
 	
+	// prefix= "sharding_"
 	private Boolean forkJoinBatchInsert;
 	private Boolean jdbcStreamSelect; 
 	private Boolean notSupportUnionQuery;
