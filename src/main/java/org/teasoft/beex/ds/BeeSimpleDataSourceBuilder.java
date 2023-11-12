@@ -34,9 +34,9 @@ public class BeeSimpleDataSourceBuilder implements DataSourceBuilder {
 			}
 
 			String username = properties.getOrDefault("username", "");
-			String password = properties.getOrDefault("password", "");
+			String p = properties.getOrDefault("password", "");
 
-			ds = new SimpleDataSource(url, username, password);
+			ds = new SimpleDataSource(url, username, p);
 			
 			Logger.info("[Bee] Using BeeSimpleDataSourceBuilder...");
 		} catch (Exception e) {

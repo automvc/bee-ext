@@ -44,11 +44,11 @@ public class BeeMongodbSimpleDataSourceBuilder implements DataSourceBuilder {
 			}
 
 			String username = properties.getOrDefault("username", "");
-			String password = properties.getOrDefault("password", "");
+			String p = properties.getOrDefault("password", "");
 
 			url = processOptionKeys(properties, url);
 			
-			ds = new MongodbSimpleDataSource(url, username, password);
+			ds = new MongodbSimpleDataSource(url, username, p);
 			
 			Logger.info("[Bee] Using BeeMongodbSimpleDataSourceBuilder...");
 		} catch (Exception e) {

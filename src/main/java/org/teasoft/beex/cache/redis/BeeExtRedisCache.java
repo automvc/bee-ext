@@ -77,7 +77,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 
 		String host = config.cacheRedis_host;
 		Integer port = config.cacheRedis_port;
-		String password = config.cacheRedis_password;
+		String p = config.cacheRedis_password;
 		Integer connectionTimeout = config.cacheRedis_connectionTimeout;
 		Integer soTimeout = config.cacheRedis_soTimeout;
 		Integer database = config.cacheRedis_database;
@@ -103,7 +103,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 		}
 
 		this.jedisPool = new JedisPool(new GenericObjectPoolConfig<Jedis>(), host, port,
-				connectionTimeout, soTimeout, password, database, clientName, ssl);
+				connectionTimeout, soTimeout, p, database, clientName, ssl);
 	}
 	
 	@Override
