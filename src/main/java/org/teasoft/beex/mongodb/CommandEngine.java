@@ -186,8 +186,6 @@ public class CommandEngine {
 		Document doc = new Document();
 		doc.append("update", tableName);
 
-//		System.out.println(inputJson);
-		
 		int pos = StringParser.getEndPosition(inputJson); // 查找({开头，} )结束的结束下标位置
 		if (pos > 0) {
 			String findJson = inputJson.substring(1, pos).trim(); //去掉括号

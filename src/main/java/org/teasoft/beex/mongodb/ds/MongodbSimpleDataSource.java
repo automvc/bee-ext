@@ -70,19 +70,29 @@ public class MongodbSimpleDataSource extends ClientDataSource {
 		} else if (MongoContext.getCurrentClientSession() != null) { // 同一tran，非首次获取
 			return MongoContext.getCurrentMongoClient().getDatabase(mongodbManager.getDatabaseName());
 		} else {
-			return _getMongoDb();
+			return _getMongoDb(); //非事务，
 		}
+		
+//		_getMongoDb(); 这个获取抛异常时，使用：client.close();
+//		然后再调用一次，重新获取。
+//		MongoClient client =MongoContext.getCurrentMongoClient();
+//		client.close();  todo
 	}
 
 	private MongoDatabase _getMongoDb() {
 		MongoClient client = mongodbManager.getMongoClient();
-		MongoContext.setCurrentMongoClient(client);
-		return client.getDatabase(mongodbManager.getDatabaseName());
+//			//非事务时，这里都是重新获取的，则关闭时，应该要真关闭。   ?????
+			MongoContext.setCurrentMongoClient(client);
+			return client.getDatabase(mongodbManager.getDatabaseName());
 	}
 
 	@Override
 	public void close() throws IOException {
-		if(! MongoContext.inTransaction()) MongoContext.removeMongoClient();
+		if(! MongoContext.inTransaction()) {
+//			MongoClient client =MongoContext.getCurrentMongoClient();
+//			client.close();  
+			MongoContext.removeMongoClient();
+		}
 	}
 	
 	

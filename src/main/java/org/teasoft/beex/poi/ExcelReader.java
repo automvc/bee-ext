@@ -360,9 +360,6 @@ public class ExcelReader {
 			}
 			if (temp > maxCol) maxCol = temp;
 		}
-//		long t2=System.currentTimeMillis();
-//		System.out.println("==============================");
-//		System.out.println(t2-t1);
 		
 //		columns=getMaxColumn(c1,c2,c3);
 		
