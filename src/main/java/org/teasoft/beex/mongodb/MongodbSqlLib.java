@@ -347,7 +347,8 @@ public class MongodbSqlLib extends AbstractBase
 			byte[] data = null;
 			for (T t : list) { //更新查询到的list
 				try {
-					Field field3 = t.getClass().getDeclaredField(fileColumnName);
+//					Field field3 = t.getClass().getDeclaredField(fileColumnName);
+					Field field3 = HoneyUtil.getField(t.getClass(),fileColumnName);
 					if (isFirst) {
 						isFirst = false;
 						if (byte[].class.equals(field3.getType())) {
@@ -359,7 +360,8 @@ public class MongodbSqlLib extends AbstractBase
 						}
 					}
 
-					Field field = t.getClass().getDeclaredField(fileid_name);
+//					Field field = t.getClass().getDeclaredField(fileid_name);
+					Field field = HoneyUtil.getField(t.getClass(),fileid_name);
 //					field.setAccessible(true);
 					HoneyUtil.setAccessibleTrue(field);
 					String fileid_value = (String) field.get(t);
@@ -367,7 +369,8 @@ public class MongodbSqlLib extends AbstractBase
 						// 上下文处理？？
 						data = getFileById(fileid_value); // fileid_value为GridFs文件对应的fileid,插入后会存入实体表对应的字段fileid_name(若有);查询时即可使用
 					} else {
-						Field field2 = t.getClass().getDeclaredField(filename_name); // GridFs文件对应的文件名字段的名称
+//						Field field2 = t.getClass().getDeclaredField(filename_name); // GridFs文件对应的文件名字段的名称
+						Field field2 = HoneyUtil.getField(t.getClass(),filename_name); // GridFs文件对应的文件名字段的名称
 //						field2.setAccessible(true);
 						HoneyUtil.setAccessibleTrue(field2);	
 						String filename_value = (String) field2.get(t); // 文件名的值:filename_value
@@ -1152,7 +1155,8 @@ public class MongodbSqlLib extends AbstractBase
 		Field field = null;
 		String type = null;
 		try {
-			field = clazz.getDeclaredField(pkName);
+//			field = clazz.getDeclaredField(pkName);
+			field = HoneyUtil.getField(clazz,pkName);
 			type = field.getType().getSimpleName();
 		} catch (Exception e) {
 			// ignore
@@ -1164,7 +1168,8 @@ public class MongodbSqlLib extends AbstractBase
 	@SuppressWarnings("rawtypes")
 	private String getPkName(Class c) {
 		try {
-			c.getDeclaredField("id"); // V1.11 因主键可以不是默认id,多了此步检测
+//			c.getDeclaredField("id"); // V1.11 因主键可以不是默认id,多了此步检测
+			HoneyUtil.getField(c,"id"); // V1.11 因主键可以不是默认id,多了此步检测
 			return "id";
 		} catch (NoSuchFieldException e) {
 			String pkName = HoneyUtil.getPkFieldNameByClass(c);

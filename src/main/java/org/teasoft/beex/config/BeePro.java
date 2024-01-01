@@ -56,6 +56,8 @@ public class BeePro {
 	private Boolean openFieldTypeHandler;
 	private Boolean closeDefaultParaResultRegistry;
 	private String systemLoggerLevel;
+	
+	private Boolean openEntityCanExtend; //2.2
 
 	public String getLoggerType() {
 		return loggerType;
@@ -199,6 +201,14 @@ public class BeePro {
 
 	public void setSystemLoggerLevel(String systemLoggerLevel) {
 		this.systemLoggerLevel = systemLoggerLevel;
+	}
+
+	public Boolean getOpenEntityCanExtend() {
+		return openEntityCanExtend;
+	}
+
+	public void setOpenEntityCanExtend(Boolean openEntityCanExtend) {
+		this.openEntityCanExtend = openEntityCanExtend;
 	}
 	
 }

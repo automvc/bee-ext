@@ -98,7 +98,8 @@ public class TransformResult {
 					fieldName = "id";
 				}else if(entityClass!=null){//判断存的是否是Json String; 使用了Json即认为是
 					try {
-						currField = entityClass.getDeclaredField(fieldName);
+//						currField = entityClass.getDeclaredField(fieldName);
+						currField = HoneyUtil.getField(entityClass,fieldName);
 						isJsonString=isJoson(currField);
 					} catch (NoSuchFieldException e) {
 						//ignore
@@ -278,7 +279,8 @@ public class TransformResult {
 					name = "id";
 					isId = true;
 				}
-				field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
+//				field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
+				field = HoneyUtil.getField(entityClass,name);// 可能会找不到Javabean的字段
 			} catch (NoSuchFieldException e) {
 				if ("id".equalsIgnoreCase(name)) { //可能主键不叫id,
 					isId = true;

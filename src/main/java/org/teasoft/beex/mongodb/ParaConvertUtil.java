@@ -66,7 +66,8 @@ public class ParaConvertUtil {
 	public static Map<String, Object> toMap(Object entity, int includeType, SuidType suidType)
 			throws Exception {
 		Map<String, Object> documentAsMap = null;
-		Field fields[] = entity.getClass().getDeclaredFields();
+//		Field fields[] = entity.getClass().getDeclaredFields();
+		Field fields[] = HoneyUtil.getFields(entity.getClass());
 		boolean isFirst = true;
 		int len = fields.length;
 		String column = "";
@@ -131,7 +132,8 @@ public class ParaConvertUtil {
 	
 	public static Map<String, Object> toMapForGridFsSelect(Class entityClass, int includeType) {
 		Map<String, Object> documentAsMap = null;
-		Field fields[] = entityClass.getDeclaredFields();
+//		Field fields[] = entityClass.getDeclaredFields();
+		Field fields[] = HoneyUtil.getFields(entityClass);
 		boolean isFirst = true;
 		int len = fields.length;
 		String column = "";
