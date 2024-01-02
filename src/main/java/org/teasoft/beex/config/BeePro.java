@@ -45,6 +45,7 @@ public class BeePro {
 	private Boolean showMongoSelectAllFields;
 	
 	private Integer insertBatchSize;
+	private Boolean eachBatchCommit; //2.2
 
 	private Boolean showSQL;
 	private Boolean showShardingSQL;//2.0
@@ -145,6 +146,14 @@ public class BeePro {
 
 	public void setInsertBatchSize(Integer insertBatchSize) {
 		this.insertBatchSize = insertBatchSize;
+	}
+
+	public Boolean getEachBatchCommit() {
+		return eachBatchCommit;
+	}
+
+	public void setEachBatchCommit(Boolean eachBatchCommit) {
+		this.eachBatchCommit = eachBatchCommit;
 	}
 
 	public Boolean getShowSQL() {
