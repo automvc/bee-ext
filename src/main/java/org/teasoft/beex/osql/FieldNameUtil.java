@@ -55,7 +55,7 @@ public class FieldNameUtil {
 		} else if (methodName.startsWith("is")) {
 			fieldName = methodName.substring(2);
 		} else if (methodName.startsWith("set")) {
-			fieldName = methodName.substring(2);
+			fieldName = methodName.substring(3); //2.2
 		} else {
 			fieldName = methodName;
 		}
