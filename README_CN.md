@@ -34,7 +34,11 @@ Bee-Ext
 * 14.支持Mongodb GridFS文件存储  
 * 15.支持Mongodb地理信息插入、查询,包括分片  
 
-* 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt及快捷输入类BFX.
+* 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt及快捷输入类BFX.  
+     提供如Orders::getUserid格式访问字段  
+     
+* 16.MS Access JDBC密码访问  
+
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  

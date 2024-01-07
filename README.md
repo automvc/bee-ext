@@ -37,6 +37,9 @@ Bee-Ext
 * 14.Mongodb GridFS file store  
 
 * 15.add SuidRichExt,MongoSuidRichExt and BFX.  
+     Provide access to fields in the format of Orders::getUserid  
+
+*16. MS Access JDBC Password connect  
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
