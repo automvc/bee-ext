@@ -6,8 +6,10 @@
 
 package org.teasoft.beex.osql.shortcut;
 
+import org.teasoft.beex.osql.ConditionExtImpl;
 import org.teasoft.beex.osql.ObjSQLRichExt;
-import org.teasoft.beex.osql.SuidRichExt;
+import org.teasoft.beex.osql.api.ConditionExt;
+import org.teasoft.beex.osql.api.SuidRichExt;
 import org.teasoft.beex.osql.mongodb.MongodbObjSQLRichExt;
 import org.teasoft.beex.osql.mongodb.MongodbSuidRichExt;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
@@ -20,6 +22,8 @@ public class BFX extends BeeFactoryHelper {
 
 	private static SuidRichExt suidRichExt;
 	private static MongodbSuidRichExt mongodbSuidRichExt;
+	
+	private static ConditionExt conditionExt;
 
 	public static SuidRichExt getSuidRichExt() {
 		if (suidRichExt == null) return new ObjSQLRichExt();
@@ -46,5 +50,15 @@ public class BFX extends BeeFactoryHelper {
 	private void _setMongodbSuidRichExt(MongodbSuidRichExt mongodbSuidRichExt) {
 		BFX.mongodbSuidRichExt = mongodbSuidRichExt;
 	}
+
+	public static ConditionExt getConditionExt() {
+		if(conditionExt==null) return new ConditionExtImpl();
+		return conditionExt;
+	}
+
+	public static void setConditionExt(ConditionExt conditionExt) {
+		BFX.conditionExt = conditionExt;
+	}
+	
 
 }

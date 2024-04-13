@@ -17,23 +17,18 @@
 
 package org.teasoft.beex.osql;
 
-import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 //import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.function.Function;
+
+import org.teasoft.beex.osql.api.SerialFunction;
 
 /**
  * @author Kingstar
  * @since  2.0
  */
 public class FieldNameUtil {
-
-	@FunctionalInterface
-	public interface SerialFunction<T, R> extends Function<T, R>, Serializable {
-
-	}
 
 	@SafeVarargs
 	public static <T> String[] getFieldNames(SerialFunction<T, ?>... fns) {

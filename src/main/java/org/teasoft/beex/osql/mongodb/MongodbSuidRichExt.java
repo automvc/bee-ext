@@ -18,7 +18,7 @@
 package org.teasoft.beex.osql.mongodb;
 
 import org.teasoft.bee.mongodb.SuidFile;
-import org.teasoft.beex.osql.SuidRichExt;
+import org.teasoft.beex.osql.api.SuidRichExt;
 
 /**
  * @author Kingstar

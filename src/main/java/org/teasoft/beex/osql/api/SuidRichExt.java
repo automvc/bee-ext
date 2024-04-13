@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-package org.teasoft.beex.osql;
+package org.teasoft.beex.osql.api;
 
 import java.util.List;
 
 import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.api.SuidRich;
-import org.teasoft.beex.osql.FieldNameUtil.SerialFunction;
 
 /**
  * @author Kingstar

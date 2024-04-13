@@ -32,7 +32,7 @@ import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.beex.mongodb.MongodbSqlLib;
 import org.teasoft.beex.osql.FieldNameUtil;
-import org.teasoft.beex.osql.FieldNameUtil.SerialFunction;
+import org.teasoft.beex.osql.api.SerialFunction;
 import org.teasoft.honey.osql.core.MongodbObjSQLRich;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.name.OriginalName;
