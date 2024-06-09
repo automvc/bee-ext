@@ -93,8 +93,7 @@ public class ConditionExtImpl extends ConditionImpl implements ConditionExt {
 
 	@SuppressWarnings({ "unchecked", "varargs" })
 	private <T> String[] getFieldNames(SerialFunction<T, ?>... fns) {
-		String[] fieldNames = FieldNameUtil.getFieldNames(fns);
-		return fieldNames;
+		return FieldNameUtil.getFieldNames(fns);
 	}
 
 	@Override
