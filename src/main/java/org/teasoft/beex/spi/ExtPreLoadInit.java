@@ -17,9 +17,19 @@
 
 package org.teasoft.beex.spi;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 import org.teasoft.bee.spi.PreLoad;
 import org.teasoft.beex.type.JsonDefaultHandler;
+import org.teasoft.beex.type.LocalDateTimeToTimestampConvert;
+import org.teasoft.beex.type.LocalDateTimeTypeHandler;
+import org.teasoft.beex.type.LocalDateTypeHandler;
+import org.teasoft.beex.type.LocalTimeTypeHandler;
 import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
+import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 
 /**
  * Bee-Ext提前预加载初始化
@@ -35,6 +45,15 @@ public class ExtPreLoadInit implements PreLoad{
 	
 	private static void init() {
 		JsonDefaultHandler.init();
+		
+		//2.4.0
+		TypeHandlerRegistry.register(LocalDateTime.class, new LocalDateTimeTypeHandler<LocalDateTime>());
+		TypeHandlerRegistry.register(LocalDate.class, new LocalDateTypeHandler<LocalDate>());
+		TypeHandlerRegistry.register(LocalTime.class, new LocalTimeTypeHandler<LocalTime>());
+		
+		//oracle?? yes.    JDBC 4.2 ??
+		SetParaTypeConverterRegistry.register(LocalDateTime.class, new LocalDateTimeToTimestampConvert<LocalDateTime>());
+		
 //		MongodbBeeSqlRegister.register(new MongodbSqlLib()); 
 //		MongodbCommRegister.register(new MongodbCommImpl());
 	}
