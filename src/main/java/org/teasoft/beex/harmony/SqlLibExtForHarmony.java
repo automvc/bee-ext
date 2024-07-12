@@ -109,7 +109,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 						columnName = rs.getColumnNameForIndex(i); // 列下标,从0开始
 						name = _toFieldName(columnName, entityClass);
 						if (isFirst) {
-//							field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 							field = HoneyUtil.getField(entityClass,name);// 可能会找不到Javabean的字段
 							map.put(name, field);
 						} else {
@@ -119,7 +118,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 					} catch (NoSuchFieldException e) {
 						continue;
 					}
-//					field.setAccessible(true);
 					HoneyUtil.setAccessibleTrue(field);
 					Object obj = null;
 					boolean isRegHandlerPriority = false;
@@ -146,7 +144,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 						if (isRegHandlerPriority) {
 							obj = TypeHandlerRegistry.handlerProcess(field.getType(), obj);
 						} 
-//						field.set(targetObj, obj); // 对相应Field设置
 						HoneyUtil.setFieldValue(field, targetObj, obj); // 对相应Field设置
 						
 					} catch (IllegalArgumentException e) {
@@ -158,7 +155,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 							if (handler != null) {
 								try {
 									Object newObj = handler.process(type, obj);
-//									field.set(targetObj, newObj);
 									HoneyUtil.setFieldValue(field, targetObj, newObj);
 									alreadyProcess = true;
 								} catch (Exception e2) {
@@ -167,7 +163,6 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 							}
 						}
 						if (!alreadyProcess) {
-//							field.set(targetObj, obj);
 							HoneyUtil.setFieldValue(field, targetObj, obj);
 						}
 					}
@@ -176,22 +171,15 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 				rsList.add(targetObj);
 				isFirst = false;
 			}
-
-//		} catch (SQLException e) {
-//			Logger.error(e.getMessage(), e);
 		} catch (IllegalAccessException e) {
-//			hasException = true;
 			throw ExceptionHelper.convert(e);
 		} catch (InstantiationException e) {
-//		hasException = true;
 			throw ExceptionHelper.convert(e);
 		} finally {
-//			close(db);  
 			closeRs(rs);
 		}
 
 		return rsList;
-
 	}
 
 	@Override

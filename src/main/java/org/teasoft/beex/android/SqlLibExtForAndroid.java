@@ -122,7 +122,6 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 					} catch (NoSuchFieldException e) {
 						continue;
 					}
-//					field.setAccessible(true);
 					HoneyUtil.setAccessibleTrue(field);
 					Object obj = null;
 					boolean isRegHandlerPriority = false;

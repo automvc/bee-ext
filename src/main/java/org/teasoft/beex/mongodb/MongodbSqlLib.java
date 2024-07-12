@@ -360,9 +360,7 @@ public class MongodbSqlLib extends AbstractBase
 						}
 					}
 
-//					Field field = t.getClass().getDeclaredField(fileid_name);
 					Field field = HoneyUtil.getField(t.getClass(),fileid_name);
-//					field.setAccessible(true);
 					HoneyUtil.setAccessibleTrue(field);
 					String fileid_value = (String) field.get(t);
 					if (StringUtils.isNotBlank(fileid_value)) {

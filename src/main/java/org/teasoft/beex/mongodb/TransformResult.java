@@ -303,7 +303,6 @@ public class TransformResult {
 //  				regSort(rmeta);  片合并后，如何重新排序？？
 //  			}
 
-//			field.setAccessible(true);
 			HoneyUtil.setAccessibleTrue(field);
 			Object obj = entry.getValue();
 			boolean isRegHandlerPriority = false;
