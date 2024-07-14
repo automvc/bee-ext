@@ -112,7 +112,6 @@ public class ManageConfig {
 		int len = fields.length;
 		for (int i = 0; i < len; i++) {
 			try {
-//				fields[i].setAccessible(true);
 				HoneyUtil.setAccessibleTrue(fields[i]);
 				if (!(fields[i].get(propObject) == null || fields[i].isSynthetic())) {
 					newConfigMap.put(modeFix + fields[i].getName(), fields[i].get(propObject));

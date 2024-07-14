@@ -112,7 +112,6 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 						columnName = cursor.getColumnName(i); // 列下标,从0开始
 						name = _toFieldName(columnName, entityClass);
 						if (isFirst) {
-//							field = entityClass.getDeclaredField(name);// 可能会找不到Javabean的字段
 							field = HoneyUtil.getField(entityClass,name);// 可能会找不到Javabean的字段
 							map.put(name, field);
 						} else {

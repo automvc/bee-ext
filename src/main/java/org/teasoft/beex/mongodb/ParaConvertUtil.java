@@ -66,14 +66,12 @@ public class ParaConvertUtil {
 	public static Map<String, Object> toMap(Object entity, int includeType, SuidType suidType)
 			throws Exception {
 		Map<String, Object> documentAsMap = null;
-//		Field fields[] = entity.getClass().getDeclaredFields();
 		Field fields[] = HoneyUtil.getFields(entity.getClass());
 		boolean isFirst = true;
 		int len = fields.length;
 		String column = "";
 		Object value = null;
 		for (int i = 0; i < len; i++) {
-//			fields[i].setAccessible(true);
 			HoneyUtil.setAccessibleTrue(fields[i]);
 			if (((suidType == SuidType.INSERT && !AnnoUtil.isGridFs(fields[i])
 					&& !AnnoUtil.isGridFsMetadata(fields[i])) || suidType != SuidType.INSERT)
@@ -132,7 +130,6 @@ public class ParaConvertUtil {
 	
 	public static Map<String, Object> toMapForGridFsSelect(Class entityClass, int includeType) {
 		Map<String, Object> documentAsMap = null;
-//		Field fields[] = entityClass.getDeclaredFields();
 		Field fields[] = HoneyUtil.getFields(entityClass);
 		boolean isFirst = true;
 		int len = fields.length;
@@ -142,7 +139,6 @@ public class ParaConvertUtil {
 
 			try {
 
-//				fields[i].setAccessible(true);
 				HoneyUtil.setAccessibleTrue(fields[i]);
 				
 //				if (HoneyUtil.isContinue(includeType, fields[i].get(entity), fields[i])) {
@@ -186,54 +182,7 @@ public class ParaConvertUtil {
 		return documentAsMap;
 	}
 	
-	
-//	private static List<Double> toDoubleList(Double dArray[]) {
-//		if(dArray==null || dArray.length==0) return new ArrayList<>(); 
-//		List<Double> list=new ArrayList<>(dArray.length);
-//		for (Double d : dArray) {
-//			list.add(d);
-//		}
-//		return list;
-//	}
-	
-//	private static boolean isExcludeField(String excludeFieldList, String checkField) {
-//		String excludeFields[] = excludeFieldList.split(",");
-//		for (String f : excludeFields) {
-//			if (f.equals(checkField)) return true;
-//		}
-//		return false;
-//	}
-	
 	public static Map<String, Object> toMapExcludeSome(Object entity,String excludeFieldList) throws Exception {
-		
-//		Map<String, Object> documentAsMap = null;
-//		Field fields[] = entity.getClass().getDeclaredFields();
-//		boolean isFirst = true;
-//		int len = fields.length;
-//		String column = "";
-//		Object value = null;
-//		for (int i = 0; i < len; i++) {
-//			fields[i].setAccessible(true);
-////			if (HoneyUtil.isContinue(-1, fields[i].get(entity), fields[i])) {
-//			if (HoneyUtil.isContinue(NullEmpty.EMPTY_STRING, fields[i].get(entity), fields[i])) {// mongodb,批量插入,不处理null,但会插入是空字符的
-//				continue;
-//			} else {
-//				if (!"".equals(excludeFieldList) && isExcludeField(excludeFieldList, fields[i].getName())) continue;
-//				
-//				if (isFirst) {
-//					isFirst = false;
-//					documentAsMap = new LinkedHashMap<String, Object>();
-//				}
-//				column = _toColumnName(fields[i].getName(), entity.getClass());
-//				if ("id".equalsIgnoreCase(column)) {// 替换id为_id
-//					column = "_id";
-//				}
-//				value = fields[i].get(entity); // value
-//				documentAsMap.put(column, value);
-//			}
-//		}
-//
-//		return documentAsMap;
 		
 		Map<String, Object> map = toMap(entity, NullEmpty.EMPTY_STRING, SuidType.INSERT);
 
