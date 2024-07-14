@@ -353,7 +353,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp, Serializable {
 	}
 
 	private void _setPreparedValues(Statement st, int objTypeIndex, int i, Object value) {
-		if (null == value) {
+		if (value == null) {
 			st.setNull(i + 1);
 			return;
 		}

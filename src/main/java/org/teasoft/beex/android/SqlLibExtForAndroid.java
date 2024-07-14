@@ -402,7 +402,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	}
 
 	private void _setPreparedValues(SQLiteStatement st, int objTypeIndex, int i, Object value) {
-		if (null == value) {
+		if (value == null) {
 			st.bindNull(i + 1);
 			return;
 		}
