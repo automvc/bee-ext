@@ -48,7 +48,7 @@ public class SQLiteTransaction extends EmptyTransaction {
 
 	@Override
 	public void commit() {
-		Logger.info("[Bee] SQLiteTransaction(android) commit. ");
+		Logger.info("[Bee] SQLiteTransaction(android) commit.");
 		if (!isBegin) throw new BeeSQLException("The SQLiteTransaction did not to begin!");
 		try {
 			db.setTransactionSuccessful();

@@ -43,8 +43,7 @@ public class DdlViaExcel {
 
 	private static final String CREATE_TABLE = "CREATE TABLE ";
 	private static String LINE_SEPARATOR = System.getProperty("line.separator"); // 换行符
-//	private static PreparedSql preparedSql = BeeFactoryHelper.getPreparedSql();
-	
+
 	/**
 	 * create table via sheet of excel.
 	 * @param excelFullPath excel FullPath

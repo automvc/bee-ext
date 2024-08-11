@@ -17,7 +17,7 @@
 
 package org.teasoft.beex.cache.redis;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.teasoft.bee.osql.Serializer;
@@ -47,7 +47,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	private static final String FIELD = "Bee";
 	private static final byte[] FIELD_BYTES = FIELD.getBytes();
 	
-	private final Random random=new Random();
+	private final ThreadLocalRandom random=ThreadLocalRandom.current();
 	private int max=0;
 	private int min=0;
 	private int baseNum=0;
