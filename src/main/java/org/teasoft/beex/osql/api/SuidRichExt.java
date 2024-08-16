@@ -28,7 +28,7 @@ import org.teasoft.bee.osql.api.SuidRich;
  * @since  2.0
  */
 //@SafeVarargs 
-@SuppressWarnings({"all", "varargs"})
+@SuppressWarnings({ "all", "varargs" })
 public interface SuidRichExt extends SuidRich {
 
 	public <T> List<T> select(T entity, SerialFunction<T, ?>... selectFields);

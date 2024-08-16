@@ -35,10 +35,11 @@ public interface ConditionExt extends Condition {
 	public <T> Condition opOn(SerialFunction<T, ?> field, Op op, Number value);
 
 	public <T> Condition opWithField(SerialFunction<T, ?> field1, Op op, SerialFunction<T, ?> field2);
-	
+
 	public <T> Condition between(SerialFunction<T, ?> field, Number low, Number high);
+
 	public <T> Condition groupBy(SerialFunction<T, ?> field);
-	
+
 	/**
 	 * having
 	 * <br>eg: having(FunctionType.MIN, Orders::getField", Op.ge, 60)-->having min(field)>=60
@@ -49,7 +50,7 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition having(FunctionType functionType, SerialFunction<T, ?> field, Op op, Number value);
-	
+
 	/**
 	 * order by
 	 * <br>eg: orderBy(Orders::getPrice)-->order by price
@@ -57,7 +58,7 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition orderBy(SerialFunction<T, ?> field);
-	
+
 	/**
 	 * order by
 	 * <br>eg: orderBy(Orders::getPrice, OrderType.DESC)-->order by price desc
@@ -76,7 +77,6 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition orderBy(FunctionType functionType, SerialFunction<T, ?> field, OrderType orderType);
-	
 
 	/**
 	 * Specify the partial fields to be queried (only for select of SQL).
@@ -84,8 +84,8 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	@SuppressWarnings({ "unchecked", "varargs" })
-	public <T> Condition selectField(SerialFunction<T, ?> ... fields);
-	
+	public <T> Condition selectField(SerialFunction<T, ?>... fields);
+
 	/**
 	 * set fieldName for distinct(Orders::getName)
 	 * <br>eg: selectDistinctField(Orders::getName) --> distinct(name)
@@ -102,7 +102,7 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition selectDistinctField(SerialFunction<T, ?> fieldName, String alias);
-	
+
 	/**
 	 * set for select result with function.
 	 * <br>eg: condition.selectFun(FunctionType.COUNT, Orders::getName);-->count(name)
@@ -111,7 +111,7 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition selectFun(FunctionType functionType, SerialFunction<T, ?> fieldForFun);
-	
+
 	/**
 	 * set for select result with function.
 	 * <br>eg:selectFun(FunctionType.MAX, Course::getScore,"maxScore")-->max(score) as maxScore
@@ -121,31 +121,30 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition selectFun(FunctionType functionType, SerialFunction<T, ?> fieldForFun, String alias);
-	
-	
-	////////////////////////////////-------just use in update-------------start-
-	
+
+	//////////////////////////////// -------just use in update-------------start-
+
 	/**
 	 * Set the fields to be updated (for only update of SQL),and the field change on itself.
-	 * <br>eg: setAdd(Orders::getPrice,2.0)--> price=price+2.0
+	 * <br>eg: setAdd(Orders::getPrice,2.0)--> set set price=price+2.0
 	 * @param field Field name.
 	 * @param num number
 	 * @return Condition
 	 */
-	public <T> Condition setAdd(SerialFunction<T, ?> field,Number num);
-	
+	public <T> Condition setAdd(SerialFunction<T, ?> field, Number num);
+
 	/**
 	 * Set the fields to be updated (for only update of SQL),and the field change on itself.
-	 * <br>eg: setMultiply(Orders::getPrice,1.05)--> price=price*1.05
+	 * <br>eg: setMultiply(Orders::getPrice,1.05)--> set price=price*1.05
 	 * @param field Field name.
 	 * @param num number
 	 * @return Condition
 	 */
-	public <T> Condition setMultiply(SerialFunction<T, ?> field,Number num);
-	
+	public <T> Condition setMultiply(SerialFunction<T, ?> field, Number num);
+
 	/**
 	 * Set the fields to be updated (for only update of SQL),and the field change on itself.
-     * <br>eg:setAdd(Orders::getPrice,Orders::getDelta)--> price=price+delta
+	 * <br>eg:setAdd(Orders::getPrice,Orders::getDelta)--> set price=price+delta
 	 * @param field Field name.
 	 * @param otherFieldName
 	 * @return Condition
@@ -154,17 +153,17 @@ public interface ConditionExt extends Condition {
 
 	/**
 	 * Set the fields to be updated (for only update of SQL),and the field change on itself.
-     * <br>eg: setMultiply(Orders::getPrice,Orders::getDelta)--> price=price*delta
+	 * <br>eg: setMultiply(Orders::getPrice,Orders::getDelta)--> set price=price*delta
 	 * @param field Field name.
 	 * @param otherFieldName other fieldName
 	 * @return Condition
 	 */
 	public <T> Condition setMultiply(SerialFunction<T, ?> field, SerialFunction<T, ?> otherFieldName);
-	
+
 	/**
 	 * Set the fields that need to be updated (only for update of SQL ); 
-     * <br>this method can be used when the set fields also need to be used for the where expression.
-     * <br>eg: set(Orders::getMaxid, 1000)-->update table_name set maxid=1000
+	 * <br>this method can be used when the set fields also need to be used for the where expression.
+	 * <br>eg: set(Orders::getMaxid, 1000)-->update table_name set maxid=1000
 	 * @param fieldName field name
 	 * @param num number
 	 * @return Condition
@@ -174,21 +173,20 @@ public interface ConditionExt extends Condition {
 	/**
 	 * Set the fields that need to be updated (only for update of SQL); 
 	 * <br>this method can be used when the set fields also need to be used for the where expression.
-     * <br>eg: set(Orders::getName, 'bee')-->name='bee'
+	 * <br>eg: set(Orders::getName, 'bee')--> set name='bee'
 	 * @param fieldName Field name
 	 * @param value
 	 * @return Condition
 	 */
 	public <T> Condition set(SerialFunction<T, ?> fieldName, String value);
-	
-	
+
 	/**
 	 * Set the fields with null value (only for update of SQL); 
 	 * @param fieldName
 	 * @return Condition
 	 */
 	public <T> Condition setNull(SerialFunction<T, ?> fieldName);
-	
+
 	/**
 	 * set one field with other field value
 	 * <br>eg: setWithField(Orders::getField1,Orders::getField2)--> set field1=field2
@@ -197,7 +195,7 @@ public interface ConditionExt extends Condition {
 	 * @return Condition
 	 */
 	public <T> Condition setWithField(SerialFunction<T, ?> field1, SerialFunction<T, ?> field2);
-	
-	////////////////////////////////-------just use in update-------------end-
+
+	//////////////////////////////// -------just use in update-------------end-
 
 }
