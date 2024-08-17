@@ -1252,8 +1252,8 @@ public class MongodbSqlLib extends AbstractBase
 		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null, null,
 				null, false, entityClass);
 
-		String c = count(struct, entityClass);
-		return Integer.parseInt(c);
+		String total = count(struct, entityClass);
+		return StringUtils.isBlank(total) ? 0 :Integer.parseInt(total);
 	}
 	
 	@Override
