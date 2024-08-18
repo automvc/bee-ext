@@ -2584,8 +2584,12 @@ public class MongodbSqlLib extends AbstractBase
 				}
 				if (!hasId) map.put("_id", -1);
 
+				if (struct.getFilter() == null) { // fixed 2.4.0
+					sql.append("{}");
+				}
+						
 				BasicDBObject projection = new BasicDBObject(map);
-				sql.append(",");
+				sql.append(", ");
 				sql.append(projection.toString());
 			}
 
