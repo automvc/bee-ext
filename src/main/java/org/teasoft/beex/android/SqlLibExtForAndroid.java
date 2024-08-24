@@ -81,8 +81,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		return BeeSQLiteOpenHelper.getWritableDB();
 	}
 
-	private static boolean openFieldTypeHandler = HoneyConfig
-			.getHoneyConfig().openFieldTypeHandler;
+	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
