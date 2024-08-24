@@ -1428,7 +1428,7 @@ public class MongodbSqlLib extends AbstractBase
 					return cacheValue;
 				}
 				String fun = "";
-				String funType = HoneyContext.getSysCommStrLocal(StringConst.FunType);
+				String funType = HoneyContext.getSysCommStrInheritableLocal(StringConst.FunType);
 				if (FunctionType.AVG.getName().equalsIgnoreCase(funType)) {
 					Logger.warn("AVG do not process here!");
 				} else {
