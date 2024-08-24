@@ -9,6 +9,7 @@ import org.teasoft.bee.osql.exception.BeeErrorGrammarException;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
 import org.teasoft.bee.spi.JsonTransform;
 import org.teasoft.honey.osql.core.HoneyConfig;
+import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.spi.SpiInstanceFactory;
 import org.teasoft.honey.util.StringParser;
 import org.teasoft.honey.util.StringUtils;
@@ -54,6 +55,8 @@ public class CommandEngine {
 			r = update(tableName, inputJson, true);
 		} else if ("replaceOne".equals(type) || "save".equals(type)) {
 			r = update(tableName, inputJson, true, true);
+		}else {
+			Logger.warn("Do not support the type! string parameter: "+str);
 		}
 		return r;
 	}

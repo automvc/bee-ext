@@ -164,6 +164,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public <T> int update(T entity) {
+		checkShardingSupport();
 		String tableName = _toTableName(entity);
 		BasicDBObject doc = null;
 		DatabaseClientConnection conn = null;
@@ -800,7 +801,7 @@ public class MongodbSqlLib extends AbstractBase
 	}
 	
 	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName,Condition condition) {
-		
+		checkShardingSupport();
 		BasicDBObject oldDoc = null;
 		BasicDBObject newDoc = null;
 		DatabaseClientConnection conn = null;
@@ -923,6 +924,7 @@ public class MongodbSqlLib extends AbstractBase
 	@SuppressWarnings("unchecked")
 	private <T> Map<String, Object>[] toMapForUpdate(T entity, Condition condition,
 			boolean isFilterField, String... specialFields) {
+		checkShardingSupport();
 		Map<String, Object> reMap[] = new Map[2];
 		try {
 			if (condition != null) condition.setSuidType(SuidType.UPDATE);
@@ -1120,30 +1122,6 @@ public class MongodbSqlLib extends AbstractBase
 		return obj;
 	}
 
-//	@Override
-//	public <T> List<T> selectById(Class<T> entityClass, Object id) {
-//
-//		String tableName = _toTableNameByClass(entityClass);
-//
-//		Object[] obj = processId(entityClass, id);
-//		Document one = (Document) obj[0];
-//		Bson moreFilter = (Bson) obj[1];
-//		
-//
-////		DatabaseClientConnection conn = getConn();
-////		try {
-////			FindIterable<Document> docIterable = null;
-////			if (moreFilter != null)
-////				docIterable = getMongoDatabase(conn).getCollection(tableName).find(moreFilter);
-////			else
-////				docIterable = getMongoDatabase(conn).getCollection(tableName).find(one);
-////
-////			return TransformResult.toListEntity(docIterable, entityClass);
-////		} finally {
-////			close(conn);
-////		}
-//	}
-
 	@SuppressWarnings("rawtypes")
 	private String getIdType(Class clazz, String pkName) {
 		Field field = null;
@@ -1193,6 +1171,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	@SuppressWarnings("rawtypes")
 	public int deleteById(Class c, Object id) {
+		checkShardingSupport();
 		String tableName = _toTableNameByClass(c);
 
 		Object[] obj = processId(c, id);
@@ -1330,7 +1309,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public <T> long insertAndReturnId(T entity, IncludeType includeType) {
-
+		checkShardingSupport();
 		String tableName = _toTableName(entity);
 		String sql = "";
 		int num = 0;
@@ -1562,7 +1541,7 @@ public class MongodbSqlLib extends AbstractBase
 	//table,where:doc.toJson(),  group:     orderyBy:   skip:   limit:  selectFields:   
 	
 	private <T> List<T> selectWithGroupBy(T entity,Condition condition) {
-		
+		checkShardingSupport();
 		String tableName = _toTableName(entity);
 
 		BasicDBObject filter = toDBObjectForFilter(entity, condition); // 加过滤条件.
@@ -1861,6 +1840,7 @@ public class MongodbSqlLib extends AbstractBase
 	// create index
 	@Override
 	public String index(String collectionName, String fieldName, IndexType indexType) {
+		checkShardingSupport();
 		DatabaseClientConnection conn = null;
 		try {
 			conn = getConn();
@@ -1906,6 +1886,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public String unique(String collectionName, String fieldName, IndexType indexType) {
+		checkShardingSupport();
 		DatabaseClientConnection conn = null;
 		try {
 			conn = getConn();
@@ -1931,6 +1912,7 @@ public class MongodbSqlLib extends AbstractBase
 	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
 
 		if (indexes == null || indexes.size() <= 0) return null;
+		checkShardingSupport();
 		List<IndexModel> list = new ArrayList<>(indexes.size());
 		Bson bson = null;
 		IndexOptions indexOptions = null;
@@ -2007,6 +1989,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	@Override
 	public int modify(String commandStr) {
+		checkShardingSupport();
 		commandStr=_removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		
@@ -2056,6 +2039,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	@Override
 	public String selectJson(String commandStr) {
+		checkShardingSupport();
 		commandStr = _removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[] = cEngine.getTableAndType(commandStr);
@@ -2102,6 +2086,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> List<T> select(String commandStr, Class<T> returnTypeClass) {
+		checkShardingSupport();
 		commandStr=_removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[]=cEngine.getTableAndType(commandStr);
@@ -2139,6 +2124,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	@Override
 	public List<Map<String, Object>> selectMapList(String commandStr) {
+		checkShardingSupport();
 		commandStr=_removeComment(commandStr);
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[] = cEngine.getTableAndType(commandStr);
@@ -2179,6 +2165,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public void dropIndexes(String collectionName) {
+		checkShardingSupport();
 		DatabaseClientConnection conn = null;
 		try {
 			conn = getConn();
@@ -2210,6 +2197,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	public String uploadFile(String filename, InputStream fileStream,
 			Map<String, Object> metadataMap) {
+		checkShardingSupport();
 		DatabaseClientConnection conn = null;
 		conn = getConn();
 		MongoDatabase database = getMongoDatabase(conn);
@@ -2265,6 +2253,8 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public List<GridFsFile> selectFiles(GridFsFile gridFsFile, Condition condition) {
+		checkShardingSupport();
+		
 		//属性不转换,保留原样.
 		
 		if (gridFsFile.getMetadata() != null && gridFsFile.getMetadata().size() == 0)
@@ -2406,49 +2396,6 @@ public class MongodbSqlLib extends AbstractBase
 		}
 		return returnBytes;
 	}
-
-	
-//	@Override
-//	public OutputStream getOutputStreamByName(String fileName) {
-//		DatabaseClientConnection conn = null;
-//		conn = getConn();
-//		MongoDatabase database = getMongoDatabase(conn);
-//		GridFSBucket gridFSBucket = getGridFSBucket(database);
-//
-//		byte[] bytesToWriteTo = null;
-//		try (GridFSDownloadStream downloadStream = gridFSBucket.openDownloadStream(fileName)) { // 返回的是files里面的id,查询时也是里面的id
-//			int fileLength = (int) downloadStream.getGridFSFile().getLength();
-//			bytesToWriteTo = new byte[fileLength];
-//			downloadStream.read(bytesToWriteTo);
-//		} catch (Exception e) {
-//			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-//			throw ExceptionHelper.convert(e);
-//		} finally {
-//			close(conn);
-//		}
-//		return bytesToWriteTo;
-//	}
-//
-//	@Override
-//	public OutputStream getOutputStreamById(String fileId) {
-//		DatabaseClientConnection conn = null;
-//		conn = getConn();
-//		MongoDatabase database = getMongoDatabase(conn);
-//		GridFSBucket gridFSBucket = getGridFSBucket(database);
-//		byte[] bytesToWriteTo = null;
-//		try (GridFSDownloadStream downloadStream = gridFSBucket
-//				.openDownloadStream(new ObjectId(fileId))) { // 返回的是files里面的id,查询时也是里面的id
-//			int fileLength = (int) downloadStream.getGridFSFile().getLength();
-//			bytesToWriteTo = new byte[fileLength];
-//			downloadStream.read(bytesToWriteTo);
-//		} catch (Exception e) {
-//			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-//			throw ExceptionHelper.convert(e);
-//		} finally {
-//			close(conn);
-//		}
-//		return bytesToWriteTo;
-//	}
 
 	@Override
 	public void renameFile(String fileId, String newName) {
@@ -2764,5 +2711,11 @@ public class MongodbSqlLib extends AbstractBase
 			}
 		}
 		return found;
+	}
+	
+	private void checkShardingSupport() {
+		if (ShardingUtil.hadSharding()) {
+			Logger.warn("Please notice this method do not support Sharding funtion in current version!");
+		}
 	}
 }
