@@ -168,7 +168,7 @@ public class ParaConvertUtil {
 //						documentAsMap.put(StringConst.GridFsMetadata_FieldName,fields[i].getName());
 //					}
 					
-					//GridFsMetadata对应map的值,是传入的实体,不是查询出来的. TODO
+					//GridFsMetadata对应map的值,是传入的实体,不是查询出来的. todo
 //					else if (value != null && fields[i].isAnnotationPresent(GridFsMetadata.class)) {
 //						documentAsMap.put(GridFsMetadata.class.getName(), value);
 

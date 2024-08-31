@@ -48,7 +48,6 @@ public class AndroidLog implements org.teasoft.bee.logging.Log {
 
 	@Override
 	public void debug(String msg) {
-//		System.out.println("---------------AndroidLog--------debug----");
 		Log.d(DEBUG, msg);
 
 	}
@@ -65,7 +64,6 @@ public class AndroidLog implements org.teasoft.bee.logging.Log {
 
 	@Override
 	public void info(String msg) {
-//		System.out.println("---------------AndroidLog--------info----");
 		Log.i(INFO, msg);
 
 	}
@@ -77,7 +75,6 @@ public class AndroidLog implements org.teasoft.bee.logging.Log {
 
 	@Override
 	public void warn(String msg) {
-//		System.out.println("---------------AndroidLog--------warn----");
 		Log.w(WARN, msg);
 	}
 

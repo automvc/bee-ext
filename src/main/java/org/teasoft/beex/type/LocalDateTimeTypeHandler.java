@@ -30,7 +30,6 @@ public class LocalDateTimeTypeHandler<T> implements TypeHandler<LocalDateTime> {
 	@Override
 	public LocalDateTime process(Class<LocalDateTime> fieldType, Object result) {
 		if (result == null) return null;
-//		System.out.println(result.getClass().getName());
 		
 		if (LocalDateTime.class.isAssignableFrom(fieldType)) {
 			LocalDateTime t = LocalDateTimeUtil.toLocalDateTime(result);
