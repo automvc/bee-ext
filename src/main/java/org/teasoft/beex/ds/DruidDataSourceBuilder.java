@@ -37,6 +37,17 @@ public class DruidDataSourceBuilder implements DataSourceBuilder {
 
 		DataSource ds = null;
 		try {
+			//2.4.0
+			if (!propertiesMap.containsKey("url") && propertiesMap.containsKey("jdbcUrl")) {
+				propertiesMap.put("url", propertiesMap.get("jdbcUrl"));
+				propertiesMap.remove("jdbcUrl");
+			}
+			//2.4.0
+			if (!propertiesMap.containsKey("driverName") && propertiesMap.containsKey("driverClassName")) {
+				propertiesMap.put("driverName", propertiesMap.get("driverClassName"));
+				propertiesMap.remove("driverClassName");
+			}
+			
 			ds = DruidDataSourceFactory.createDataSource(propertiesMap);
 			Logger.info("[Bee] Using DruidDataSourceBuilder...");
 		} catch (Exception e) {
