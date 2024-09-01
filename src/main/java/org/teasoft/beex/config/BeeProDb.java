@@ -41,7 +41,9 @@ public class BeeProDb {
 	
 //    private List<Map<String,String>> dbs; //V2.1 配置多个数据源, 属性值已具体工具对应
     
-    private Map<String,Map<String,String>> dbs;  //V2.1.10
+	private Map<String, Map<String, String>> dbs; // V2.1.10
+    
+	private Map<String, Map<String, String>> sharding; // 2.4.0
     
     private Boolean extendFirst;//V2.1
 
@@ -131,6 +133,14 @@ public class BeeProDb {
 
 	public void setDbs(Map<String, Map<String, String>> dbs) {
 		this.dbs = dbs;
+	}
+
+	public Map<String, Map<String, String>> getSharding() {
+		return sharding;
+	}
+
+	public void setSharding(Map<String, Map<String, String>> sharding) {
+		this.sharding = sharding;
 	}
 	
 }
