@@ -207,6 +207,13 @@
              <version>2.0.4</version>
              <scope>provided</scope>
 		</dependency>
+
+		<dependency>
+             <groupId>org.postgresql</groupId>
+             <artifactId>postgresql</artifactId>
+             <version>42.2.24.jre7</version>
+             <scope>provided</scope>
+		</dependency>
 				
 		<!-- if necessary, can import the ohos.jar to java build path -->
 <!-- 	<dependency>

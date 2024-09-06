@@ -17,10 +17,11 @@
 
 package org.teasoft.beex.type;
 
+import org.teasoft.bee.osql.DatabaseConst;
 import org.teasoft.bee.osql.annotation.customizable.Json;
 import org.teasoft.bee.osql.annotation.customizable.JsonHandler;
-import org.teasoft.beex.type.JsonTypeConvert;
-import org.teasoft.beex.type.JsonTypeHandler;
+import org.teasoft.bee.osql.type.PostgreSQLJsonString;
+import org.teasoft.bee.osql.type.PostgreSQLJsonbString2;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 
@@ -34,6 +35,9 @@ public class JsonDefaultHandler implements JsonHandler {
 	public static void init() {
 		TypeHandlerRegistry.register(Json.class, new JsonTypeHandler());
 		SetParaTypeConverterRegistry.register(Json.class, new JsonTypeConvert());
+
+		SetParaTypeConverterRegistry.register(PostgreSQLJsonString.class, new PgSQLJsonTypeConvert(), DatabaseConst.PostgreSQL);
+		SetParaTypeConverterRegistry.register(PostgreSQLJsonbString2.class, new PgSQLJsonbTypeConvert2(), DatabaseConst.PostgreSQL);
 	}
 
 }
