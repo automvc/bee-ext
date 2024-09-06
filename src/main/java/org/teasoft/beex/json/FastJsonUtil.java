@@ -16,6 +16,7 @@ public class FastJsonUtil {
 	
 	public static String toJson(Object obj) {
 		try {
+			if (obj != null && obj.getClass() == String.class) return (String) obj;
 			return JSON.toJSONString(obj);
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
@@ -25,6 +26,7 @@ public class FastJsonUtil {
 	
 	public static <T> T toEntity(String json, Class<T> clazz) {
 		try {
+			if (clazz != null && clazz == String.class) return (T) json;
 			return (T)JSON.parseObject(json, clazz);
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);

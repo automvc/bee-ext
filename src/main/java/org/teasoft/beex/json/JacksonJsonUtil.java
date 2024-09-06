@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 public class JacksonJsonUtil {
 	
 	public static String toJson(Object obj) {
+		if (obj != null && obj.getClass() == String.class) return (String) obj;
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(obj);
@@ -31,7 +32,8 @@ public class JacksonJsonUtil {
 	
 	public static <T> T toEntity(String json, Class<T> clazz) {
 		try {
-			if(json==null) return null;
+			if (json == null) return null;
+			if (clazz != null && clazz == String.class) return (T) json;
 			ObjectMapper mapper = new ObjectMapper();
 			compat(mapper);
 			return (T) mapper.readValue(json, clazz);
@@ -52,6 +54,7 @@ public class JacksonJsonUtil {
 	public static <T> T toEntity(String json, Class<T> clazz, Class elementClass) {
 		try {
 			if(json==null) return null;
+			if (clazz != null && clazz == String.class) return (T) json;
 			ObjectMapper mapper = new ObjectMapper();
 			compat(mapper);
 			JavaType javaType = mapper.getTypeFactory().constructParametricType(clazz, elementClass);
