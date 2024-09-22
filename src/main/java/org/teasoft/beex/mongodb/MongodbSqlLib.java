@@ -442,15 +442,15 @@ public class MongodbSqlLib extends AbstractBase
 			
 			if (HoneyContext.getSqlIndexLocal() == null) { //分片,主线程
 				
-				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
-				struct.setTableName(struct.getTableName().replace(StringConst.ShardingTableIndexStr, tabNameList==null?"":tabNameList.toString()));
+//				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
+//				struct.setTableName(struct.getTableName().replace(StringConst.ShardingTableIndexStr, tabNameList==null?"":tabNameList.toString()));
 				List<T> list =_select(struct, entityClass); //检测缓存的           
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
 					logDsTab();
 					return list; 
 				}
 				ShardingReg.regShadingPage("", "", struct.getStart(), struct.getSize());
-				List<T> rsList = new MongodbShardingSelectEngine().asynProcess(entityClass, this, struct);
+				List<T> rsList = new MongodbShardingSelectEngine().asynProcess(entityClass, this, struct);//此处会设置真正的table
 				addInCache(struct.getSql(), rsList, rsList.size());
 				logSelectRows(rsList.size());
 				return rsList;
@@ -535,7 +535,7 @@ public class MongodbSqlLib extends AbstractBase
 		}
 	}
 
-	public <T> String _selectJson(MongoSqlStruct struct, Class<T> entityClass) {
+	private <T> String _selectJson(MongoSqlStruct struct, Class<T> entityClass) {
 		String sql = struct.getSql();
 		logSQLForMain("Mongodb::selectJson: "+sql);
 		log(struct);
@@ -726,6 +726,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> int delete(T entity, Condition condition) {
+		checkShardingSupport();
 		String tableName = _toTableName(entity);
 		BasicDBObject filter = toDBObjectForFilter(entity, condition);
 		
@@ -1808,9 +1809,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	// sharding  index??  可以通过HoneyContext.setTabSuffix(String suffix) 设置
 	private <T> boolean _createTable(Class<T> entityClass, boolean isDropExistTable) {
-		String tableName = _toTableNameByClass(entityClass);
-//		out.println(tableName); //eg: orders5[$#(index)#$] or orders_5[$#(index)#$]
-		tableName = tableName.replace(StringConst.ShardingTableIndexStr, ""); //分片时,是会带有下标的.
+		String tableName = _toTableNameByClass(entityClass); //到这里,已是lib执行,获取的是当前线程的tab 
 		DatabaseClientConnection conn = null;
 		boolean f = false;
 		try {
@@ -2494,7 +2493,7 @@ public class MongodbSqlLib extends AbstractBase
 		// db.users.find({ "gender" : true , "age" : { "$gte" : 20}},{ "name" : 1 , "age" : 1 , "address" : 1}).sort({ "age" : -1}).limit(2).skip(0)
 
 		String table = struct.getTableName();
-		table = table.replace(StringConst.ShardingTableIndexStr, "");
+//		table = table.replace(StringConst.ShardingTableIndexStr, "");
 
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
@@ -2575,7 +2574,7 @@ public class MongodbSqlLib extends AbstractBase
 		String insertType="One";
 		if(insertMany) insertType="Many";
 		String table = struct.getTableName();
-		table = table.replace(StringConst.ShardingTableIndexStr, "");
+//		table = table.replace(StringConst.ShardingTableIndexStr, "");
 		if (struct.getUpdateSetOrInsertOrFunOrOther() != null) {
 				StringBuffer sql = new StringBuffer();
 				sql.append("db.");
@@ -2610,7 +2609,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	private void log1Obj2Str(MongoSqlStruct struct, String opType) {
 		String table = struct.getTableName();
-		table = table.replace(StringConst.ShardingTableIndexStr, "");
+//		table = table.replace(StringConst.ShardingTableIndexStr, "");
 		
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
@@ -2657,7 +2656,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	private void logWithFilter(MongoSqlStruct struct, String opType) {
 		String table = struct.getTableName();
-		table = table.replace(StringConst.ShardingTableIndexStr, "");
+//		table = table.replace(StringConst.ShardingTableIndexStr, "");
 		
 		StringBuffer sql = new StringBuffer();
 		sql.append("db.");
@@ -2715,7 +2714,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	private void checkShardingSupport() {
 		if (ShardingUtil.hadSharding()) {
-			Logger.warn("Please notice this method do not support Sharding funtion in current version!");
+			Logger.warn("Please notice this method do not support Sharding funtion by default! But you can use HintManager set the sharding table and dataSource name.");
 		}
 	}
 }
