@@ -30,6 +30,9 @@ import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.SessionFactory;
 
 /**
+ * Tran Handler for @Tran.
+ * <br>The transaction will use same connection,
+ * <br>it mean that all operations of same transaction will do in same dataSource.
  * @author Kingstar
  * @since  1.17
  */
@@ -65,10 +68,13 @@ public class TranHandler {
 			transaction.commit();
 		} catch (Exception e) {
 			transaction.rollback();
-			Logger.warn(e.getMessage(), e);
+//			Logger.warn(e.getMessage(), e);
+			Logger.warn("Catch Exception in TranHandler.tranAround: "+e.getMessage());
+			Logger.info(MSG + " end.");
+			throw e;  //fixed  2.4.0.8
 		}
 
-		Logger.info(MSG + " end...");
+		Logger.info(MSG + " end.");
 		return returnValue;
 	}
 
