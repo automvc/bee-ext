@@ -34,9 +34,9 @@ public class JsonTypeHandler implements TypeHandler {
 
 	@Override
 	public Object process(Class fieldType, Object result) {
-		if(result==null) return result;
+		if (result == null) return result;
 		if (List.class.isAssignableFrom(fieldType)) {
-			Object newOjb[] = (Object[])result;
+			Object newOjb[] = (Object[]) result;
 			return _process((Field) newOjb[1], newOjb[0]);
 		} else {
 			return JsonUtil.toEntity((String) result, fieldType);
@@ -44,14 +44,14 @@ public class JsonTypeHandler implements TypeHandler {
 	}
 
 	private Object _process(Field field, Object result) {
-		if(result==null) return result;
+		if (result == null) return result;
 		Type gType = field.getGenericType();
-		Class<?> elementType=null;
+		Class<?> elementType = null;
 		if (gType instanceof ParameterizedType) {
 			ParameterizedType paraType = (ParameterizedType) gType;
-			elementType = (Class<?>) paraType.getActualTypeArguments()[0]; //得到元素的泛型类型
+			elementType = (Class<?>) paraType.getActualTypeArguments()[0]; // 得到元素的泛型类型
 		}
 		return JsonUtil.toEntity((String) result, field.getType(), elementType);
 	}
-	
+
 }

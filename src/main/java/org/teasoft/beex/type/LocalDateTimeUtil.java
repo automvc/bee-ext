@@ -17,7 +17,6 @@
 
 package org.teasoft.beex.type;
 
-//import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 

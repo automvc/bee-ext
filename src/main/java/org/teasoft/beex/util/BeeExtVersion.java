@@ -27,19 +27,19 @@ import org.teasoft.honey.util.HoneyVersion;
  * @since  1.11
  */
 public final class BeeExtVersion {
-	
+
 	private BeeExtVersion() {}
 
 	public static final String version = "2.4.0";
 	public static final String buildId = version + ".8";
-	
+
 	static {
 		printVersion();
 	}
-	
+
 	private static void printVersion() {
-		Logger.info("[Bee] -------- BeeExt "+version+" -------- ");
-		
+		Logger.info("[Bee] -------- BeeExt " + version + " -------- ");
+
 		Logger.debug("[Bee] ========= Bee    buildId  " + BeeVersion.buildId);
 		Logger.debug("[Bee] ========= Honey  buildId  " + HoneyVersion.buildId);
 		Logger.debug("[Bee] ========= BeeExt buildId  " + buildId);

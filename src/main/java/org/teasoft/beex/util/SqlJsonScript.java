@@ -39,7 +39,7 @@ public class SqlJsonScript {
 		List<ColumnBean> list = ColumnUtil.getColumnList(tableName);
 
 		ObjectMapper mapper = new ObjectMapper();
-		
+
 		return mapper.writeValueAsString(list);
 	}
 
