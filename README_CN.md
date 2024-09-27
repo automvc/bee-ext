@@ -34,10 +34,13 @@ Bee-Ext
 * 14.支持Mongodb GridFS文件存储  
 * 15.支持Mongodb地理信息插入、查询,包括分片  
 
-* 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt及快捷输入类BFX.  
+* 15.提供两个扩展接口SuidRichExt,MongoSuidRichExt,ConditionExt及快捷输入类BFX.  
      提供如Orders::getUserid格式访问字段  
+    常用API有org.teasoft.beex.osql.api包  
      
 * 16.MS Access JDBC密码访问  
+
+* 17.内置各种常用数据源的DataSourceBuilder  
 
 
 **其它:**	

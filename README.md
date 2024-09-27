@@ -36,10 +36,13 @@ Bee-Ext
   
 * 14.Mongodb GridFS file store  
 
-* 15.add SuidRichExt,MongoSuidRichExt and BFX.  
+* 15.add SuidRichExt,MongoSuidRichExt,ConditionExt and BFX.  
      Provide access to fields in the format of Orders::getUserid  
+     normal API in org.teasoft.beex.osql.api package  
 
 *16. MS Access JDBC Password connect  
+
+* 17.default support normal ds DataSourceBuilder  
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
