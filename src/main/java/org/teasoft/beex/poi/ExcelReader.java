@@ -92,8 +92,8 @@ public class ExcelReader {
 	 * 返回首个Excel sheet中从开始行到结束行的记录.
 	 * <br>Returns the records from the beginning line to the end line in the first Excel sheet.
 	 * @param inputStream InputStream of the Excel file 
-	 * @param startRow 开始行(首行为0).start row(0,1,...)
-	 * @param endRow 结束行.end row.
+	 * @param startRow 开始行(首行为0).start row(the first is 0)
+	 * @param endRow 结束行(包括),如果小于0,则获取所有行.End row (including), if less than 0, retrieve all rows.
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 */
 	public static List<String[]> readExcel(InputStream inputStream, int startRow, int endRow) {
@@ -105,8 +105,8 @@ public class ExcelReader {
 	 * 返回首个Excel sheet中从开始行到结束行的记录.
 	 * <br>Returns the records from the beginning line to the end line in the first Excel sheet.
 	 * @param fullPath 完整的Excel文件路径(包含文件名).Full Excel file path (including file name)
-	 * @param startRow 开始行(首行为0).start row(0,1,...)
-	 * @param endRow 结束行.end row.
+	 * @param startRow 开始行(首行为0).start row(the first is 0)
+	 * @param endRow 结束行(包括),如果小于0,则获取所有行.End row (including), if less than 0, retrieve all rows.
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws FileNotFoundException  if the file does not exist
 	 */
@@ -119,8 +119,8 @@ public class ExcelReader {
 	 * <br>Returns the records from the beginning line to the end line in Excel sheet with sheetname.
 	 * @param fullPath 完整的Excel文件路径(包含文件名).Full Excel file path (including file name)
 	 * @param sheetName sheet name
-	 * @param startRow 开始行(首行为0).start row(0,1,...)
-	 * @param endRow 结束行.end row.
+	 * @param startRow 开始行(首行为0).start row(the first is 0)
+	 * @param endRow 结束行(包括),如果小于0,则获取所有行.End row (including), if less than 0, retrieve all rows.
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 */
 	public static List<String[]> readExcel(String fullPath, String sheetName, int startRow, int endRow)
@@ -305,8 +305,8 @@ public class ExcelReader {
 	/**
 	 * 
 	 * @param sheet
-	 * @param startRow 开始行,从0开始
-	 * @param endRow 结束行(包括),如果小于0,则获取所有行
+	 * @param startRow 开始行(首行为0).start row(the first is 0)
+	 * @param endRow 结束行(包括),如果小于0,则获取所有行.End row (including), if less than 0, retrieve all rows.
 	 * @return
 	 */
 	private static List<String[]> getListBySheet(Sheet sheet, int startRow, int endRow) {
