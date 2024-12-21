@@ -58,6 +58,7 @@ import org.teasoft.bee.osql.annotation.GridFsMetadata;
 import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.exception.BeeErrorGrammarException;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
+import org.teasoft.bee.osql.exception.NotSupportedException;
 import org.teasoft.beex.json.JsonUtil;
 import org.teasoft.beex.mongodb.ds.MongoContext;
 import org.teasoft.beex.mongodb.ds.SingleMongodbFactory;
@@ -87,6 +88,7 @@ import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectFunEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectJsonEngine;
 import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingSelectListStringArrayEngine;
+import org.teasoft.honey.sharding.engine.mongodb.MongodbShardingUpdateOrDeleteEngine;
 import org.teasoft.honey.util.ObjectUtils;
 import org.teasoft.honey.util.StreamUtil;
 import org.teasoft.honey.util.StringParser;
@@ -141,7 +143,7 @@ public class MongodbSqlLib extends AbstractBase
 	}
 
 	private MongoDatabase getMongoDatabase(DatabaseClientConnection conn) {
-		if (conn == null) {
+		if (conn == null) { //TODO
 			return SingleMongodbFactory.getMongoDb(); // 单个数据源时,
 		}
 		return (MongoDatabase) conn.getDbConnection();
@@ -164,13 +166,10 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public <T> int update(T entity) {
-		checkShardingSupport();
+//		checkShardingSupport(); 
+		if (entity == null) return -1;
 		String tableName = _toTableName(entity);
 		BasicDBObject doc = null;
-		DatabaseClientConnection conn = null;
-		int num = 0;
-		String sql = "";
-
 		try {
 
 			String pkName = HoneyUtil.getPkFieldName(entity);
@@ -197,31 +196,62 @@ public class MongodbSqlLib extends AbstractBase
 			doc = newDBObject(map);
 			BasicDBObject updateDocument = new BasicDBObject("$set", doc);
 
-			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
-					null, null, false, entity.getClass(), updateDocument);
+			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null, null, null, false,
+					entity.getClass(), updateDocument);
+			struct.setSuidType(SuidType.UPDATE);
+			
+			return updateOrDelete(struct);
+
+		} catch (Exception e) {
+			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
+			throw ExceptionHelper.convert(e);
+		}
+	}
+	
+	// 2.5.0
+	private int _update(MongoSqlStruct struct, boolean isClearCache) {
+		int num = 0;
+		String sql = null;
+		DatabaseClientConnection conn = null;
+		try {
 			sql = struct.getSql();
 			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
-			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			logSQLForMain("Mongodb::update: "+sql);
+
+			logSQLForMain("Mongodb::update: " + sql);
 			logUpdate(struct);
-			
+
+			HoneyContext.addInContextForCache(sql, struct.getTableName());
+
 			conn = getConn();
 
 			ClientSession session = getClientSession();
-			UpdateResult rs;
+
+			BasicDBObject filter = (BasicDBObject) struct.getFilter();
+			BasicDBObject updateDocument = (BasicDBObject) struct.getUpdateSetOrInsertOrFunOrOther();
+
+			String tableName = struct.getTableName();
+			UpdateResult rs = null;
 			if (session == null)
 				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(filter, updateDocument);
 			else
 				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, filter, updateDocument);
-			 
-			num = (int) rs.getModifiedCount();
+
+			if (rs != null) {
+				long updateCount = rs.getModifiedCount();
+				if (updateCount > Integer.MAX_VALUE) {
+					Logger.error(
+							"in MongodbSqlLib._update method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
+				}
+				num = (int) updateCount;
+			}
+
 			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
 		} finally {
 			logAffectRow(num);
-			clearInCache(sql, "int", SuidType.MODIFY, num);
+			if (isClearCache) clearInCache(sql, "int", SuidType.MODIFY, num);
 			close(conn);
 		}
 	}
@@ -248,8 +278,8 @@ public class MongodbSqlLib extends AbstractBase
 			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 			logSQLForMain("Mongodb::insert: "+sql);
 			logInsertOne(struct);
-			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			
+//			HoneyContext.addInContextForCache(sql, struct.getTableName());
+			_addInContextForCache(struct);
 	
 			ClientSession session = getClientSession();
 			if (session == null)
@@ -442,8 +472,6 @@ public class MongodbSqlLib extends AbstractBase
 			
 			if (HoneyContext.getSqlIndexLocal() == null) { //分片,主线程
 				
-//				List<String> tabNameList = HoneyContext.getListLocal(StringConst.TabNameListLocal);
-//				struct.setTableName(struct.getTableName().replace(StringConst.ShardingTableIndexStr, tabNameList==null?"":tabNameList.toString()));
 				List<T> list =_select(struct, entityClass); //检测缓存的           
 				if (list != null) {// 若缓存是null,就无法区分了,所以没有数据,最好是返回空List,而不是null
 					logDsTab();
@@ -461,6 +489,47 @@ public class MongodbSqlLib extends AbstractBase
 		}
 	}
 	
+	private static final String JUST_SUPPORT_UPDATE_DELETE = "updateOrDelete method just support update and delete type";
+
+	// 2.5.0
+	@Override
+	public int updateOrDelete(MongoSqlStruct struct) {
+
+		String sql = struct.getSql();
+		if (sql == null || "".equals(sql)) return -1;
+		boolean isClearCache;
+		if (!ShardingUtil.hadSharding()) {// 1.x版本及不用分片走的分支
+			isClearCache = true;
+			if (struct.getSuidType() == SuidType.DELETE)
+				return _delete(struct, isClearCache);
+			else if (struct.getSuidType() == SuidType.UPDATE)
+				return _update(struct, isClearCache);
+			else
+				throw new NotSupportedException(JUST_SUPPORT_UPDATE_DELETE);
+		} else {
+			if (HoneyContext.getSqlIndexLocal() == null) {// 拦截到的要分片的主线程
+				try {
+//					HoneyContext.addInContextForCache(sql, struct.getTableName());
+					_addInContextForCache(struct);
+					int num = new MongodbShardingUpdateOrDeleteEngine().asynProcess(this, struct);
+					logAffectRow(num);
+					clearInCache(sql, "int", SuidType.MODIFY, num); // 父线程才清缓存
+					return num;
+				} finally {
+					clearContext(sql); // 分片的主线程都要清主线程的上下文
+				}
+			} else { // 子线程执行
+				isClearCache = false;
+				if (struct.getSuidType() == SuidType.DELETE)
+					return _delete(struct, isClearCache);
+				else if (struct.getSuidType() == SuidType.UPDATE)
+					return _update(struct, isClearCache);
+				else
+					throw new NotSupportedException(JUST_SUPPORT_UPDATE_DELETE);
+			}
+		}
+	}
+	
 //	单表查,一次只涉及一张表
 	@SuppressWarnings("unchecked")
 	private <T> List<T> _select(MongoSqlStruct struct, Class<T> entityClass) {
@@ -468,8 +537,12 @@ public class MongodbSqlLib extends AbstractBase
 		String sql = struct.getSql();
 		logSQLForMain("Mongodb::select: " + sql);
 		log(struct);
-
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
+		
+//		String tableName=struct.getTableName();
+//		tableName =ShardingUtil.appendTableIndexIfNeed(tableName);
+//		HoneyContext.addInContextForCache(sql, tableName);
+		_addInContextForCache(struct);
+		
 //		boolean isReg  //不需要添加returnType判断,因MongoSqlStruct已有returnType
 //		initRoute(SuidType.SELECT, entityClass, sql);
 		Object cacheObj = getCache().get(sql);
@@ -495,6 +568,12 @@ public class MongodbSqlLib extends AbstractBase
 		}
 
 		return rsList;
+	}
+	
+	private void _addInContextForCache(MongoSqlStruct struct) {
+		String tableName = struct.getTableName();
+		tableName = ShardingUtil.appendTableIndexIfNeed(tableName);
+		HoneyContext.addInContextForCache(struct.getSql(), tableName);
 	}
 	
 	@Override
@@ -539,8 +618,9 @@ public class MongodbSqlLib extends AbstractBase
 		String sql = struct.getSql();
 		logSQLForMain("Mongodb::selectJson: "+sql);
 		log(struct);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
-
+//		HoneyContext.addInContextForCache(sql, struct.getTableName());
+		_addInContextForCache(struct);
+		
 		initRoute(SuidType.SELECT, entityClass, sql);
 		Object cacheObj = getCache().get(sql); // 这里的sql还没带有值
 		if (cacheObj != null) {
@@ -611,7 +691,8 @@ public class MongodbSqlLib extends AbstractBase
 		String sql = struct.getSql();
 		logSQLForMain("Mongodb::selectString: "+sql);
 		log(struct);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
+//		HoneyContext.addInContextForCache(sql, struct.getTableName());
+		_addInContextForCache(struct);
 		
 		initRoute(SuidType.SELECT, entityClass, sql);
 		Object cacheObj = getCache().get(sql); // 这里的sql还没带有值
@@ -724,63 +805,25 @@ public class MongodbSqlLib extends AbstractBase
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> int delete(T entity, Condition condition) {
-		checkShardingSupport();
+//		checkShardingSupport();
 		String tableName = _toTableName(entity);
 		BasicDBObject filter = toDBObjectForFilter(entity, condition);
-		
-		int num = 0;
-		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null,
-				null, null, false,entity.getClass());
-		String sql=struct.getSql();
-		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
-		logSQLForMain("Mongodb::delete: "+sql);
-		logDeleteMany(struct);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		
-		DatabaseClientConnection conn = getConn();
-		
-		try {
-			DeleteResult rs = null;
-			ClientSession session = getClientSession();
-			
-			if (filter != null) {
-				if (session == null)
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
-				else
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, filter);
-			}else {
-				boolean notDeleteWholeRecords = HoneyConfig.getHoneyConfig().notDeleteWholeRecords;
-				if (notDeleteWholeRecords) {
-					throw new BeeIllegalBusinessException("BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).If need, you can change the config in bee.osql.notDeleteWholeRecords !");
-				}
-				if (session == null)
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap()));
-				else
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, new Document(new HashMap()));
-			}
-			if (rs != null)
-				 num=(int) rs.getDeletedCount();
 
-			logAffectRow(num);
-			return num;
-		} catch (Exception e) {
-			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
-			throw ExceptionHelper.convert(e);
-		} finally {
-			clearInCache(sql, "int", SuidType.MODIFY, num); // has clearContext(sql)
-			close(conn);
-		}
+		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, filter, null, null, null, null, false,
+				entity.getClass());
+
+		struct.setSuidType(SuidType.DELETE);
+		return updateOrDelete(struct);
 	}
-	
+
 	@Override
 	public <T> int update(T oldEntity, T newEntity) {
 		String tableName = _toTableName(oldEntity);
 		try {
 			Map<String, Object> oldMap = ParaConvertUtil.toMap(oldEntity);
 			Map<String, Object> newMap = ParaConvertUtil.toMap(newEntity);
-			return update(oldMap, newMap, tableName, null);
+			return update(oldMap, newMap, tableName, null, oldEntity);
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
@@ -791,109 +834,87 @@ public class MongodbSqlLib extends AbstractBase
 	public <T> int update(T entity, Condition condition, String... setFields) {
 		String tableName = _toTableName(entity);
 		Map<String, Object> reMap[] = toMapForUpdateSet(entity, condition, setFields);
-		return update(reMap[0], reMap[1], tableName, condition);
+		return update(reMap[0], reMap[1], tableName, condition, entity);
 	}
 
 	@Override
 	public <T> int updateBy(T entity, Condition condition, String... whereFields) {
 		String tableName = _toTableName(entity);
 		Map<String, Object> reMap[] = toMapForUpdateBy(entity, condition, whereFields);
-		return update(reMap[0], reMap[1], tableName, condition);
+		return update(reMap[0], reMap[1], tableName, condition, entity);
 	}
 	
-	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName,Condition condition) {
-		checkShardingSupport();
+	private <T> int update(Map<String, Object> filterMap, Map<String, Object> newMap, String tableName,
+			Condition condition, T entity) {
+//		checkShardingSupport();
 		BasicDBObject oldDoc = null;
 		BasicDBObject newDoc = null;
-		DatabaseClientConnection conn = null;
-		String sql="";
-		int num=0;
 		BasicDBObject updateSet = new BasicDBObject();
-		boolean hasNewValue=false;
+		boolean hasNewValue = false;
 		try {
-			
+
 			boolean notUpdateWholeRecords = HoneyConfig.getHoneyConfig().notUpdateWholeRecords;
 			if (notUpdateWholeRecords && ObjectUtils.isEmpty(filterMap)) {
 				throw new BeeIllegalBusinessException(
 						"BeeIllegalBusinessException: It is not allowed update whole documents(records) in one collection(table). If need, you can change the config in bee.osql.notUpdateWholeRecords !");
 			}
-			
+
 			if (filterMap == null) filterMap = new HashMap<>();
-			
+
 			oldDoc = new BasicDBObject(filterMap); // filter
 //			List<Bson> updateBsonList=new ArrayList<>();
-			
-			if(newMap!=null && newMap.size()>0) {
+
+			if (newMap != null && newMap.size() > 0) {
 				newDoc = new BasicDBObject(newMap);
-				hasNewValue=true;
+				hasNewValue = true;
 //				updateBsonList.add(new BasicDBObject("$set", newDoc));
 			}
-			
-			List<DBObject> updateSetBsonList=MongoConditionUpdateSetHelper.processConditionForUpdateSet(condition);	
-			if(updateSetBsonList!=null)	 {
+
+			List<DBObject> updateSetBsonList = MongoConditionUpdateSetHelper.processConditionForUpdateSet(condition);
+			if (updateSetBsonList != null) {
 //				updateBsonList.addAll(updateSetBsonList);
-				
+
 				DBObject setObject = updateSetBsonList.get(0);
 				DBObject incObject = updateSetBsonList.get(1);
 				DBObject mulObject = updateSetBsonList.get(2);
-				
-				if(setObject!=null) {
-					if(newDoc!=null) newDoc.putAll(setObject);
-					else newDoc=(BasicDBObject)setObject;
+
+				if (setObject != null) {
+					if (newDoc != null)
+						newDoc.putAll(setObject);
+					else
+						newDoc = (BasicDBObject) setObject;
 				}
-				
+
 //				DBObject newObj = new BasicDBObject();
-				
-				if (newDoc!=null) {
+
+				if (newDoc != null) {
 					updateSet.put("$set", newDoc);
-					hasNewValue=true;
+					hasNewValue = true;
 				}
-				if (incObject!=null) {
+				if (incObject != null) {
 					updateSet.put("$inc", incObject);
-					hasNewValue=true;
+					hasNewValue = true;
 				}
-				if (mulObject!=null) {
+				if (mulObject != null) {
 					updateSet.put("$mul", mulObject);
-					hasNewValue=true;
+					hasNewValue = true;
 				}
-			}else if(newDoc!=null){
+			} else if (newDoc != null) {
 				updateSet.put("$set", newDoc);
 			}
-			
-			if(!hasNewValue) {
+
+			if (!hasNewValue) {
 				throw new BeeErrorGrammarException("The update set part is empty!");
 			}
-			
-//			Bson updateSet=Updates.combine(updateBsonList);
-			
-			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, oldDoc, null, null,
-					null, null, false, null, updateSet); // this method no entityClass
-			sql = struct.getSql();
-			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
-			HoneyContext.addInContextForCache(sql, struct.getTableName());
-			logSQLForMain("Mongodb::update: "+sql);
-			logUpdate(struct);
 
-			conn = getConn();
+			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, oldDoc, null, null, null, null, false,
+					entity.getClass(), updateSet); // this method no entityClass
 
-//			UpdateResult rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateBsonList.get(0)); //ok
-			ClientSession session = getClientSession();
-			UpdateResult rs =null;
-			if (session == null)
-				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(oldDoc, updateSet);
-			else
-				rs = getMongoDatabase(conn).getCollection(tableName).updateMany(session, oldDoc, updateSet);
-			
-			Logger.debug("Update result raw json: "+rs.toString());
-			num=(int) rs.getModifiedCount();
-			logAffectRow(num);
-			return num;
+			struct.setSuidType(SuidType.UPDATE);
+			return updateOrDelete(struct);
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
-		} finally {
-			clearInCache(sql, "int", SuidType.MODIFY, num);
-			close(conn);
 		}
 	}
 
@@ -925,7 +946,7 @@ public class MongodbSqlLib extends AbstractBase
 	@SuppressWarnings("unchecked")
 	private <T> Map<String, Object>[] toMapForUpdate(T entity, Condition condition,
 			boolean isFilterField, String... specialFields) {
-		checkShardingSupport();
+//		checkShardingSupport();
 		Map<String, Object> reMap[] = new Map[2];
 		try {
 			if (condition != null) condition.setSuidType(SuidType.UPDATE);
@@ -992,7 +1013,8 @@ public class MongodbSqlLib extends AbstractBase
 				null, null, false,entity.getClass()," (Artificial sql) Just define for cache: insert batch "); //insert 放在updateSet
 		String sql=struct.getSql();
 		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
+//		HoneyContext.addInContextForCache(sql, struct.getTableName());
+		_addInContextForCache(struct);
 		_log("Mongodb::batch insert: "+sql);
 		
 		DatabaseClientConnection conn = getConn();
@@ -1160,53 +1182,92 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	@SuppressWarnings("rawtypes")
 	public int deleteById(Class c, Object id) {
-		checkShardingSupport();
+//		checkShardingSupport();
 		String tableName = _toTableNameByClass(c);
 
 		Object[] obj = processId(c, id);
 		BasicDBObject one = (BasicDBObject) obj[0];
 		Bson moreFilter = (Bson) obj[1];
-		
-		Object filter; 
-		if (moreFilter != null)
-			filter=moreFilter;
-		else 
-			filter=one;
-		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, (Bson)filter, null, null,
-				null, null, false,c);
-		String sql=struct.getSql();
-		initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
-		logSQLForMain("Mongodb::deleteById: "+sql);
-		logDelete(struct,moreFilter==null);
-		
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
-		
-		int num=0;
 
-		DatabaseClientConnection conn = getConn();
+		Object filter;
+		boolean isDeleteOne = false;
+		if (moreFilter != null) {
+			filter = moreFilter;
+		} else {
+			filter = one;
+			isDeleteOne = true;
+		}
+
+		MongoSqlStruct struct = new MongoSqlStruct("int", tableName, (Bson) filter, null, null, null, null, false, c);
+
+		struct.setSuidType(SuidType.DELETE);
+		struct.setDeleteOne(isDeleteOne);
+		return updateOrDelete(struct);
+	}
+	
+	// 2.5.0
+	private int _delete(MongoSqlStruct struct, boolean isClearCache) {
+
+		int num = 0;
+		String sql = null;
+		DatabaseClientConnection conn = null;
 		try {
-			DeleteResult rs = null;
+			sql = struct.getSql();
+			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
+			boolean isDeleteOne = struct.isDeleteOne();
+
+			String logType = "Mongodb::delete: ";
+			if (isDeleteOne) logType = "Mongodb::deleteById: ";
+			logSQLForMain(logType + sql);
+			logDelete(struct, isDeleteOne);
+
+//			if (isClearCache) HoneyContext.addInContextForCache(sql, struct.getTableName());
+			if (isClearCache) _addInContextForCache(struct);
+
+			conn = getConn();
 			ClientSession session = getClientSession();
-			if (session == null) {
-				if (moreFilter != null)
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(moreFilter);
+			Bson filter = (Bson) struct.getFilter();
+			String tableName = struct.getTableName();
+
+			DeleteResult rs = null;
+
+			if (isDeleteOne) {
+				if (session == null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(filter);
 				else
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(one);
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(session, filter);
+			} else if (filter != null) {
+				if (session == null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(filter);
+				else
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, filter);
 			} else {
-				if (moreFilter != null)
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, moreFilter);
+				boolean notDeleteWholeRecords = HoneyConfig.getHoneyConfig().notDeleteWholeRecords;
+				if (notDeleteWholeRecords) {
+					throw new BeeIllegalBusinessException(
+							"BeeIllegalBusinessException: It is not allowed delete whole documents(records) in one collection(table).If need, you can change the config in bee.osql.notDeleteWholeRecords !");
+				}
+				if (session == null)
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(new Document(new HashMap()));
 				else
-					rs = getMongoDatabase(conn).getCollection(tableName).deleteOne(session, one);
+					rs = getMongoDatabase(conn).getCollection(tableName).deleteMany(session, new Document(new HashMap()));
+			}
+			if (rs != null) {
+				long deletedCount = rs.getDeletedCount();
+				if (deletedCount > Integer.MAX_VALUE) {
+					Logger.error(
+							"in MongodbSqlLib._delete method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
+				}
+				num = (int) deletedCount;
 			}
 
-			num=(int) rs.getDeletedCount();
-			logAffectRow(num);
 			return num;
 		} catch (Exception e) {
 			if (e instanceof MongoTimeoutException) Logger.warn(Timeout_MSG);
 			throw ExceptionHelper.convert(e);
 		} finally {
-			clearInCache(sql, "int", SuidType.MODIFY, num);
+			logAffectRow(num);
+			if (isClearCache) clearInCache(sql, "int", SuidType.MODIFY, num); // has clearContext(sql)
 			close(conn);
 		}
 	}
@@ -1257,7 +1318,8 @@ public class MongodbSqlLib extends AbstractBase
 		String sql=struct.getSql();
 		logSQLForMain("Mongodb::count: "+sql);
 		logCount(struct);
-		HoneyContext.addInContextForCache(sql, struct.getTableName());
+//		HoneyContext.addInContextForCache(sql, struct.getTableName());
+		_addInContextForCache(struct);
 		
 		Object cacheObj = getCache().get(sql);
 		if (cacheObj != null) {
@@ -1272,7 +1334,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		DatabaseClientConnection conn = getConn();
 		try {
-			int c;
+			long c; //2.5.0
 			ClientSession session = getClientSession();
 			
 			if (session == null) {
@@ -1288,7 +1350,12 @@ public class MongodbSqlLib extends AbstractBase
 			}
 			
 			addInCache(sql, c + "", 1);
-			logAffectRow(c);
+			
+			if (c > Integer.MAX_VALUE) {
+				Logger.error("in _count method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
+			}
+			logAffectRow((int) c);
+			
 			return c+"";
 		} finally {
 			close(conn);
@@ -1324,7 +1391,8 @@ public class MongodbSqlLib extends AbstractBase
 			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 			logSQLForMain("Mongodb::insertAndReturnId: " + sql);
 			logInsertOne(struct);
-			HoneyContext.addInContextForCache(sql, struct.getTableName());
+//			HoneyContext.addInContextForCache(sql, struct.getTableName());
+			_addInContextForCache(struct);
 
 			ClientSession session = getClientSession();
 			BsonValue bv =null;
@@ -1441,7 +1509,8 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = struct.getTableName();
 		String sql = struct.getSql();
 		logSQLForMain("Mongodb::selectWithFun: "+sql);
-		HoneyContext.addInContextForCache(sql, tableName);
+//		HoneyContext.addInContextForCache(sql, tableName);
+		_addInContextForCache(struct);
 		
 		Object cacheObj = getCache().get(sql);
 		if (cacheObj != null) {
@@ -2628,13 +2697,13 @@ public class MongodbSqlLib extends AbstractBase
 	}
 	
 	
-	private void logDeleteMany(MongoSqlStruct struct) {
-		logDelete(struct, false);
-	}
+//	private void logDeleteMany(MongoSqlStruct struct) {
+//		logDelete(struct, false);
+//	}
 	
-	private void logDelete(MongoSqlStruct struct,boolean isOne) {
+	private void logDelete(MongoSqlStruct struct,boolean isDeleteOne) {
 			String deleteType="deleteMany";
-			if(isOne) deleteType="deleteOne";
+			if(isDeleteOne) deleteType="deleteOne";
 			logWithFilter(struct, deleteType);
 	}
 	
