@@ -576,6 +576,10 @@ public class MongodbSqlLib extends AbstractBase
 		HoneyContext.addInContextForCache(struct.getSql(), tableName);
 	}
 	
+	private void _addInContextForCache(String sql, String tableName) {
+		HoneyContext.addInContextForCache(sql, tableName);
+	}
+	
 	@Override
 	public <T> String selectJson(T entity, Condition condition) {
 		if (entity == null) return null;
@@ -1365,7 +1369,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public <T> long insertAndReturnId(T entity, IncludeType includeType) {
-		checkShardingSupport();
+//		checkShardingSupport();
 		String tableName = _toTableName(entity);
 		String sql = "";
 		int num = 0;
@@ -1599,7 +1603,7 @@ public class MongodbSqlLib extends AbstractBase
 	//table,where:doc.toJson(),  group:     orderyBy:   skip:   limit:  selectFields:   
 	
 	private <T> List<T> selectWithGroupBy(T entity,Condition condition) {
-		checkShardingSupport();
+		checkShardingSupport(); //TODO
 		String tableName = _toTableName(entity);
 
 		BasicDBObject filter = toDBObjectForFilter(entity, condition); // 加过滤条件.
@@ -1866,7 +1870,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	// sharding  index??  可以通过HoneyContext.setTabSuffix(String suffix) 设置
 	private <T> boolean _createTable(Class<T> entityClass, boolean isDropExistTable) {
-		String tableName = _toTableNameByClass(entityClass); //到这里,已是lib执行,获取的是当前线程的tab 
+		String tableName = _toTableNameByClass(entityClass); // 到这里,已是lib执行,获取的是当前线程的tab
 		DatabaseClientConnection conn = null;
 		boolean f = false;
 		try {
@@ -1901,19 +1905,23 @@ public class MongodbSqlLib extends AbstractBase
 		try {
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
-			fieldName=_toColumnName(fieldName);
+			fieldName = _toColumnName(fieldName);
 			Bson bson = _getKeyBson(fieldName, indexType);
-			
+
 			ClientSession session = getClientSession();
-			collectionName=_toTableName2(collectionName); //fixed bug 2.1
+			collectionName = _toTableName2(collectionName); // fixed bug 2.1
+
+			_log("Mongodb::index collection(table): " + collectionName + ", fieldName: " + fieldName + ", indexType: "
+					+ indexType.getIndexType());
+
 			String re;
 			if (session == null) {
 				re = mdb.getCollection(collectionName).createIndex(bson);
-				//用原生语句也ok。
+				// 用原生语句也ok。
 //				Bson commandBson = index(collectionName, fieldName);
 //				Document result = runByCommand(commandBson);//操作驱动API
 //				re=result.toJson();
-			}else {
+			} else {
 				re = mdb.getCollection(collectionName).createIndex(session, bson);
 			}
 			return re;
@@ -1948,10 +1956,14 @@ public class MongodbSqlLib extends AbstractBase
 			conn = getConn();
 			MongoDatabase mdb = getMongoDatabase(conn);
 			Bson bson = _getKeyBson(_toColumnName(fieldName), indexType);
-			IndexOptions indexOptions = new IndexOptions().unique(true);
-			
+			IndexOptions indexOptions = new IndexOptions().unique(true); // unique
+
 			ClientSession session = getClientSession();
-			collectionName=_toTableName2(collectionName);
+			collectionName = _toTableName2(collectionName);
+
+			_log("Mongodb::unique collection(table): " + collectionName + ", fieldName: " + fieldName + ", indexType: "
+					+ indexType.getIndexType());
+
 			String re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndex(bson, indexOptions);
@@ -2054,7 +2066,7 @@ public class MongodbSqlLib extends AbstractBase
 		String tableName = tableAndType[0];
 		String type = tableAndType[1];
 		
-		HoneyContext.addInContextForCache(commandStr, tableName);
+		_addInContextForCache(commandStr, tableName);
 		initRoute(SuidType.MODIFY, null, commandStr);
 		
 		Integer num = 0;
@@ -2100,7 +2112,7 @@ public class MongodbSqlLib extends AbstractBase
 		CommandEngine cEngine = new CommandEngine();
 		String tableAndType[] = cEngine.getTableAndType(commandStr);
 		String tableName = tableAndType[0];
-		HoneyContext.addInContextForCache(commandStr, tableName); //为了操作缓存，将相关信息添加到上下文
+		_addInContextForCache(commandStr, tableName); //为了操作缓存，将相关信息添加到上下文
 
 		boolean isReg = updateInfoInCache(commandStr, "StringJson", SuidType.SELECT, null);
 		if (isReg) {
@@ -2148,7 +2160,7 @@ public class MongodbSqlLib extends AbstractBase
 		String tableAndType[]=cEngine.getTableAndType(commandStr);
 		checkIsNotSelectCommandException(tableAndType[1]);
 		String tableName = tableAndType[0];
-		HoneyContext.addInContextForCache(commandStr, tableName);
+		_addInContextForCache(commandStr, tableName);
 		
 		boolean isReg = updateInfoInCache(commandStr, "List<T>", SuidType.SELECT, returnTypeClass);
 		if (isReg) {
@@ -2186,7 +2198,7 @@ public class MongodbSqlLib extends AbstractBase
 		String tableAndType[] = cEngine.getTableAndType(commandStr);
 		checkIsNotSelectCommandException(tableAndType[1]);
 		String tableName = tableAndType[0];
-		HoneyContext.addInContextForCache(commandStr, tableName);
+		_addInContextForCache(commandStr, tableName);
 
 		boolean isReg = updateInfoInCache(commandStr, "List<Map<String, Object>>", SuidType.SELECT, null);
 		if (isReg) {
@@ -2228,6 +2240,7 @@ public class MongodbSqlLib extends AbstractBase
 			MongoDatabase mdb = getMongoDatabase(conn);
 			ClientSession session = getClientSession();
 			collectionName=_toTableName2(collectionName);
+			_log("Mongodb::drop indexes for " + collectionName);
 			if (session == null)
 				mdb.getCollection(collectionName).dropIndexes();
 			else
@@ -2253,7 +2266,7 @@ public class MongodbSqlLib extends AbstractBase
 	@Override
 	public String uploadFile(String filename, InputStream fileStream,
 			Map<String, Object> metadataMap) {
-		checkShardingSupport();
+		checkShardingSupport(); //TODO
 		DatabaseClientConnection conn = null;
 		conn = getConn();
 		MongoDatabase database = getMongoDatabase(conn);
@@ -2309,7 +2322,7 @@ public class MongodbSqlLib extends AbstractBase
 
 	@Override
 	public List<GridFsFile> selectFiles(GridFsFile gridFsFile, Condition condition) {
-		checkShardingSupport();
+		checkShardingSupport();//TODO
 		
 		//属性不转换,保留原样.
 		

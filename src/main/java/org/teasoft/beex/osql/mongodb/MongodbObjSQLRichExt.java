@@ -18,6 +18,7 @@
 package org.teasoft.beex.osql.mongodb;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,10 @@ import org.teasoft.beex.osql.FieldNameUtil;
 import org.teasoft.beex.osql.api.SerialFunction;
 import org.teasoft.honey.osql.core.MongodbObjSQLRich;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.name.OriginalName;
+import org.teasoft.honey.sharding.engine.mongodb.FullOpTemplate;
+import org.teasoft.honey.sharding.engine.mongodb.OneMethod;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.geojson.Geometry;
@@ -181,35 +185,127 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 	}
 
 	//------------------------------------create index-------------------------------
+//	@Override
+//	public String index(String collectionName, String fieldName, IndexType indexType) {
+//		if (collectionName == null) return null;
+//		_doBeforePasreEntity();
+//		String r;
+//		if (collectionName.endsWith(StringConst.ShardingTableIndexStr)) {
+//			List<String> list = new FullOpTemplate<String>(collectionName, new OneMethod<String>() {
+//				public String doOneMethod() {
+//					String r0 = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+//					return r0;
+//				}
+//			}).execute();
+//			r = "";
+//			for (int i = 0; list != null && i < list.size(); i++) {
+//				r += list.get(i) + "\t\n";
+//			}
+//		} else {
+//			r = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+//		}
+//		doBeforeReturn();
+//		return r;
+//	}
+	
 	@Override
 	public String index(String collectionName, String fieldName, IndexType indexType) {
+		return template(collectionName, fieldName, indexType, new OneMethod<String>() {
+			public String doOneMethod() {
+				return ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+			}
+		});
+	}
+	
+	private String template(String collectionName, String fieldName, IndexType indexType,OneMethod<String> dynamicMethod) {
+		if (collectionName == null) return null;
 		_doBeforePasreEntity();
-		String r= ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+		String r;
+		if (collectionName.endsWith(StringConst.ShardingTableIndexStr)) {
+			List<String> list = new FullOpTemplate<String>(collectionName, new OneMethod<String>() {
+				public String doOneMethod() {
+//					String r0 = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+					String r0=dynamicMethod.doOneMethod();
+					return r0;
+				}
+			}).execute();
+			r = "";
+			for (int i = 0; list != null && i < list.size(); i++) {
+				r += list.get(i) + "\t\n";
+			}
+		} else {
+//			r = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+			r=dynamicMethod.doOneMethod();
+		}
 		doBeforeReturn();
 		return r;
 	}
+	
 
+//	@Override
+//	public String unique(String collectionName, String fieldName, IndexType indexType) {
+//		_doBeforePasreEntity();
+//		String r= ((MongodbSqlLib) getMongodbBeeSql()).unique(collectionName, fieldName, indexType);
+//		doBeforeReturn();
+//		return r;
+//	}
+	
 	@Override
 	public String unique(String collectionName, String fieldName, IndexType indexType) {
-		_doBeforePasreEntity();
-		String r= ((MongodbSqlLib) getMongodbBeeSql()).unique(collectionName, fieldName, indexType);
-		doBeforeReturn();
-		return r;
+		return template(collectionName, fieldName, indexType, new OneMethod<String>() {
+			public String doOneMethod() {
+				return ((MongodbSqlLib) getMongodbBeeSql()).unique(collectionName, fieldName, indexType);
+			}
+		});
 	}
+	
 
+//	@Override
+//	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
+//		_doBeforePasreEntity();
+//		List<String> list= ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+//		doBeforeReturn();
+//		return list;
+//	}
+	
 	@Override
 	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
+		if (collectionName == null) return null;
 		_doBeforePasreEntity();
-		List<String> list= ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+//	String r;
+		List<String> rlist = new ArrayList<>();
+		if (collectionName.endsWith(StringConst.ShardingTableIndexStr)) {
+			List list = new FullOpTemplate<List>(collectionName, new OneMethod<List>() {
+				public List doOneMethod() {
+					List r0 = ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+//				String r0 = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
+					return r0;
+				}
+			}).execute();
+//		r = "";
+			for (int i = 0; list != null && i < list.size(); i++) {
+//			r += list.get(i) + "\t\n";
+				rlist.addAll((List) list.get(i));
+			}
+		} else {
+			rlist = ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
+		}
 		doBeforeReturn();
-		return list;
+		return rlist;
 	}
 
 	@Override
 	public void dropIndexes(String collectionName) {
-		_doBeforePasreEntity();
-		((MongodbSqlLib) getMongodbBeeSql()).dropIndexes(collectionName);
-		doBeforeReturn();
+//		_doBeforePasreEntity();
+//		((MongodbSqlLib) getMongodbBeeSql()).dropIndexes(collectionName);
+//		doBeforeReturn();
+
+		template(collectionName, null, null, new OneMethod<String>() {
+			public String doOneMethod() {
+				((MongodbSqlLib) getMongodbBeeSql()).dropIndexes(collectionName);
+				return "";
+			}
+		});
 	}
 
 	

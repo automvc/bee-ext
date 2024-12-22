@@ -20,8 +20,11 @@ package org.teasoft.beex.osql.mongodb;
 import java.util.List;
 
 /**
+ * Create index and drop indexes.
  * @author Kingstar
  * @since  2.1
+ * for Sharding 
+ * @since  2.5.0
  */
 public interface CreateIndex {
 
@@ -33,7 +36,8 @@ public interface CreateIndex {
 	
 	/**
 	 * Drop all the indexes on this collection, except for the default on _id.
-	 * @param collectionName collection name
+	 * Include index,unique.
+	 * @param collectionName collection name(table name)
 	 */
 	public void dropIndexes(String collectionName);  
 }
