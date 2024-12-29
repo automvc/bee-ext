@@ -30,7 +30,7 @@ public final class BeeExtVersion {
 
 	private BeeExtVersion() {}
 
-	public static final String version = "2.5.0";
+	public static final String version = "2.5.2";
 	public static final String buildId = version + ".1";
 
 	static {

@@ -28,6 +28,7 @@ import org.teasoft.bee.mongodb.CenterPara;
 import org.teasoft.bee.mongodb.GridFsFile;
 import org.teasoft.bee.mongodb.NearPara;
 import org.teasoft.bee.osql.IncludeType;
+import org.teasoft.bee.osql.OneMethod;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.exception.BeeIllegalBusinessException;
@@ -38,8 +39,7 @@ import org.teasoft.honey.osql.core.MongodbObjSQLRich;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.name.OriginalName;
-import org.teasoft.honey.sharding.engine.mongodb.FullOpTemplate;
-import org.teasoft.honey.sharding.engine.mongodb.OneMethod;
+import org.teasoft.honey.sharding.engine.mongodb.ShardingFullOpTemplate;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.geojson.Geometry;
@@ -222,11 +222,10 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 		_doBeforePasreEntity();
 		String r;
 		if (collectionName.endsWith(StringConst.ShardingTableIndexStr)) {
-			List<String> list = new FullOpTemplate<String>(collectionName, new OneMethod<String>() {
+			List<String> list = new ShardingFullOpTemplate<String>(collectionName, new OneMethod<String>() {
 				public String doOneMethod() {
 //					String r0 = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
-					String r0=dynamicMethod.doOneMethod();
-					return r0;
+					return dynamicMethod.doOneMethod();
 				}
 			}).execute();
 			r = "";
@@ -272,19 +271,14 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 	public List<String> indexes(String collectionName, List<IndexPair> indexes) {
 		if (collectionName == null) return null;
 		_doBeforePasreEntity();
-//	String r;
 		List<String> rlist = new ArrayList<>();
 		if (collectionName.endsWith(StringConst.ShardingTableIndexStr)) {
-			List list = new FullOpTemplate<List>(collectionName, new OneMethod<List>() {
+			List list = new ShardingFullOpTemplate<List>(collectionName, new OneMethod<List>() {
 				public List doOneMethod() {
-					List r0 = ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
-//				String r0 = ((MongodbSqlLib) getMongodbBeeSql()).index(collectionName, fieldName, indexType);
-					return r0;
+					return ((MongodbSqlLib) getMongodbBeeSql()).indexes(collectionName, indexes);
 				}
 			}).execute();
-//		r = "";
 			for (int i = 0; list != null && i < list.size(); i++) {
-//			r += list.get(i) + "\t\n";
 				rlist.addAll((List) list.get(i));
 			}
 		} else {

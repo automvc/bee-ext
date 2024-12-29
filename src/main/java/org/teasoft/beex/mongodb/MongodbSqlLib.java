@@ -208,7 +208,7 @@ public class MongodbSqlLib extends AbstractBase
 		}
 	}
 	
-	// 2.5.0
+	// 2.5.2
 	private int _update(MongoSqlStruct struct, boolean isClearCache) {
 		int num = 0;
 		String sql = null;
@@ -491,7 +491,7 @@ public class MongodbSqlLib extends AbstractBase
 	
 	private static final String JUST_SUPPORT_UPDATE_DELETE = "updateOrDelete method just support update and delete type";
 
-	// 2.5.0
+	// 2.5.2
 	@Override
 	public int updateOrDelete(MongoSqlStruct struct) {
 
@@ -1209,7 +1209,7 @@ public class MongodbSqlLib extends AbstractBase
 		return updateOrDelete(struct);
 	}
 	
-	// 2.5.0
+	// 2.5.2
 	private int _delete(MongoSqlStruct struct, boolean isClearCache) {
 
 		int num = 0;
@@ -1338,7 +1338,7 @@ public class MongodbSqlLib extends AbstractBase
 		
 		DatabaseClientConnection conn = getConn();
 		try {
-			long c; //2.5.0
+			long c; //2.5.2
 			ClientSession session = getClientSession();
 			
 			if (session == null) {
@@ -1998,6 +1998,9 @@ public class MongodbSqlLib extends AbstractBase
 
 			ClientSession session = getClientSession();
 			collectionName=_toTableName2(collectionName);
+			
+			_log("Mongodb::indexes collection(table): " + collectionName + ", List<IndexPair>: " + indexes.toString());
+			
 			List<String> re;
 			if (session == null)
 				re = mdb.getCollection(collectionName).createIndexes(list);
