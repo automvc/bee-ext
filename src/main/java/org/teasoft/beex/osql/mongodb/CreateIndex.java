@@ -23,8 +23,10 @@ import java.util.List;
  * Create index and drop indexes.
  * @author Kingstar
  * @since  2.1
- * for Sharding 
- * @since  2.5.0
+ * For Sharding.
+ * <br>If collectionName(table name) end with '[$#(index)#$]', will process as sharding full mode; 
+ * <br>It will be executed on all nodes.  
+ * @since  2.5.2
  */
 public interface CreateIndex {
 
