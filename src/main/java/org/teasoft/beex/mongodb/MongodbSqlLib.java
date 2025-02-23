@@ -273,7 +273,7 @@ public class MongodbSqlLib extends AbstractBase
 			
 			doc = newDoc(map);
 			MongoSqlStruct struct = new MongoSqlStruct("int", tableName, null, null, null,
-					null, null, false,entity.getClass(),newDBObject(map)); //insert 放在updateSet
+					null, null, false,entity.getClass(),newDBObject(map)); //insert 放在updateSetOrInsertOrFunOrOther
 			sql=struct.getSql();
 			initRoute(SuidType.MODIFY, struct.getEntityClass(), sql);
 			logSQLForMain("Mongodb::insert: "+sql);

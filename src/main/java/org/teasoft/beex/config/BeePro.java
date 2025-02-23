@@ -48,7 +48,9 @@ public class BeePro {
 	private Boolean eachBatchCommit; //2.2
 
 	private Boolean showSQL;
-	private Boolean showShardingSQL;//2.0
+	private Boolean showShardingSQL;// 2.0
+	private Boolean showSqlExecuteTime;// 2.5.2
+	private Integer minSqlExecuteTime;// 2.5.2
 	
 	private String lang;
 	
@@ -170,6 +172,22 @@ public class BeePro {
 
 	public void setShowShardingSQL(Boolean showShardingSQL) {
 		this.showShardingSQL = showShardingSQL;
+	}
+	
+	public Boolean getShowSqlExecuteTime() {
+		return showSqlExecuteTime;
+	}
+
+	public void setShowSqlExecuteTime(Boolean showSqlExecuteTime) {
+		this.showSqlExecuteTime = showSqlExecuteTime;
+	}
+
+	public Integer getMinSqlExecuteTime() {
+		return minSqlExecuteTime;
+	}
+
+	public void setMinSqlExecuteTime(Integer minSqlExecuteTime) {
+		this.minSqlExecuteTime = minSqlExecuteTime;
 	}
 
 	public String getLang() {
