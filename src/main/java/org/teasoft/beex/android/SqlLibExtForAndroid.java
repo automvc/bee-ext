@@ -49,26 +49,32 @@ import android.database.sqlite.SQLiteStatement;
  */
 public class SqlLibExtForAndroid implements BeeSqlForApp {
 
-	private SQLiteDatabase database; // 有事务管理.
+//	private SQLiteDatabase database=null; // 有事务管理.    close in 2.1.7
 
+	/**
+	 * 不推荐在多线程环境下使用;若使用,由使用者保证线程安全.
+	 * V2.1.7 改为每个操作都重新获取. (syn 2.1.7)
+	 * @return SQLiteDatabase instance
+	 */
 	public SQLiteDatabase getDatabase() {
-
+		
 		// 从上下文获取
 		Object obj = HoneyContext.getCurrentAppDB();
 		if (obj != null) return (SQLiteDatabase) obj;
 
-		if (database == null || !database.isOpen()) {
-			database = getWritableDB();
-			if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase(); // change just return ???
-		}//不为null时,则使用原来的
+		SQLiteDatabase database=null;
+//		if (database == null || !database.isOpen()) {
+		  database = getWritableDB();
+		  if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase(); 
+//		}//不为null时,则使用原来的
 		HoneyContext.setCurrentAppDBIfNeed(database);
 
 		return database;
 	}
 
-	public void setDatabase(SQLiteDatabase database) {
-		this.database = database;
-	}
+//	public void setDatabase(SQLiteDatabase database) {
+//		this.database = database;
+//	}
 
 	private SQLiteDatabase getWritableDB() {
 		
@@ -395,7 +401,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	}
 
 	private void _setPreparedValues(SQLiteStatement st, int objTypeIndex, int i, Object value) {
-		if (null == value) {
+		if (value == null) {
 			st.bindNull(i + 1);
 			return;
 		}
@@ -580,10 +586,10 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object jsonHandlerProcess(Field field, Object obj, TypeHandler jsonHandler) {
 		if (List.class.isAssignableFrom(field.getType())) {
-			Object newOjb[] = new Object[2];
-			newOjb[0] = obj;
-			newOjb[1] = field;
-			obj = jsonHandler.process(field.getType(), newOjb);
+			Object newObj[] = new Object[2];
+			newObj[0] = obj;
+			newObj[1] = field;
+			obj = jsonHandler.process(field.getType(), newObj);
 		} else {
 			obj = jsonHandler.process(field.getType(), obj);
 		}
