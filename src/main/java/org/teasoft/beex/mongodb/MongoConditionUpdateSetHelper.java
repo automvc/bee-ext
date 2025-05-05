@@ -27,6 +27,7 @@ import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.Expression;
 import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
+import org.teasoft.honey.osql.core.OpType;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -39,12 +40,6 @@ import com.mongodb.DBObject;
  */
 public class MongoConditionUpdateSetHelper {
 
-	private static final String setAdd = "setAdd";
-	private static final String setMultiply = "setMultiply";
-	private static final String setAddField = "setAddField";
-	private static final String setMultiplyField = "setMultiplyField";
-	private static final String setWithField = "setWithField";
-	
 	static List<DBObject> processConditionForUpdateSet(Condition condition) {
 
 		if (condition == null) return null;
@@ -55,14 +50,14 @@ public class MongoConditionUpdateSetHelper {
 
 		if (updateSetList != null && updateSetList.size() > 0) {
 			if (SuidType.UPDATE != conditionImpl.getSuidType()) {
-				throw new BeeErrorGrammarException(conditionImpl.getSuidType()
-						+ " do not support the method set ,setAdd or setMultiply!");
+				throw new BeeErrorGrammarException(
+						conditionImpl.getSuidType() + " do not support the method set ,setAdd or setMultiply!");
 			}
 		}
 
 		Expression expression = null;
 		Class<?> entityClass = null;
-		
+
 		DBObject setObject = null;
 		DBObject incObject = null;
 		DBObject mulObject = null;
@@ -73,70 +68,52 @@ public class MongoConditionUpdateSetHelper {
 		for (int j = 0; updateSetList != null && j < updateSetList.size(); j++) {
 			if (j == 0) updateSetBsonList = new ArrayList<>();
 			expression = updateSetList.get(j);
-			String opType = expression.getOpType();
+			OpType opType = expression.getOpType();
+			String columnName = _toColumnName(expression.getFieldName(), entityClass);
 
-			if (opType != null && expression.getValue() == null) {
-				throw new BeeErrorGrammarException(
-						"the value is null (" + conditionImpl.getSuidType() + ", method:"
-								+ opType + ", fieldName:" + expression.getFieldName() + ")!");
-			} else {
-
-				String columnName = _toColumnName(expression.getFieldName(), entityClass);
-
-				
-				if (opType == null) { // set("fieldName",value)
+			if (opType == OpType.OP2) { // set("fieldName",value)
 //					bs = Updates.set(columnName, expression.getValue());
 //					updateSetBsonList.add(bs);
-					
-					if(! hasSet) setObject = new BasicDBObject();
-					setObject.put(columnName, expression.getValue());
-					hasSet=true;
-					continue;
-				}
 
-//				if (opType != null) { // 只有set(arg1,arg2) opType=null
-////					if (setWithField.equals(opType)) {
-////					}
-//					continue;
-//				}
-
-				if (setAdd.equals(opType)) { // price=price + num
-//					bs = Updates.inc(columnName, (Number) expression.getValue());
-//					updateSetBsonList.add(bs);
-					if(!hasInc) incObject = new BasicDBObject();
-					hasInc=true;
-					incObject.put(columnName, (Number) expression.getValue());
-
-				} else if (setMultiply.equals(opType)) { // price=price * num
-//					bs = Updates.mul(columnName, (Number) expression.getValue());
-//					updateSetBsonList.add(bs);
-					if(!hasMul) mulObject = new BasicDBObject();
-					hasMul=true;
-					mulObject.put(columnName, (Number) expression.getValue());
-
-				} else if (setAddField.equals(opType)) {// eg:setAdd("price","delta")--> price=price + field2
-
-					Logger.warn(
-							"Mongodb donot support the syntax like: set price=price + field2");
-
-				} else if (setMultiplyField.equals(opType)) {// eg:setMultiply("price","delta")--> price=price * field2
-
-					Logger.warn(
-							"Mongodb donot support the syntax like: set price=price * field2");
-
-				} else if (setWithField.equals(opType)) { // set field1=field2
-					Logger.warn("Mongodb donot support the syntax like: set field1=field2");
-				}
+				if (!hasSet) setObject = new BasicDBObject();
+				setObject.put(columnName, expression.getValue());
+				hasSet = true;
+				continue;
 			}
 
+			if (opType == OpType.SET_ADD) { // price=price + num
+//					bs = Updates.inc(columnName, (Number) expression.getValue());
+//					updateSetBsonList.add(bs);
+				if (!hasInc) incObject = new BasicDBObject();
+				hasInc = true;
+				incObject.put(columnName, (Number) expression.getValue());
+
+			} else if (opType == OpType.SET_MULTIPLY) { // price=price * num
+//					bs = Updates.mul(columnName, (Number) expression.getValue());
+//					updateSetBsonList.add(bs);
+				if (!hasMul) mulObject = new BasicDBObject();
+				hasMul = true;
+				mulObject.put(columnName, (Number) expression.getValue());
+
+			} else if (opType == OpType.SET_ADD_FIELD) {// eg:setAdd("price","field2")--> price=price + field2
+
+				Logger.warn("Mongodb donot support the syntax like: set price = price + field2");
+
+			} else if (opType == OpType.SET_MULTIPLY_FIELD) {// eg:setMultiply("price","field2")--> price=price * field2
+
+				Logger.warn("Mongodb donot support the syntax like: set price = price * field2");
+
+			} else if (opType == OpType.SET_WITH_FIELD) { // set field1=field2
+				Logger.warn("Mongodb donot support the syntax like: set field1 = field2");
+			}
 		}
-		
+
 		if (updateSetBsonList != null) {
 			updateSetBsonList.add(setObject);
 			updateSetBsonList.add(incObject);
 			updateSetBsonList.add(mulObject);
 		}
-		
+
 		return updateSetBsonList;
 	}
 
