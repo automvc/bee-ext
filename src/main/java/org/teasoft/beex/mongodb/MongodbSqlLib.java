@@ -239,7 +239,7 @@ public class MongodbSqlLib extends AbstractBase
 			if (rs != null) {
 				long updateCount = rs.getModifiedCount();
 				if (updateCount > Integer.MAX_VALUE) {
-					Logger.error(
+					Logger.warn(
 							"in MongodbSqlLib._update method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
 				}
 				num = (int) updateCount;
@@ -1259,7 +1259,7 @@ public class MongodbSqlLib extends AbstractBase
 			if (rs != null) {
 				long deletedCount = rs.getDeletedCount();
 				if (deletedCount > Integer.MAX_VALUE) {
-					Logger.error(
+					Logger.warn(
 							"in MongodbSqlLib._delete method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
 				}
 				num = (int) deletedCount;
@@ -1356,7 +1356,7 @@ public class MongodbSqlLib extends AbstractBase
 			addInCache(sql, c + "", 1);
 			
 			if (c > Integer.MAX_VALUE) {
-				Logger.error("in _count method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
+				Logger.warn("in _count method, affect num(long) more than Integer.MAX_VALUE, it will have error when long convert to int!");
 			}
 			logAffectRow((int) c);
 			
@@ -1809,7 +1809,7 @@ public class MongodbSqlLib extends AbstractBase
 		try {
 			if (conn != null) conn.close();
 		} catch (IOException e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 	}
 

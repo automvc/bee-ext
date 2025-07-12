@@ -19,7 +19,7 @@ public class FastJsonUtil {
 			if (obj != null && obj.getClass() == String.class) return (String) obj;
 			return JSON.toJSONString(obj);
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -29,7 +29,7 @@ public class FastJsonUtil {
 			if (clazz != null && clazz == String.class) return (T) json;
 			return (T)JSON.parseObject(json, clazz);
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -44,7 +44,7 @@ public class FastJsonUtil {
 				Logger.warn("This method with fastjson,just support List type!");
 			}
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -55,7 +55,7 @@ public class FastJsonUtil {
 		try {
 			return JSON.parseArray(json, elementClass);// 把字符串转换成List<> ok
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}

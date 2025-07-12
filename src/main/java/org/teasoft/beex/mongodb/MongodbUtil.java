@@ -131,7 +131,7 @@ public class MongodbUtil {
 		try {
 			if (conn != null) conn.close();
 		} catch (IOException e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 	}
 }

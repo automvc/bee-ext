@@ -25,7 +25,7 @@ public class JacksonJsonUtil {
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(obj);
 		} catch (JsonProcessingException e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -38,7 +38,7 @@ public class JacksonJsonUtil {
 			compat(mapper);
 			return (T) mapper.readValue(json, clazz);
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -61,7 +61,7 @@ public class JacksonJsonUtil {
 			return (T)mapper.readValue(json, javaType);
 			
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -84,7 +84,7 @@ public class JacksonJsonUtil {
 			}
 			
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
