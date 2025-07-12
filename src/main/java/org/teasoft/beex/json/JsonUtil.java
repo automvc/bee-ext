@@ -34,7 +34,7 @@ public class JsonUtil {
 			ObjectMapper mapper = new ObjectMapper();
 			return (T) mapper.readValue(json, clazz);
 		} catch (Exception e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -44,7 +44,7 @@ public class JsonUtil {
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(obj);
 		} catch (JsonProcessingException e) {
-			Logger.error(e.getMessage(), e);
+			Logger.warn(e.getMessage(), e);
 		}
 		return null;
 	}
