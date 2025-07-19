@@ -21,7 +21,7 @@ import java.sql.SQLException;
 
 import org.postgresql.util.PGobject;
 import org.teasoft.bee.osql.type.SetParaTypeConvert;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 
 /**
  * Just for PostgreSQL json type.

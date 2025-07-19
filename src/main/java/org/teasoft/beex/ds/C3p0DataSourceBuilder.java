@@ -23,7 +23,7 @@ import javax.sql.DataSource;
 
 import org.teasoft.bee.ds.DataSourceBuilder;
 import org.teasoft.bee.osql.exception.ConfigWrongException;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;

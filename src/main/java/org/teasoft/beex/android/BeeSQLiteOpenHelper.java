@@ -19,9 +19,9 @@ package org.teasoft.beex.android;
 
 import org.teasoft.bee.android.CreateAndUpgrade;
 import org.teasoft.bee.android.CreateAndUpgradeRegistry;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyContext;
-import org.teasoft.honey.osql.core.Logger;
 
 import android.app.Application;
 import android.content.Context;

@@ -21,10 +21,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.teasoft.bee.osql.Serializer;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.DefaultBeeExtCache;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.JdkSerializer;
-import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 import redis.clients.jedis.Jedis;

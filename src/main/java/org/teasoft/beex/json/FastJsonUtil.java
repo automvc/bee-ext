@@ -3,7 +3,7 @@ package org.teasoft.beex.json;
 
 import java.util.List;
 
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 
 import com.alibaba.fastjson.JSON;
 

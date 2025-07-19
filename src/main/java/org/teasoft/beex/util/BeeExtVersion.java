@@ -18,7 +18,7 @@
 package org.teasoft.beex.util;
 
 import org.teasoft.bee.osql.BeeVersion;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.util.HoneyVersion;
 
 /**

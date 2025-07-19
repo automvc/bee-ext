@@ -17,7 +17,7 @@
 
 package org.teasoft.beex.mongodb.ds;
 
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;

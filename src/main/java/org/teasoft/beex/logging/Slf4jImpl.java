@@ -35,7 +35,7 @@ public class Slf4jImpl implements Log {
 
 	public Slf4jImpl() {
 
-		String callerFQCN = org.teasoft.honey.osql.core.Logger.class.getName();
+		String callerFQCN = org.teasoft.honey.logging.Logger.class.getName();
 		Logger logger = LoggerFactory.getLogger(callerFQCN);
 
 		if (logger instanceof LocationAwareLogger) {

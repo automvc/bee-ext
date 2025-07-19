@@ -23,7 +23,7 @@ import javax.sql.DataSource;
 
 import org.apache.tomcat.jdbc.pool.DataSourceFactory;
 import org.teasoft.bee.ds.DataSourceBuilder;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.util.Converter;
 
 /**

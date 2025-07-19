@@ -27,7 +27,7 @@ import org.teasoft.beex.type.LocalDateTimeToTimestampConvert;
 import org.teasoft.beex.type.LocalDateTimeTypeHandler;
 import org.teasoft.beex.type.LocalDateTypeHandler;
 import org.teasoft.beex.type.LocalTimeTypeHandler;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.type.SetParaTypeConverterRegistry;
 import org.teasoft.honey.osql.type.TypeHandlerRegistry;
 

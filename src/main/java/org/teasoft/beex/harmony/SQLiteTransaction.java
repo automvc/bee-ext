@@ -19,9 +19,9 @@ package org.teasoft.beex.harmony;
 
 import org.teasoft.bee.osql.BeeSQLException;
 import org.teasoft.beex.transaction.EmptyTransaction;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyContext;
-import org.teasoft.honey.osql.core.Logger;
 
 import ohos.data.rdb.RdbStore;
 

@@ -37,7 +37,7 @@ class Slf4jLocationAwareLoggerImpl implements Log {
 
 	Slf4jLocationAwareLoggerImpl(LocationAwareLogger logger, boolean isNoArg) {
 		if (isNoArg) {
-			callerFQCN = org.teasoft.honey.osql.core.Logger.class.getName();
+			callerFQCN = org.teasoft.honey.logging.Logger.class.getName();
 		} else {
 			callerFQCN = Slf4jImpl.class.getName();
 		}

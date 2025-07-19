@@ -17,8 +17,8 @@
 
 package org.teasoft.beex.harmony;
 
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.HoneyConfig;
-import org.teasoft.honey.osql.core.Logger;
 
 import ohos.app.Context;
 import ohos.data.DatabaseHelper;

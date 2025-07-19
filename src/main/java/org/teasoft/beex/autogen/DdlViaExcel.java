@@ -23,13 +23,13 @@ import java.util.Map;
 
 import org.teasoft.bee.osql.api.PreparedSql;
 import org.teasoft.beex.poi.ExcelReader;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.autogen.DdlToSql;
 import org.teasoft.honey.osql.autogen.Java2DbType;
 import org.teasoft.honey.osql.core.BeeFactoryHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.HoneyUtil;
-import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.util.StringUtils;
 
 /**

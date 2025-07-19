@@ -22,7 +22,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.teasoft.bee.ds.DataSourceBuilder;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 

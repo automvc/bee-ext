@@ -26,7 +26,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.teasoft.bee.osql.transaction.Tran;
 import org.teasoft.bee.osql.transaction.Transaction;
 import org.teasoft.bee.osql.transaction.TransactionIsolationLevel;
-import org.teasoft.honey.osql.core.Logger;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.SessionFactory;
 
 /**

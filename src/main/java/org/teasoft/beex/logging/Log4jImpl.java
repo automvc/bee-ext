@@ -33,7 +33,7 @@ public class Log4jImpl implements Log {
 	private Logger log;
 
 	public Log4jImpl() {
-		callerFQCN = org.teasoft.honey.osql.core.Logger.class.getName();
+		callerFQCN = org.teasoft.honey.logging.Logger.class.getName();
 		log = Logger.getLogger(callerFQCN);
 	}
 
