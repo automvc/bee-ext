@@ -67,6 +67,7 @@ import org.teasoft.beex.osql.mongodb.GeoFind;
 import org.teasoft.beex.osql.mongodb.IndexPair;
 import org.teasoft.beex.osql.mongodb.IndexType;
 import org.teasoft.honey.database.DatabaseClientConnection;
+import org.teasoft.honey.logging.Logger;
 import org.teasoft.honey.osql.core.AbstractBase;
 import org.teasoft.honey.osql.core.BeeFactory;
 import org.teasoft.honey.osql.core.ConditionImpl;
@@ -76,7 +77,6 @@ import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyContext;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
-import org.teasoft.honey.osql.core.Logger;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
 import org.teasoft.honey.osql.core.StringConst;
 import org.teasoft.honey.osql.mongodb.MongoConditionHelper;
@@ -2399,13 +2399,13 @@ public class MongodbSqlLib extends AbstractBase
 	
 	@Override
 	public byte[] getFileByName(String fileName) {
-		logSQL("getFileByName, fileName: "+fileName);
+		Logger.logSQL("getFileByName, fileName: "+fileName);
 		return _getFileByKey(fileName);
 	}
 	
 	@Override
 	public byte[] getFileById(String fileId) {
-		logSQL("getFileById, fileId: "+fileId);
+		Logger.logSQL("getFileById, fileId: "+fileId);
 		return _getFileByKey(new ObjectId(fileId));
 	}
 
@@ -2553,13 +2553,13 @@ public class MongodbSqlLib extends AbstractBase
 	//----------------------GEO-----------------------end-----------------------------
 	
 	private void _log(String str) {
-		logSQL(str);
+		Logger.logSQL(str);
 	}
 	
 	//主线程才打印（不需要分片或不是子线程）
 	private void logSQLForMain(String hardStr) {
 		if (!ShardingUtil.hadSharding() || HoneyContext.getSqlIndexLocal() == null)
-			logSQL(hardStr);
+			Logger.logSQL(hardStr);
 	}
 	
 	private void log(MongoSqlStruct struct) {
