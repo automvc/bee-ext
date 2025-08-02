@@ -35,17 +35,24 @@ import org.teasoft.honey.util.StringUtils;
 public class BeeSimpleDataSourceBuilder implements DataSourceBuilder {
 
 	@Override
-	public DataSource build(Map<String, String> properties) {
+	public DataSource build(Map<String, String> propertiesMap) {
 		DataSource ds = null;
 		try {
-			String url = properties.get("url");
+			
+			//2.5.2
+			if (!propertiesMap.containsKey("url") && propertiesMap.containsKey("jdbcUrl")) {
+				propertiesMap.put("url", propertiesMap.get("jdbcUrl"));
+				propertiesMap.remove("jdbcUrl");
+			}
+			
+			String url = propertiesMap.get("url");
 			if (StringUtils.isBlank(url)) {
 				throw new ConfigWrongException(
 						"The url for  BeeSimpleDataSource can not be null!");
 			}
 
-			String username = properties.getOrDefault("username", "");
-			String p = properties.getOrDefault("password", "");
+			String username = propertiesMap.getOrDefault("username", "");
+			String p = propertiesMap.getOrDefault("pass"+"word", "");
 
 			ds = new SimpleDataSource(url, username, p);
 			

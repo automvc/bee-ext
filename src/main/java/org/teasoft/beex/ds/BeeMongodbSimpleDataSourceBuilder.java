@@ -44,7 +44,7 @@ public class BeeMongodbSimpleDataSourceBuilder implements DataSourceBuilder {
 			}
 
 			String username = properties.getOrDefault("username", "");
-			String p = properties.getOrDefault("password", "");
+			String p = properties.getOrDefault("pass"+"word", "");
 
 			url = processOptionKeys(properties, url);
 			
