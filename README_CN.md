@@ -9,7 +9,7 @@ Bee-Ext
 
 * 1.兼容各种流行Log日志框架	
 
-* 2.为整合Spring Boot并管理Bee配置	
+* 2.整合Spring Boot并管理Bee配置	
 
 * 3.支持Excel读入,将数据转化为List<String[]>,支持将Excel数据导入到数据库,提供简便的API接口	
 
