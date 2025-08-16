@@ -32,18 +32,18 @@ import android.database.sqlite.SQLiteDatabase;
  * @since  1.17
  */
 public class SQLiteTransaction implements Transaction {
-	
+
 	private SQLiteDatabase db;
 	private boolean isBegin = false;
 
 	@Override
 	public void begin() {
 		Logger.info("[Bee] SQLiteTransaction begin. ");
-		
-		db=	BeeSQLiteOpenHelper.getWritableDB();	
+
+		db = BeeSQLiteOpenHelper.getWritableDB();
 		db.beginTransaction();
 		isBegin = true;
-		HoneyContext.setCurrentAppDB(db);//将db放入缓存.
+		HoneyContext.setCurrentAppDB(db);// 将db放入缓存.
 	}
 
 	@Override
@@ -61,7 +61,6 @@ public class SQLiteTransaction implements Transaction {
 		}
 	}
 
-
 	@Override
 	public void rollback() {
 		Logger.info("[Bee] SQLiteTransaction rollback. ");
@@ -72,7 +71,7 @@ public class SQLiteTransaction implements Transaction {
 			isBegin = false;
 		}
 	}
-	
+
 	private void _close() {
 		if (db != null) {
 			try {
@@ -80,32 +79,30 @@ public class SQLiteTransaction implements Transaction {
 			} catch (BeeSQLException e) {
 				throw ExceptionHelper.convert(e);
 			} finally {
-				HoneyContext.removeCurrentAppDB(); //事务结束时要删除上下文
+				HoneyContext.removeCurrentAppDB(); // 事务结束时要删除上下文
 			}
 		}
 	}
-	
-	
-	
-	//will ignore following methods
-	
+
+	// will ignore following methods
+
 	@Override
 	public int getTransactionIsolation() {
-		//will ignore this method
+		// will ignore this method
 		Logger.debug("No need getTransactionIsolation() method in SQLiteTransaction");
 		return 4;
 	}
 
 	@Override
 	public boolean isReadOnly() {
-		//will ignore this method
+		// will ignore this method
 		Logger.debug("No need isReadOnly() method in SQLiteTransaction");
 		return false;
 	}
 
 	@Override
 	public void setReadOnly(boolean readOnly) {
-		//will ignore this method
+		// will ignore this method
 		Logger.debug("No need readOnly() method in SQLiteTransaction");
 	}
 
@@ -116,9 +113,8 @@ public class SQLiteTransaction implements Transaction {
 
 	@Override
 	public void setTransactionIsolation(TransactionIsolationLevel level) {
-		//will ignore this method
+		// will ignore this method
 		Logger.debug("No need setTransactionIsolation(TransactionIsolationLevel level) method in SQLiteTransaction");
 	}
-	
 
 }

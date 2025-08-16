@@ -36,8 +36,7 @@ public class BeeConfigInit {
 		String folderPath = "assets/entry/resources/rawfile/";
 		String filePath = folderPath + "bee.properties";
 
-		try (InputStream inputStream = BeeConfigInit.class.getClassLoader()
-				.getResourceAsStream(filePath);) {
+		try (InputStream inputStream = BeeConfigInit.class.getClassLoader().getResourceAsStream(filePath);) {
 			if (inputStream != null) {
 //              HoneyConfig.getHoneyConfig().resetBeeProperties(folderPath); //不行
 				HoneyConfig.getHoneyConfig().resetBeeProperties(inputStream);

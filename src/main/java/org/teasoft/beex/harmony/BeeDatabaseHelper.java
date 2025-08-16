@@ -41,26 +41,26 @@ public class BeeDatabaseHelper {
 	private static StoreConfig config = null;
 	private static RdbOpenCallback rdbOpenCallback = null;
 	private static RdbStore rdbStore = null;
-	private static boolean isInit=true;
-	
+	private static boolean isInit = true;
+
 	static {
 		Context temp = ContextRegistry.getContext();
 		if (temp != null) {
 			context = temp;
 //			context.getApplicationContext();
-			DBNAME=HoneyConfig.getHoneyConfig().harmonyDbName;
-			VERSION=HoneyConfig.getHoneyConfig().harmonyDbVersion;
-			boolean harmonyDbReadonly=HoneyConfig.getHoneyConfig().harmonyDbReadonly;
+			DBNAME = HoneyConfig.getHoneyConfig().harmonyDbName;
+			VERSION = HoneyConfig.getHoneyConfig().harmonyDbVersion;
+			boolean harmonyDbReadonly = HoneyConfig.getHoneyConfig().harmonyDbReadonly;
 			DatabaseHelper databaseHelper = new DatabaseHelper(context);
-			
+
 			if (harmonyDbReadonly)
 				config = StoreConfig.newReadOnlyConfig(DBNAME);
 			else
 				config = StoreConfig.newDefaultConfig(DBNAME);
 			rdbOpenCallback = RdbOpenCallbackRegistry.getRdbOpenCallback();
 			try {
-			rdbStore = databaseHelper.getRdbStore(config, VERSION, rdbOpenCallback, null);
-			isInit=false;
+				rdbStore = databaseHelper.getRdbStore(config, VERSION, rdbOpenCallback, null);
+				isInit = false;
 			} catch (Exception e) {
 				Logger.info("---------------获取DB对象失败");
 				Logger.error(e.getMessage(), e);
@@ -74,13 +74,13 @@ public class BeeDatabaseHelper {
 	public BeeDatabaseHelper(Context context) {}
 
 	public static RdbStore getRdbStore() {
-		RdbStore tempDb=rdbStore;
-		if(! isInit && (tempDb==null || ! tempDb.isOpen()) ) {//非首次, 要是中途关了,可以重新获取,但callback置为null
-			DBNAME=HoneyConfig.getHoneyConfig().harmonyDbName;
-			VERSION=HoneyConfig.getHoneyConfig().harmonyDbVersion;
+		RdbStore tempDb = rdbStore;
+		if (!isInit && (tempDb == null || !tempDb.isOpen())) {// 非首次, 要是中途关了,可以重新获取,但callback置为null
+			DBNAME = HoneyConfig.getHoneyConfig().harmonyDbName;
+			VERSION = HoneyConfig.getHoneyConfig().harmonyDbVersion;
 			DatabaseHelper databaseHelper = new DatabaseHelper(context);
 			config = StoreConfig.newDefaultConfig(DBNAME);
-			rdbStore = databaseHelper.getRdbStore(config, VERSION, null, null); //callback=null
+			rdbStore = databaseHelper.getRdbStore(config, VERSION, null, null); // callback=null
 		}
 		return rdbStore;
 	}

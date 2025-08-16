@@ -57,15 +57,15 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	 * @return SQLiteDatabase instance
 	 */
 	public SQLiteDatabase getDatabase() {
-		
+
 		// 从上下文获取
 		Object obj = HoneyContext.getCurrentAppDB();
 		if (obj != null) return (SQLiteDatabase) obj;
 
-		SQLiteDatabase database=null;
+		SQLiteDatabase database = null;
 //		if (database == null || !database.isOpen()) {
-		  database = getWritableDB();
-		  if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase(); 
+		database = getWritableDB();
+		if (database == null) database = BeeSQLiteDatabaseRegistry.getSQLiteDatabase();
 //		}//不为null时,则使用原来的
 		HoneyContext.setCurrentAppDBIfNeed(database);
 
@@ -77,12 +77,11 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 //	}
 
 	private SQLiteDatabase getWritableDB() {
-		
+
 		return BeeSQLiteOpenHelper.getWritableDB();
 	}
 
-	private static boolean openFieldTypeHandler = HoneyConfig
-			.getHoneyConfig().openFieldTypeHandler;
+	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -129,16 +128,14 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 						boolean processAsJson = false;
 						if (isJoson(field)) {
 							obj = cursor.getString(cursor.getColumnIndex(columnName));
-							TypeHandler jsonHandler = TypeHandlerRegistry
-									.getHandler(Json.class);
+							TypeHandler jsonHandler = TypeHandlerRegistry.getHandler(Json.class);
 							if (jsonHandler != null) {
 								obj = jsonHandlerProcess(field, obj, jsonHandler);
 								processAsJson = true;
 							}
 						} else {
 							if (openFieldTypeHandler) {
-								isRegHandlerPriority = TypeHandlerRegistry
-										.isPriorityType(field.getType());
+								isRegHandlerPriority = TypeHandlerRegistry.isPriorityType(field.getType());
 							}
 						}
 
@@ -153,7 +150,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 						}
 					} catch (IllegalArgumentException e) {
 						boolean alreadyProcess = false;
-						obj = cursor.getString(cursor.getColumnIndex(columnName));//SQLite in Android get the String first and then transfer
+						obj = cursor.getString(cursor.getColumnIndex(columnName));// SQLite in Android get the String first and
+																					// then transfer
 						if (openFieldTypeHandler) {
 							Class type = field.getType();
 							TypeHandler handler = TypeHandlerRegistry.getHandler(type);
@@ -275,15 +273,17 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		SuidType regType = HoneyContext.getSuidType();
 		if (regType == SuidType.INSERT) {
 			long i = insert(sql, bindArgs);
-			if (i>0) return 1;
-			else return 0;
+			if (i > 0)
+				return 1;
+			else
+				return 0;
 		} else if (regType == SuidType.UPDATE || regType == SuidType.DELETE) {
 			return updateOrDelete(sql, bindArgs);
 		} else {
 			return execSQL(sql, bindArgs);
 		}
 	}
-	
+
 	private long insert(String sql, Object[] bindArgs) {
 		SQLiteDatabase db = null;
 		SQLiteStatement st = null;
@@ -301,7 +301,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 		return r;
 	}
-	
+
 	private int updateOrDelete(String sql, Object[] bindArgs) {
 		SQLiteDatabase db = null;
 		SQLiteStatement st = null;
@@ -319,7 +319,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 		return r;
 	}
-	
+
 	private int execSQL(String sql, Object[] bindArgs) {
 		SQLiteDatabase db = null;
 		int r = 0;
@@ -353,8 +353,6 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 		return result;
 	}
 
-
-
 	@Override
 	public int batchInsert(String sql0, List<Object[]> listBindArgs) {
 		SQLiteDatabase db = null;
@@ -374,12 +372,12 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			}
 			db.setTransactionSuccessful();
 		} catch (android.database.SQLException e) {
-		   Logger.error(e.getMessage(), e);
-		} catch(Exception e2) {
-		  Logger.debug(e2.getMessage(), e2);
-		}finally {
+			Logger.error(e.getMessage(), e);
+		} catch (Exception e2) {
+			Logger.debug(e2.getMessage(), e2);
+		} finally {
 			try {
-				if (db != null) db.endTransaction();	
+				if (db != null) db.endTransaction();
 			} catch (Exception e) {
 				Logger.debug(e.getMessage(), e);
 			}
@@ -392,9 +390,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	private void setPreparedValues(SQLiteStatement st, Object[] bindArgs) {
 		if (null != bindArgs && bindArgs.length > 0) {
 			for (int i = 0; i < bindArgs.length; i++) {
-				int objTypeIndex=-1;
-				if (bindArgs[i] != null)
-					objTypeIndex = HoneyUtil.getJavaTypeIndex(bindArgs[i].getClass().getName());
+				int objTypeIndex = -1;
+				if (bindArgs[i] != null) objTypeIndex = HoneyUtil.getJavaTypeIndex(bindArgs[i].getClass().getName());
 				_setPreparedValues(st, objTypeIndex, i, bindArgs[i]);
 			}
 		}
@@ -473,9 +470,8 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 
 			default:
 				st.bindString(i + 1, (String) value);
-				
-				
-				//要支持自定义的  TODO
+
+				// 要支持自定义的 TODO
 		}
 	}
 
@@ -490,9 +486,9 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 			db = getDatabase();
 			Cursor cursor = db.rawQuery(sql, selectionArgs);
 			if (cursor.moveToNext()) {
-				fun = cursor.getString(0);//获取首个元素
+				fun = cursor.getString(0);// 获取首个元素
 				if (fun == null) fun = "";
-			} 
+			}
 		} catch (Exception e) {
 			Logger.error(e.getMessage(), e);
 		} finally {
@@ -535,8 +531,7 @@ public class SqlLibExtForAndroid implements BeeSqlForApp {
 	}
 
 	@Override
-	public List<Map<String, String>> selectMapListWithColumnName(String sql,
-			String[] selectionArgs) {
+	public List<Map<String, String>> selectMapListWithColumnName(String sql, String[] selectionArgs) {
 		SQLiteDatabase db = null;
 		List<Map<String, String>> list = new ArrayList<>();
 		try {

@@ -52,17 +52,17 @@ public class JakartaCommonsLoggingImpl implements org.teasoft.bee.logging.Log {
 	public void info(String msg) {
 		log.info(msg);
 	}
-	
+
 	@Override
 	public void trace(String msg) {
 		log.trace(msg);
 	}
-	
+
 	@Override
 	public void error(String msg, Throwable e) {
 		log.error(msg, e);
 	}
-	
+
 	@Override
 	public void debug(String msg, Throwable e) {
 		log.debug(msg, e);
@@ -82,12 +82,12 @@ public class JakartaCommonsLoggingImpl implements org.teasoft.bee.logging.Log {
 	public boolean isDebugEnabled() {
 		return log.isDebugEnabled();
 	}
-	
+
 	@Override
 	public boolean isInfoEnabled() {
 		return log.isInfoEnabled();
 	}
-	
+
 	@Override
 	public boolean isWarnEnabled() {
 		return log.isWarnEnabled();

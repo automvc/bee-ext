@@ -24,16 +24,16 @@ package org.teasoft.beex.config;
  */
 public class BeeProMultiDS {
 
- // prefix= "multiDS_"
+	// prefix= "multiDS_"
 	private Boolean enable;
 	private Integer type;
 	private String defalutDS;
-	private String writeDB; //multiDsType=1
-	private String readDB; //multiDsType=1
-	private Integer rDbRouteWay; //  //multiDsType=1
-	private String matchEntityClassPath; //multiDsType=2
-	private String matchTable; //multiDsType=2
-	//	支持同时使用多种类型数据库的数据源.support different type muli-Ds at same time.
+	private String writeDB; // multiDsType=1
+	private String readDB; // multiDsType=1
+	private Integer rDbRouteWay; // //multiDsType=1
+	private String matchEntityClassPath; // multiDsType=2
+	private String matchTable; // multiDsType=2
+	// 支持同时使用多种类型数据库的数据源.support different type muli-Ds at same time.
 	private Boolean differentDbType;
 
 	public Boolean getEnable() {

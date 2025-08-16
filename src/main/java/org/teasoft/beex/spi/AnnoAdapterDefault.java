@@ -34,29 +34,25 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 
 	@Override
 	public boolean isPrimaryKey(Field field) {
-		return field.isAnnotationPresent(PrimaryKey.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Id.class)
+		return field.isAnnotationPresent(PrimaryKey.class) || field.isAnnotationPresent(jakarta.persistence.Id.class)
 				|| field.isAnnotationPresent(javax.persistence.Id.class);
 	}
 
 	@Override
 	public boolean isTable(Class<?> clazz) {
-		return clazz.isAnnotationPresent(Table.class)
-				|| clazz.isAnnotationPresent(jakarta.persistence.Table.class)
+		return clazz.isAnnotationPresent(Table.class) || clazz.isAnnotationPresent(jakarta.persistence.Table.class)
 				|| clazz.isAnnotationPresent(javax.persistence.Table.class);
 	}
 
 	@Override
 	public boolean isColumn(Field field) {
-		return field.isAnnotationPresent(Column.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Column.class)
+		return field.isAnnotationPresent(Column.class) || field.isAnnotationPresent(jakarta.persistence.Column.class)
 				|| field.isAnnotationPresent(javax.persistence.Column.class);
 	}
 
 	@Override
 	public boolean isIgnore(Field field) {
-		return field.isAnnotationPresent(Ignore.class)
-				|| field.isAnnotationPresent(jakarta.persistence.Transient.class)
+		return field.isAnnotationPresent(Ignore.class) || field.isAnnotationPresent(jakarta.persistence.Transient.class)
 				|| field.isAnnotationPresent(javax.persistence.Transient.class);
 	}
 
@@ -69,14 +65,12 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 		}
 
 		if (field.isAnnotationPresent(jakarta.persistence.Column.class)) {
-			jakarta.persistence.Column column = field
-					.getAnnotation(jakarta.persistence.Column.class);
+			jakarta.persistence.Column column = field.getAnnotation(jakarta.persistence.Column.class);
 			return column.name();
 		}
 
 		if (field.isAnnotationPresent(javax.persistence.Column.class)) {
-			javax.persistence.Column column = field
-					.getAnnotation(javax.persistence.Column.class);
+			javax.persistence.Column column = field.getAnnotation(javax.persistence.Column.class);
 			return column.name();
 		}
 
@@ -92,8 +86,7 @@ public class AnnoAdapterDefault implements AnnoAdapter {
 		}
 
 		if (clazz.isAnnotationPresent(javax.persistence.Table.class)) {
-			javax.persistence.Table tab = (javax.persistence.Table) clazz
-					.getAnnotation(javax.persistence.Table.class);
+			javax.persistence.Table tab = (javax.persistence.Table) clazz.getAnnotation(javax.persistence.Table.class);
 			return tab.name();
 		}
 

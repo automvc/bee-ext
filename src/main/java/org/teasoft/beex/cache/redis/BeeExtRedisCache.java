@@ -39,7 +39,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	private JedisPool jedisPool;
 	private Jedis jedis;
 	private Serializer serializer;
-	
+
 	private static final long serialVersionUID = 1596710362359L;
 
 	private static final String FIELD = "Bee";
@@ -50,7 +50,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 	public BeeExtRedisCache() {
 		initRedis();
 	}
-	
+
 	private int getTimeOUt() {
 		return HoneyConfig.getHoneyConfig().cache_levelTwoTimeout;
 	}
@@ -85,10 +85,10 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 			database = Protocol.DEFAULT_DATABASE;
 		}
 
-		this.jedisPool = new JedisPool(new GenericObjectPoolConfig<Jedis>(), host, port,
-				connectionTimeout, soTimeout, password, database, clientName, ssl);
+		this.jedisPool = new JedisPool(new GenericObjectPoolConfig<Jedis>(), host, port, connectionTimeout, soTimeout,
+				password, database, clientName, ssl);
 	}
-	
+
 	@Override
 	public void addInExtCache(String key, Object result) {
 		Jedis jedis1 = getJedis();
@@ -97,8 +97,7 @@ public class BeeExtRedisCache extends DefaultBeeExtCache {
 			jedis1.expire(key.getBytes(), getTimeOUt());
 		} catch (Exception e) {
 			Logger.warn(e.getMessage(), e);
-		}
-		finally {
+		} finally {
 			jedis1.close();
 		}
 	}

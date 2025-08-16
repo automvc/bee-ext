@@ -23,8 +23,8 @@ package org.teasoft.beex.config;
  * @since  1.9
  */
 public class BeeProMoreTable {
-	
-	//prefix="moreTable_"
+
+	// prefix="moreTable_"
 	private Boolean columnListWithStar;
 	private Boolean twoTablesWithJoinOnStyle;
 

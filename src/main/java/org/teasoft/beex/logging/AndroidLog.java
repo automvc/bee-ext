@@ -27,8 +27,8 @@ public class AndroidLog implements org.teasoft.bee.logging.Log {
 
 //	private static String tag = "Bee-AndroidLog";
 	private static final String DEBUG = "AndroidLog(DEBUG)";
-	private static final String INFO  = "AndroidLog(INFO)";
-	private static final String WARN  = "AndroidLog(WARN)";
+	private static final String INFO = "AndroidLog(INFO)";
+	private static final String WARN = "AndroidLog(WARN)";
 	private static final String ERROR = "AndroidLog(ERROR)";
 
 	@Override

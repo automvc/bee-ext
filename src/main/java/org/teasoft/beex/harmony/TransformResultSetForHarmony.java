@@ -53,9 +53,9 @@ public class TransformResultSetForHarmony {
 		while (rs.goToNextRow()) {
 			json.append(",{");
 			for (int i = 0; i < columnCount; i++) { // 0..n-1
-				columnName = rs.getColumnNameForIndex(i);  //从0开始
+				columnName = rs.getColumnNameForIndex(i); // 从0开始
 				value = rs.getString(i);
-				
+
 				if (value == null && ignoreNull) {
 					continue;
 				}
@@ -156,8 +156,7 @@ public class TransformResultSetForHarmony {
 
 		int columnCount = rs.getColumnCount();
 
-		boolean nullToEmptyString = HoneyConfig
-				.getHoneyConfig().returnStringList_nullToEmptyString;
+		boolean nullToEmptyString = HoneyConfig.getHoneyConfig().returnStringList_nullToEmptyString;
 		String str[] = null;
 		while (rs.goToNextRow()) {
 			str = new String[columnCount];

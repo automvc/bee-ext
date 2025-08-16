@@ -24,7 +24,7 @@ package org.teasoft.beex.config;
  */
 public class BeeProPearFlowerId {
 
-	//	prefix = "pearFlowerId_"
+	// prefix = "pearFlowerId_"
 	private Long tolerateSecond;
 	private Boolean useHalfWorkId;
 	private Long switchWorkIdTimeThreshold;

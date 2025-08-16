@@ -156,8 +156,7 @@ public class TransformResultSetForAndroid {
 
 		int columnCount = cursor.getColumnCount();
 
-		boolean nullToEmptyString = HoneyConfig
-				.getHoneyConfig().returnStringList_nullToEmptyString;
+		boolean nullToEmptyString = HoneyConfig.getHoneyConfig().returnStringList_nullToEmptyString;
 		String str[] = null;
 		while (cursor.moveToNext()) {
 			str = new String[columnCount];

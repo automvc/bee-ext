@@ -40,8 +40,8 @@ public class ManageConfig {
 	private BeeProCache beeProCache;
 
 	private BeeProDb beeProDb;
-	
-	private BeeProProfiles beeProProfiles;//V1.11
+
+	private BeeProProfiles beeProProfiles;// V1.11
 
 	private BeeProGenid beeProGenid;
 
@@ -59,7 +59,7 @@ public class ManageConfig {
 
 	private BeeProShowSql beeProShowSql;
 
-	//V1.11
+	// V1.11
 	private BeeProCacheRedis beeProCacheRedis;
 
 	public void updateConfig() {
@@ -67,7 +67,7 @@ public class ManageConfig {
 
 		newConfigMap.putAll(process(beePro, false));
 		newConfigMap.putAll(process(beeProCache));
-		newConfigMap.putAll(process(beeProCacheRedis)); //V1.11
+		newConfigMap.putAll(process(beeProCacheRedis)); // V1.11
 		newConfigMap.putAll(process(beeProDb, false));
 		newConfigMap.putAll(process(beeProProfiles, false));
 
@@ -82,7 +82,7 @@ public class ManageConfig {
 
 //		Logger.info("[Bee] new config: "+newConfigMap);
 		HoneyContext.updateConfig(newConfigMap);
-		Logger.info("[Bee] new part config: " + newConfigMap); //更新后再用日志,否则用不了新的信息.
+		Logger.info("[Bee] new part config: " + newConfigMap); // 更新后再用日志,否则用不了新的信息.
 	}
 
 	private Map<String, Object> process(Object propObject) {
@@ -102,8 +102,7 @@ public class ManageConfig {
 		Field fields[] = propObject.getClass().getDeclaredFields();
 		String modeFix = "";
 		if (isNeedPrefix) {
-			modeFix = NameUtil.firstLetterToLowerCase(propObject.getClass().getSimpleName().substring(6))
-					+ "_";
+			modeFix = NameUtil.firstLetterToLowerCase(propObject.getClass().getSimpleName().substring(6)) + "_";
 		}
 
 		int len = fields.length;
@@ -143,7 +142,7 @@ public class ManageConfig {
 	public void setBeeProDb(BeeProDb beeProDb) {
 		this.beeProDb = beeProDb;
 	}
-	
+
 	/**
 	 * get instance of BeeProProfiles
 	 * @return instance of BeeProProfiles

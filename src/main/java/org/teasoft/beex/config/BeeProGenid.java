@@ -24,11 +24,11 @@ package org.teasoft.beex.config;
  */
 public class BeeProGenid {
 
-	 // prefix= "genid_"
+	// prefix= "genid_"
 	private Integer workerid;
 	private Integer generatorType;
 	private Boolean forAllTableLongId;
-	private Boolean replaceOldId; 
+	private Boolean replaceOldId;
 	private String includesEntityList;
 	private String excludesEntityList;
 
@@ -55,7 +55,7 @@ public class BeeProGenid {
 	public void setForAllTableLongId(Boolean forAllTableLongId) {
 		this.forAllTableLongId = forAllTableLongId;
 	}
-	
+
 	public Boolean getReplaceOldId() {
 		return replaceOldId;
 	}

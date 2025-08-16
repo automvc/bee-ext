@@ -13,7 +13,7 @@ package org.teasoft.beex.config;
  */
 public class BeeProCacheRedis {
 
-	//  prefix= "cacheRedis_"
+	// prefix= "cacheRedis_"
 	private String host;
 
 	private Integer port;

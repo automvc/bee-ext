@@ -24,31 +24,31 @@ package org.teasoft.beex.config;
  */
 public class BeePro {
 
-	private String loggerType; //v1.8
-	
-	private String sqlLoggerLevel; //v1.9.8
+	private String loggerType; // v1.8
+
+	private String sqlLoggerLevel; // v1.9.8
 
 	private Boolean logDonotPrintLevel;
 
-	private String dateFormat; //v1.7.2   use in DateUtil
+	private String dateFormat; // v1.7.2 use in DateUtil
 
 	private String sqlKeyWordCase;
 
 	private Boolean notDeleteWholeRecords;
 
 	private Boolean notUpdateWholeRecords;
-	
+
 	private Boolean notCatchModifyDuplicateException;
-	
+
 	private Boolean notShowModifyDuplicateException;
 
 	private Integer insertBatchSize;
 
 	private Boolean showSQL;
-	
+
 	private String lang;
-	
-	//1.17.21
+
+	// 1.17.21
 	private Boolean openDefineColumn;
 	private Boolean openFieldTypeHandler;
 	private Boolean closeDefaultParaResultRegistry;
@@ -61,7 +61,7 @@ public class BeePro {
 	public void setLoggerType(String loggerType) {
 		this.loggerType = loggerType;
 	}
-	
+
 	public String getSqlLoggerLevel() {
 		return sqlLoggerLevel;
 	}
@@ -109,7 +109,7 @@ public class BeePro {
 	public void setNotUpdateWholeRecords(Boolean notUpdateWholeRecords) {
 		this.notUpdateWholeRecords = notUpdateWholeRecords;
 	}
-	
+
 	public Boolean getNotCatchModifyDuplicateException() {
 		return notCatchModifyDuplicateException;
 	}
@@ -181,5 +181,5 @@ public class BeePro {
 	public void setSystemLoggerLevel(String systemLoggerLevel) {
 		this.systemLoggerLevel = systemLoggerLevel;
 	}
-	
+
 }

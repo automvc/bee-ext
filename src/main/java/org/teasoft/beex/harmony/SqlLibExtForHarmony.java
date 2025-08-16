@@ -47,10 +47,9 @@ import ohos.data.resultset.ResultSet;
  */
 public class SqlLibExtForHarmony implements BeeSqlForApp {
 
-	private static boolean openFieldTypeHandler = HoneyConfig
-			.getHoneyConfig().openFieldTypeHandler;
+	private static boolean openFieldTypeHandler = HoneyConfig.getHoneyConfig().openFieldTypeHandler;
 
-	private RdbStore rdbStore; 
+	private RdbStore rdbStore;
 
 	public RdbStore getRdbStore() {
 
@@ -61,7 +60,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		if (rdbStore == null || !rdbStore.isOpen()) {
 			rdbStore = getRdbStoreFromHelper();
 			if (rdbStore == null) rdbStore = BeeRdbStoreRegistry.getRdbStore();
-		} //esle,则使用原来的
+		} // esle,则使用原来的
 		HoneyContext.setCurrentAppDBIfNeed(rdbStore);
 
 		return rdbStore;
@@ -85,8 +84,8 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		String name = null;
 		boolean isFirst = true;
 		String columnName;
-		RdbStore db = null; 
-		ResultSet rs= null;
+		RdbStore db = null;
+		ResultSet rs = null;
 		try {
 			db = getRdbStore();
 			rs = db.querySql(sql, sqlArgs);
@@ -120,16 +119,14 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 						boolean processAsJson = false;
 						if (isJoson(field)) {
 							obj = rs.getString(i);
-							TypeHandler jsonHandler = TypeHandlerRegistry
-									.getHandler(Json.class);
+							TypeHandler jsonHandler = TypeHandlerRegistry.getHandler(Json.class);
 							if (jsonHandler != null) {
 								obj = jsonHandlerProcess(field, obj, jsonHandler);
 								processAsJson = true;
 							}
 						} else {
 							if (openFieldTypeHandler) {
-								isRegHandlerPriority = TypeHandlerRegistry
-										.isPriorityType(field.getType());
+								isRegHandlerPriority = TypeHandlerRegistry.isPriorityType(field.getType());
 							}
 						}
 
@@ -193,7 +190,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 			db = getRdbStore();
 			st = db.buildStatement(sql);
 			setPreparedValues(st, sqlArgs); // 绑定参数
-			fun=st.executeAndGetString();
+			fun = st.executeAndGetString();
 			if (fun == null) fun = "";
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
@@ -318,7 +315,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		}
 		return r;
 	}
-	
+
 	private void close(Statement st, RdbStore db) {
 		try {
 			if (st != null) st.close();
@@ -334,10 +331,10 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 //			Logger.debug(e.getMessage(), e);
 //		}
 	}
-	
+
 	private void closeRs(ResultSet rs) {
 		try {
-			if(rs!=null) rs.close();
+			if (rs != null) rs.close();
 		} catch (Exception e) {
 			Logger.debug(e.getMessage(), e);
 		}
@@ -347,8 +344,7 @@ public class SqlLibExtForHarmony implements BeeSqlForApp {
 		if (null != bindArgs && bindArgs.length > 0) {
 			for (int i = 0; i < bindArgs.length; i++) {
 				int objTypeIndex = -1;
-				if (bindArgs[i] != null)
-					objTypeIndex = HoneyUtil.getJavaTypeIndex(bindArgs[i].getClass().getName());
+				if (bindArgs[i] != null) objTypeIndex = HoneyUtil.getJavaTypeIndex(bindArgs[i].getClass().getName());
 				_setPreparedValues(st, objTypeIndex, i, bindArgs[i]);
 			}
 		}

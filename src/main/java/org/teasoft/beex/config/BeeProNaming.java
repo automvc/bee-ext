@@ -24,11 +24,11 @@ package org.teasoft.beex.config;
  */
 public class BeeProNaming {
 
-	//	prefix = "naming_"
+	// prefix = "naming_"
 	private Boolean toLowerCaseBefore;
 
 	private Integer translateType;
-	
+
 	private Boolean useMoreTranslateType;
 
 	private String entity2tableMappingList;
@@ -48,7 +48,7 @@ public class BeeProNaming {
 	public void setTranslateType(Integer translateType) {
 		this.translateType = translateType;
 	}
-	
+
 	public Boolean getUseMoreTranslateType() {
 		return useMoreTranslateType;
 	}

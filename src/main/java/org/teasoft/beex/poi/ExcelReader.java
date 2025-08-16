@@ -43,7 +43,7 @@ import org.teasoft.honey.util.StringUtils;
  * @author Kingstar
  */
 public class ExcelReader {
-	
+
 	private ExcelReader() {}
 
 	/**
@@ -127,7 +127,7 @@ public class ExcelReader {
 			throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath), sheetName, startRow, endRow);
 	}
-	
+
 	public static List<String[]> readExcel(String fullPath, int sheetIndex, int startRow, int endRow)
 			throws FileNotFoundException {
 		return readExcel(new FileInputStream(fullPath), sheetIndex, startRow, endRow);
@@ -146,7 +146,7 @@ public class ExcelReader {
 		Sheet sheet = getSheet(inputStream, sheetName);
 		return getListBySheet(sheet, startRow, endRow);
 	}
-	
+
 	public static List<String[]> readExcel(InputStream inputStream, int sheetIdex, int startRow, int endRow) {
 		Sheet sheet = getSheet(inputStream, sheetIdex);
 		return getListBySheet(sheet, startRow, endRow);
@@ -159,8 +159,9 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws FileNotFoundException  if the file does not exist
 	 */
-	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray) throws FileNotFoundException {
-		return checkAndReadExcel(fullPath, hopeTitleArray, 0); //默认标题在第0行.
+	public static List<String[]> checkAndReadExcel(String fullPath, String[] hopeTitleArray)
+			throws FileNotFoundException {
+		return checkAndReadExcel(fullPath, hopeTitleArray, 0); // 默认标题在第0行.
 	}
 
 	/**
@@ -171,14 +172,16 @@ public class ExcelReader {
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 * @throws FileNotFoundException  if the file does not exist
 	 */
-	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitles, int titleRow) throws FileNotFoundException {
+	public static List<String[]> checkAndReadExcel(String fullPath, String hopeTitles, int titleRow)
+			throws FileNotFoundException {
 		String[] hopeTitleArray = hopeTitles.split(",");
 		return checkAndReadExcel(new FileInputStream(fullPath), hopeTitleArray, titleRow);
 	}
-	
-	public static List<String[]> checkAndReadExcel(String fullPath, int sheetIndex, String hopeTitles, int titleRow) throws FileNotFoundException {
+
+	public static List<String[]> checkAndReadExcel(String fullPath, int sheetIndex, String hopeTitles, int titleRow)
+			throws FileNotFoundException {
 		String[] hopeTitleArray = hopeTitles.split(",");
-		return checkAndReadExcel(new FileInputStream(fullPath),sheetIndex, hopeTitleArray, titleRow);
+		return checkAndReadExcel(new FileInputStream(fullPath), sheetIndex, hopeTitleArray, titleRow);
 	}
 
 	/**
@@ -213,21 +216,20 @@ public class ExcelReader {
 	 * @param titleRow 标题所在行(首行为0). line number of title row(start from 0)
 	 * @return 可包含多个String数组结构的多行记录的list. list can contain more than one record with String array struct.
 	 */
-	public static List<String[]> checkAndReadExcel(InputStream inputStream, String[] hopeTitleArray,
-			int titleRow) {
+	public static List<String[]> checkAndReadExcel(InputStream inputStream, String[] hopeTitleArray, int titleRow) {
 		Sheet sheet = getSheet(inputStream);
 
-		return _check(sheet,hopeTitleArray, titleRow);
+		return _check(sheet, hopeTitleArray, titleRow);
 	}
-	
-	public static List<String[]> checkAndReadExcel(InputStream inputStream,int sheetIndex, String[] hopeTitleArray,
-			int titleRow) {
-		Sheet sheet = getSheet(inputStream,sheetIndex);
 
-		return _check(sheet,hopeTitleArray, titleRow);
+	public static List<String[]> checkAndReadExcel(InputStream inputStream, int sheetIndex, String[] hopeTitleArray,
+			int titleRow) {
+		Sheet sheet = getSheet(inputStream, sheetIndex);
+
+		return _check(sheet, hopeTitleArray, titleRow);
 	}
-	
-	private static List<String[]> _check(Sheet sheet, String[] hopeTitleArray,int titleRow){
+
+	private static List<String[]> _check(Sheet sheet, String[] hopeTitleArray, int titleRow) {
 		List<String[]> list = getListBySheet(sheet, 0, titleRow);
 
 		if (titleRow > (list.size() - 1)) {
@@ -237,7 +239,7 @@ public class ExcelReader {
 
 		String msg = checkTitle(hopeTitleArray, list.get(titleRow));
 
-		if (StringUtils.isNotEmpty(msg)) { //检测标题没通过.
+		if (StringUtils.isNotEmpty(msg)) { // 检测标题没通过.
 			if (msg.startsWith("Warn:")) {
 				Logger.warn(msg);
 			} else {
@@ -249,7 +251,6 @@ public class ExcelReader {
 
 		return getListBySheet(sheet);
 	}
-	
 
 	private static Sheet getSheet(InputStream inputStream) {
 		return getSheet(inputStream, 0);
@@ -267,7 +268,7 @@ public class ExcelReader {
 		} finally {
 			try {
 				if (workbook != null) workbook.close();
-				if(inputStream!=null) inputStream.close();
+				if (inputStream != null) inputStream.close();
 			} catch (IOException e2) {
 				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
 			}
@@ -281,14 +282,14 @@ public class ExcelReader {
 		Sheet sheet = null;
 		try {
 			workbook = WorkbookFactory.create(inputStream);
-			sheet = workbook.getSheet(sheetName); //根据sheet名称获取
+			sheet = workbook.getSheet(sheetName); // 根据sheet名称获取
 		} catch (Exception e) {
 //			Logger.error(e.getMessage());
 			throw ExceptionHelper.convert(e);
 		} finally {
 			try {
 				if (workbook != null) workbook.close();
-				if(inputStream!=null) inputStream.close();
+				if (inputStream != null) inputStream.close();
 			} catch (IOException e2) {
 				Logger.warn("Have exception when close Workbook. " + e2.getMessage());
 			}
@@ -311,17 +312,17 @@ public class ExcelReader {
 	 */
 	private static List<String[]> getListBySheet(Sheet sheet, int startRow, int endRow) {
 		List<String[]> list = new ArrayList<>();
-		if(sheet==null) return list;
-		int rows = sheet.getLastRowNum(); //最后的行号,不是总行数.     如何判断是无数据的空行???  
+		if (sheet == null) return list;
+		int rows = sheet.getLastRowNum(); // 最后的行号,不是总行数. 如何判断是无数据的空行???
 		int columns = 0;
 		String[] colStr = null;
 
-		if (endRow < 0) endRow = rows; //最后的行号,不是总行数.
+		if (endRow < 0) endRow = rows; // 最后的行号,不是总行数.
 		if (startRow > endRow) {
 			throw new BeeIllegalBusinessException("endRow need less than startRow!");
 		}
 		if (endRow > rows) endRow = rows;
-		
+
 //		//从前三行(从startRow开始)中获取最大列数. 
 //		int c1 = 0;
 //		int c2 = 0;
@@ -347,11 +348,11 @@ public class ExcelReader {
 //		} catch (Exception e) { //获取空行会报异常  V1.11 fixed bug
 //			c3 = 0;
 //		}
-		
+
 //		long t1=System.currentTimeMillis();
 		int maxCol = 0;
-		int temp =0;
-		//find max Col
+		int temp = 0;
+		// find max Col
 		for (int t = startRow; t <= endRow; t++) {
 			try {
 				temp = sheet.getRow(t).getLastCellNum();
@@ -363,10 +364,10 @@ public class ExcelReader {
 //		long t2=System.currentTimeMillis();
 //		System.out.println("==============================");
 //		System.out.println(t2-t1);
-		
+
 //		columns=getMaxColumn(c1,c2,c3);
-		
-		columns=maxCol;
+
+		columns = maxCol;
 		for (int r = startRow; r <= endRow; r++) { // 循环遍历表格的行
 			Row row = sheet.getRow(r); // 获取单元格中指定的行对象
 			if (row != null) {
@@ -376,13 +377,13 @@ public class ExcelReader {
 					colStr[c] = trim(getValue(cell));
 				}
 				list.add(colStr);
-			}else {
-				list.add(new String[] {""}); // 空行
+			} else {
+				list.add(new String[] { "" }); // 空行
 			}
 		}
 		return list;
 	}
-	
+
 //	private static int getMaxColumn(int c1,int c2,int c3) {
 //		int max=c1;
 //		if(c2>max) max=c2;
@@ -395,14 +396,14 @@ public class ExcelReader {
 		if (cell == null) {
 			return null;
 		}
-		String result="";
+		String result = "";
 		switch (cell.getCellTypeEnum()) {
-			case NUMERIC:// 数字类型  
+			case NUMERIC:// 数字类型
 				short formatType = cell.getCellStyle().getDataFormat();
 
 				if (formatType == 14 || formatType == 31 || formatType == 57 || formatType == 58 || formatType == 20
 						|| formatType == 32) {
-					// 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)  
+					// 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
 					SimpleDateFormat sdf = null;
 					if (formatType == 14)
 						sdf = new SimpleDateFormat("yyyy/M/dd");
@@ -414,7 +415,7 @@ public class ExcelReader {
 						sdf = new SimpleDateFormat("M月d日");
 					else if (formatType == 20)
 						sdf = new SimpleDateFormat("HH:mm");
-					else   //32
+					else // 32
 						sdf = new SimpleDateFormat("h时mm分");
 					double value = cell.getNumericCellValue();
 					Date date = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(value);
@@ -442,11 +443,11 @@ public class ExcelReader {
 					sdf = new SimpleDateFormat("yyyy-MM-dd");
 					Date date = cell.getDateCellValue();
 					result = sdf.format(date);
-				} else if (org.apache.poi.hssf.usermodel.HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式  
+				} else if (org.apache.poi.hssf.usermodel.HSSFDateUtil.isCellDateFormatted(cell)) {// 处理日期格式、时间格式
 					SimpleDateFormat sdf = null;
 					if (cell.getCellStyle().getDataFormat() == HSSFDataFormat.getBuiltinFormat("h:mm")) {
 						sdf = new SimpleDateFormat("HH:mm");
-					} else {// 日期  
+					} else {// 日期
 						sdf = new SimpleDateFormat("yyyy/MM/dd");
 					}
 					Date date = cell.getDateCellValue();
@@ -462,7 +463,7 @@ public class ExcelReader {
 					result = String.valueOf(inputValue);
 				}
 				break;
-			case STRING:// String类型  
+			case STRING:// String类型
 				result = cell.getRichStringCellValue().toString();
 				break;
 			case BLANK:

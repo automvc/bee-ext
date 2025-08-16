@@ -30,10 +30,10 @@ public class BeeProDb {
 	private String username;
 	private String password;
 	private String schemaName;
-	
+
 	private Boolean jndiType;
 	private String jndiName;
-	
+
 	private Boolean pagingWithLimitOffset;
 
 	public String getDbName() {
@@ -75,7 +75,7 @@ public class BeeProDb {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
 	public String getSchemaName() {
 		return schemaName;
 	}
@@ -107,5 +107,5 @@ public class BeeProDb {
 	public void setPagingWithLimitOffset(Boolean pagingWithLimitOffset) {
 		this.pagingWithLimitOffset = pagingWithLimitOffset;
 	}
-	
+
 }

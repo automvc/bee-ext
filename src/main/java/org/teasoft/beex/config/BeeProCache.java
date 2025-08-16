@@ -24,21 +24,21 @@ package org.teasoft.beex.config;
  */
 public class BeeProCache {
 
-	 // prefix= "cache_"
-	private Integer timeout; //缓存保存时间(毫秒 ms)
+	// prefix= "cache_"
+	private Integer timeout; // 缓存保存时间(毫秒 ms)
 
-	private Integer mapSize; //缓存集数据量大小
+	private Integer mapSize; // 缓存集数据量大小
 
-	private Double startDeleteRate; //when timeout use
+	private Double startDeleteRate; // when timeout use
 
-	private Double fullUsedRate; //when add element in cache use
+	private Double fullUsedRate; // when add element in cache use
 
-	private Double fullClearRate; //when add element in cache use
+	private Double fullClearRate; // when add element in cache use
 
 	private Boolean keyUseMD5;
 
 	private Boolean nocache;
-	
+
 	private Integer prototype;
 
 	private Integer workResultSetSize;
@@ -48,11 +48,11 @@ public class BeeProCache {
 	private String forever;
 
 	private String modifySyn;
-	
-	//V1.17.21
-	private Boolean useLevelTwo; 
-	private Boolean levelOneTolevelTwo; 
-	private Integer levelTwoTimeout; //二级缓存保存时间(秒 second)
+
+	// V1.17.21
+	private Boolean useLevelTwo;
+	private Boolean levelOneTolevelTwo;
+	private Integer levelTwoTimeout; // 二级缓存保存时间(秒 second)
 	private String levelTwoEntityList;
 
 	public Integer getTimeout() {
@@ -110,7 +110,7 @@ public class BeeProCache {
 	public void setNocache(Boolean nocache) {
 		this.nocache = nocache;
 	}
-	
+
 	public Integer getPrototype() {
 		return prototype;
 	}

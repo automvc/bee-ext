@@ -24,7 +24,7 @@ package org.teasoft.beex.config;
  */
 public class BeeProReturnStringList {
 
-	//prefix="returnStringList_"
+	// prefix="returnStringList_"
 	private Boolean nullToEmptyString;
 
 	public Boolean getNullToEmptyString() {

@@ -55,10 +55,8 @@ public class TranHandler {
 		try {
 			transaction.begin();
 
-			if (readOnly != null && !"".equals(readOnly))
-				transaction.setReadOnly(Boolean.parseBoolean(readOnly));
-			if (isolation != null && isolation.getLevel() != -1)
-				transaction.setTransactionIsolation(isolation);
+			if (readOnly != null && !"".equals(readOnly)) transaction.setReadOnly(Boolean.parseBoolean(readOnly));
+			if (isolation != null && isolation.getLevel() != -1) transaction.setTransactionIsolation(isolation);
 
 			returnValue = joinPoint.proceed(args);
 
@@ -72,8 +70,7 @@ public class TranHandler {
 		return returnValue;
 	}
 
-	private Tran getTargetAnnotation(ProceedingJoinPoint joinPoint)
-			throws NoSuchMethodException {
+	private Tran getTargetAnnotation(ProceedingJoinPoint joinPoint) throws NoSuchMethodException {
 		Tran annotation = joinPoint.getTarget().getClass().getAnnotation(Tran.class);
 		if (annotation == null) {
 			Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();

@@ -27,7 +27,7 @@ import ohos.app.Context;
  * @since  1.17
  */
 public class ContextRegistry implements Registry {
-	
+
 	private static Context context;
 
 	private ContextRegistry() {}

@@ -45,8 +45,7 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 		this(context, name, null, version);
 	}
 
-	public BeeSQLiteOpenHelper(Context context, String name, CursorFactory factory,
-			int version) {
+	public BeeSQLiteOpenHelper(Context context, String name, CursorFactory factory, int version) {
 		super(context, name, factory, version);
 	}
 
@@ -81,8 +80,7 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 		num++;
 
 		try {
-			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
-					.getCreateAndUpgrade().newInstance();
+			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry.getCreateAndUpgrade().newInstance();
 			if (instance != null) {
 				HoneyContext.setCurrentAppDB(db); // put it in context first , prevent:getDatabase called recursively
 				instance.onCreate();
@@ -102,8 +100,7 @@ public class BeeSQLiteOpenHelper extends SQLiteOpenHelper {
 		num++;
 
 		try {
-			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry
-					.getCreateAndUpgrade().newInstance();
+			CreateAndUpgrade instance = (CreateAndUpgrade) CreateAndUpgradeRegistry.getCreateAndUpgrade().newInstance();
 			if (instance != null) {
 				HoneyContext.setCurrentAppDB(db);// put it in context first , prevent:getDatabase called recursively
 				instance.onUpgrade(oldVersion, newVersion);
