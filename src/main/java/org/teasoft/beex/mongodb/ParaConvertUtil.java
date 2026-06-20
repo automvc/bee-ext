@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.conversions.Bson;
+import org.teasoft.bee.osql.IncludeType;
 import org.teasoft.bee.osql.OrderType;
 import org.teasoft.bee.osql.SuidType;
 import org.teasoft.bee.osql.annotation.Geo2dsphere;
@@ -35,7 +36,6 @@ import org.teasoft.bee.osql.api.Condition;
 import org.teasoft.bee.osql.type.SetParaTypeConvert;
 import org.teasoft.bee.sharding.ShardingSortStruct;
 import org.teasoft.honey.logging.Logger;
-import org.teasoft.honey.osql.constant.NullEmpty;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
@@ -184,7 +184,7 @@ public class ParaConvertUtil {
 	
 	public static Map<String, Object> toMapExcludeSome(Object entity,String excludeFieldList) throws Exception {
 		
-		Map<String, Object> map = toMap(entity, NullEmpty.EMPTY_STRING, SuidType.INSERT);
+		Map<String, Object> map = toMap(entity, IncludeType.INCLUDE_EMPTY.getValue(), SuidType.INSERT);
 
 		String excludeFields[] = excludeFieldList.split(",");
 		for (String f : excludeFields) {
