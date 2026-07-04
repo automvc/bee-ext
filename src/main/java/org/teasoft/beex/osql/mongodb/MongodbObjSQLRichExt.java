@@ -473,7 +473,7 @@ public class MongodbObjSQLRichExt extends MongodbObjSQLRich implements MongodbSu
 	private <T> List<T> _geoFind(T entity, Bson geoBson, Condition condition) {
 		if (entity == null)
 			return null;
-		regCondition(condition); 
+		regConditionForSharding(condition); 
 		doBeforePasreEntity(entity, SuidType.SELECT);
 		if (condition != null)
 			condition.setSuidType(SuidType.SELECT);
