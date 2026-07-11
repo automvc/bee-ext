@@ -75,6 +75,7 @@ import org.teasoft.honey.osql.core.ConditionImpl.FunExpress;
 import org.teasoft.honey.osql.core.ExceptionHelper;
 import org.teasoft.honey.osql.core.HoneyConfig;
 import org.teasoft.honey.osql.core.HoneyContext;
+import org.teasoft.honey.osql.core.HoneyContext1;
 import org.teasoft.honey.osql.core.HoneyUtil;
 import org.teasoft.honey.osql.core.JsonResultWrap;
 import org.teasoft.honey.osql.core.NameTranslateHandle;
@@ -1489,7 +1490,8 @@ public class MongodbSqlLib extends AbstractBase
 					return cacheValue;
 				}
 				String fun = "";
-				String funType = HoneyContext.getSysCommStrInheritableLocal(StringConst.FunType);
+//				String funType = HoneyContext.getSysCommStrInheritableLocal(StringConst.FunType);
+				String funType = HoneyContext1.getExtForShardingStr(StringConst.FunType);
 				if (FunctionType.AVG.getName().equalsIgnoreCase(funType)) {
 					Logger.warn("AVG do not process here!");
 				} else {
