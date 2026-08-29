@@ -103,7 +103,10 @@ public class BeeSqlFormatter implements SqlFormat {
 			fm = SqlFormatter.of(Dialect.MySql);
 		else if (DatabaseConst.MariaDB.equalsIgnoreCase(dbName))
 			fm = SqlFormatter.of(Dialect.MariaDb);
-		else if (DatabaseConst.PostgreSQL.equalsIgnoreCase(dbName))
+		else if (DatabaseConst.PostgreSQL.equalsIgnoreCase(dbName)
+				|| DatabaseConst.GaussDB.equalsIgnoreCase(dbName)
+				|| DatabaseConst.OpenGauss.equalsIgnoreCase(dbName)
+				)
 			fm = SqlFormatter.of(Dialect.PostgreSql);
 		else if (DatabaseConst.ORACLE.equalsIgnoreCase(dbName))
 			fm = SqlFormatter.of(Dialect.PlSql);

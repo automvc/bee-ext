@@ -38,6 +38,7 @@ public class JsonDefaultHandler implements JsonHandler {
 
 		SetParaTypeConverterRegistry.register(PostgreSQLJsonString.class, new PgSQLJsonTypeConvert(), DatabaseConst.PostgreSQL);
 		SetParaTypeConverterRegistry.register(PostgreSQLJsonbString2.class, new PgSQLJsonbTypeConvert2(), DatabaseConst.PostgreSQL);
+		//todo can add by yourself if use DatabaseConst.OpenGauss, GaussDB
 	}
 
 }
