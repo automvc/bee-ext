@@ -28,6 +28,7 @@ public class BeeProSharding {
 	private Boolean jdbcStreamSelect; 
 	private Boolean notSupportUnionQuery;
 	private Integer executorSize;
+	private Boolean useVirtualThread; // 3.0.0
 
 	public Boolean getForkJoinBatchInsert() {
 		return forkJoinBatchInsert;
@@ -60,5 +61,13 @@ public class BeeProSharding {
 	public void setExecutorSize(Integer executorSize) {
 		this.executorSize = executorSize;
 	}
-	
+
+	public Boolean getUseVirtualThread() {
+		return useVirtualThread;
+	}
+
+	public void setUseVirtualThread(Boolean useVirtualThread) {
+		this.useVirtualThread = useVirtualThread;
+	}
+
 }
