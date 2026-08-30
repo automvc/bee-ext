@@ -29,6 +29,7 @@ public class BeeProSharding {
 	private Boolean notSupportUnionQuery;
 	private Integer executorSize;
 	private Boolean useVirtualThread; // 3.0.0
+	private Integer fetchSizeForPostgreSql;
 
 	public Boolean getForkJoinBatchInsert() {
 		return forkJoinBatchInsert;
@@ -68,6 +69,14 @@ public class BeeProSharding {
 
 	public void setUseVirtualThread(Boolean useVirtualThread) {
 		this.useVirtualThread = useVirtualThread;
+	}
+
+	public Integer getFetchSizeForPostgreSql() {
+		return fetchSizeForPostgreSql;
+	}
+
+	public void setFetchSizeForPostgreSql(Integer fetchSizeForPostgreSql) {
+		this.fetchSizeForPostgreSql = fetchSizeForPostgreSql;
 	}
 
 }
