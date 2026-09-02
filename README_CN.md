@@ -42,6 +42,7 @@ Bee-Ext
 
 * 17.内置各种常用数据源的DataSourceBuilder  
 
+* 18.支持JDK21 虚拟线程  
 
 **其它:**	
 * 1.更快的开发Java Web的新组合：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
