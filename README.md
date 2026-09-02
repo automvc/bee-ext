@@ -40,9 +40,11 @@ Bee-Ext
      Provide access to fields in the format of Orders::getUserid  
      normal API in org.teasoft.beex.osql.api package  
 
-*16. MS Access JDBC Password connect  
+* 16. MS Access JDBC Password connect  
 
 * 17.default support normal ds DataSourceBuilder  
+
+* 18. support jdk 21 Virtual Thread  
 
 **Others:**	
 * 1.Faster development of new combinations for Java Web：  [Bee+Spring+SpringMVC](../../../../aiteasoft/bee-spring-springmvc)  
